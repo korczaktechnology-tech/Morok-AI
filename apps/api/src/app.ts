@@ -5,11 +5,14 @@ import { MongoClient } from "mongodb";
 import { config } from "./config.js";
 import { connectDatabase, initializeDatabase } from "./db.js";
 import { coreCommands } from "./domain/commands.js";
-import { corePermissions, requiresConfirmation } from "./domain/permissions.js";
+import { corePermissions, decidePermission, requiresConfirmation } from "./domain/permissions.js";
 import { ToolRegistry } from "./domain/tools.js";
 import { MOROK_IDENTITY } from "./domain/identity.js";
 import { StubModelGateway } from "./domain/gateway.js";
 import { AuthService } from "./domain/auth.js";
+import { SessionService } from "./domain/session.js";
+import { MemoryService } from "./domain/memory.js";
+import { ContextService } from "./domain/context.js";
 import { assertPermission } from "./domain/security.js";
 
 export function buildApp() {
@@ -21,14 +24,27 @@ export function buildApp() {
 
   app.get("/health", async () => ({ status: "ok", service: "morok-api", environment: config.nodeEnv }));
   app.get("/api/v1/status", async () => ({
-    status: "ok", identity: MOROK_IDENTITY,
-    capabilities: { commands: coreCommands.length, permissions: corePermissions.length, tools: tools.list().length, modelGateway: true }
+    status: "ok",
+    identity: MOROK_IDENTITY,
+    capabilities: {
+      commands: coreCommands.length,
+      permissions: corePermissions.length,
+      tools: tools.list().length,
+      modelGateway: true
+    }
   }));
   app.get("/api/v1/commands", async () => ({ commands: coreCommands }));
   app.get("/api/v1/permissions", async () => ({ permissions: corePermissions }));
   app.get("/api/v1/permissions/:id", async (request) => {
     const { id } = request.params as { id: string };
     return { permission: id, requiresConfirmation: requiresConfirmation(id) };
+  });
+  app.post("/api/v1/permissions/check", async (request, reply) => {
+    const user = await authenticateRequest(request.headers.authorization);
+    if (!user) return reply.code(401).send({ error: "unauthorized" });
+    const body = request.body as { permission?: string; confirmed?: boolean };
+    if (!body?.permission) return reply.code(400).send({ error: "permission_required" });
+    return decidePermission(user.roles, body.permission, body.confirmed === true);
   });
 
   app.post("/api/v1/auth/register", async (request, reply) => {
@@ -55,74 +71,124 @@ export function buildApp() {
   });
 
   app.get("/api/v1/auth/me", async (request, reply) => {
-    const user = await authenticateRequest(request.headers.authorization);
-    if (!user) return reply.code(401).send({ error: "unauthorized" });
-    return { user };
+    const auth = await authenticateRequest(request.headers.authorization);
+    if (!auth) return reply.code(401).send({ error: "unauthorized" });
+    return { user: auth.user };
   });
 
   app.get("/api/v1/conversations/:id", async (request, reply) => {
-    const user = await authenticateRequest(request.headers.authorization);
-    if (!user) return reply.code(401).send({ error: "unauthorized" });
-    assertPermission({ userId: user.id, roles: user.roles }, "conversation.read");
+    const auth = await authenticateRequest(request.headers.authorization);
+    if (!auth) return reply.code(401).send({ error: "unauthorized" });
+    assertPermission({ userId: auth.user.id, roles: auth.user.roles }, "conversation.read");
     const { id } = request.params as { id: string };
-    const conversation = await (await connectDatabase()).collection("conversations").findOne({ id, userId: user.id });
+    const conversation = await (await connectDatabase()).collection("conversations").findOne({ id, userId: auth.user.id });
     if (!conversation) return reply.code(404).send({ error: "conversation_not_found" });
     return { conversation };
   });
 
   app.post("/api/v1/memories", async (request, reply) => {
-    const user = await authenticateRequest(request.headers.authorization);
-    if (!user) return reply.code(401).send({ error: "unauthorized" });
+    const auth = await authenticateRequest(request.headers.authorization);
+    if (!auth) return reply.code(401).send({ error: "unauthorized" });
     const body = request.body as { content?: string };
     if (!body?.content?.trim()) return reply.code(400).send({ error: "content_required" });
-    const now = new Date();
-    const memory = { id: randomUUID(), userId: user.id, content: body.content.trim(), createdAt: now, updatedAt: now };
-    await (await connectDatabase()).collection("memories").insertOne(memory);
+    const memory = await new MemoryService(await connectDatabase()).create(auth.user.id, body.content);
     return reply.code(201).send({ memory });
   });
 
   app.get("/api/v1/memories", async (request, reply) => {
-    const user = await authenticateRequest(request.headers.authorization);
-    if (!user) return reply.code(401).send({ error: "unauthorized" });
+    const auth = await authenticateRequest(request.headers.authorization);
+    if (!auth) return reply.code(401).send({ error: "unauthorized" });
     const { q } = request.query as { q?: string };
-    const memories = await (await connectDatabase()).collection("memories").find({ userId: user.id }).sort({ updatedAt: -1 }).limit(100).toArray();
-    const query = q?.trim().toLowerCase();
-    return { memories: query ? memories.filter((memory) => String(memory.content).toLowerCase().includes(query)).slice(0, 50) : memories.slice(0, 50) };
+    return { memories: await new MemoryService(await connectDatabase()).search(auth.user.id, q ?? "") };
+  });
+
+  app.post("/api/v1/tools/:id/execute", async (request, reply) => {
+    const auth = await authenticateRequest(request.headers.authorization);
+    if (!auth) return reply.code(401).send({ error: "unauthorized" });
+    const { id } = request.params as { id: string };
+    const body = request.body as { input?: unknown; confirmed?: boolean };
+    const decision = decidePermission(auth.user.roles, "tool.execute", body?.confirmed === true);
+    const db = await connectDatabase();
+    if (!decision.allowed) {
+      await db.collection("audit_logs").insertOne({
+        action: decision.reason === "confirmation_required" ? "tool.confirmation.required" : "tool.execution.denied",
+        actorId: auth.user.id,
+        toolId: id,
+        createdAt: new Date()
+      });
+      return reply.code(decision.reason === "confirmation_required" ? 409 : 403).send(decision);
+    }
+    try {
+      const result = await tools.execute(id, body?.input);
+      await db.collection("tool_executions").insertOne({
+        id: randomUUID(),
+        toolId: id,
+        actorId: auth.user.id,
+        input: body?.input,
+        result,
+        confirmed: true,
+        createdAt: new Date()
+      });
+      await db.collection("audit_logs").insertOne({
+        action: "tool.execution.completed",
+        actorId: auth.user.id,
+        toolId: id,
+        createdAt: new Date()
+      });
+      return { ok: true, result };
+    } catch (error) {
+      const code = error instanceof Error && error.message === "tool_not_found" ? 404 : 400;
+      return reply.code(code).send({ error: error instanceof Error ? error.message : "tool_execution_failed" });
+    }
   });
 
   app.post("/api/v1/messages", async (request, reply) => {
     const db = await connectDatabase();
-    const user = await authenticateRequest(request.headers.authorization);
-    if (!user) return reply.code(401).send({ error: "unauthorized" });
-    assertPermission({ userId: user.id, roles: user.roles }, "conversation.read");
+    const auth = await authenticateRequest(request.headers.authorization);
+    if (!auth) return reply.code(401).send({ error: "unauthorized" });
+    assertPermission({ userId: auth.user.id, roles: auth.user.roles }, "conversation.read");
 
     const body = request.body as { message?: string; conversationId?: string; sessionId?: string };
     if (!body?.message?.trim()) return reply.code(400).send({ error: "message_required" });
 
     const now = new Date();
-    const conversationId = body.conversationId ?? randomUUID();
-    const sessionId = body.sessionId ?? randomUUID();
     const message = body.message.trim();
+    const session = body.sessionId
+      ? await new SessionService(db).getByToken(body.sessionId)
+      : null;
+    const sessionId = body.sessionId ?? auth.sessionId;
+    const conversationId = body.conversationId ?? randomUUID();
+
+    if (body.sessionId && (!session || session.userId !== auth.user.id)) {
+      return reply.code(401).send({ error: "invalid_session" });
+    }
 
     await db.collection("conversations").updateOne(
-      { id: conversationId, userId: user.id },
-      { $set: { userId: user.id, updatedAt: now }, $setOnInsert: { id: conversationId, createdAt: now, messages: [] } },
+      { id: conversationId, userId: auth.user.id },
+      { $set: { userId: auth.user.id, updatedAt: now }, $setOnInsert: { id: conversationId, createdAt: now, messages: [] } },
       { upsert: true }
     );
     await db.collection("conversations").updateOne(
-      { id: conversationId, userId: user.id },
+      { id: conversationId, userId: auth.user.id },
       { $push: { messages: { role: "user", content: message, createdAt: now } } }
     );
 
-    const response = await gateway.complete({ message, context: { userId: user.id, sessionId, conversationId } });
+    const context = await new ContextService(db).create(auth.user.id, sessionId, conversationId);
+    const response = await gateway.complete({ message, context });
 
     await db.collection("conversations").updateOne(
-      { id: conversationId, userId: user.id },
+      { id: conversationId, userId: auth.user.id },
       { $push: { messages: { role: "assistant", content: response.content, model: response.model, createdAt: new Date() } }, $set: { updatedAt: new Date() } }
     );
-    await db.collection("audit_logs").insertOne({ action: "conversation.message.completed", actorId: user.id, conversationId, createdAt: new Date() });
+    await db.collection("audit_logs").insertOne({
+      action: "conversation.message.completed",
+      actorId: auth.user.id,
+      conversationId,
+      sessionId,
+      createdAt: new Date()
+    });
 
-    return { ...response, conversationId, sessionId };
+    return { ...response, conversationId, sessionId, context };
   });
 
   app.get("/health/database", async (_request, reply) => {
@@ -150,5 +216,12 @@ export function buildApp() {
 
 async function authenticateRequest(authorization: string | undefined) {
   if (!authorization?.startsWith("Bearer ")) return null;
-  return new AuthService(await connectDatabase()).authenticate(authorization.slice(7));
+  const db = await connectDatabase();
+  const token = authorization.slice(7);
+  const service = new AuthService(db);
+  const user = await service.authenticate(token);
+  if (!user) return null;
+  const session = await new SessionService(db).getByToken(token);
+  if (!session || session.userId !== user.id) return null;
+  return { user, sessionId: session.id };
 }
