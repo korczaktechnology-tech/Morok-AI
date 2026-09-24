@@ -3,7 +3,7 @@ services:
     name: morok-api
     runtime: node
     plan: free
-    buildCommand: npm install --include=dev && npm run build --workspace=@morok/api
+    buildCommand: npm install --workspaces --include=dev && npm run build --workspace=@morok/api
     startCommand: npm run start --workspace=@morok/api
     healthCheckPath: /health
     envVars:
