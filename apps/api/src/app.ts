@@ -12,6 +12,7 @@ import { StubModelGateway } from "./domain/gateway.js";
 import { AuthService } from "./domain/auth.js";
 import { MemoryService } from "./domain/memory.js";
 import { ContextService } from "./domain/context.js";
+import { SessionService } from "./domain/session.js";
 import { assertPermission } from "./domain/security.js";
 
 export function buildApp() {
