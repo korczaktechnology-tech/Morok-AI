@@ -3,13 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "description": "Morok — assistente pessoal inteligente multiplataforma.",
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "dev": "npm run dev --workspace=@morok/api & npm run dev --workspace=@morok/client",
-    "build": "npm run build --workspaces",
-    "typecheck": "npm run typecheck --workspaces",
-    "lint": "npm run lint --workspaces",
-    "test": "npm run test --workspaces",
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
     "format": "prettier --write ."
   },
   "engines": {
