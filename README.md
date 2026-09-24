@@ -16,7 +16,7 @@ O desenvolvimento será realizado em cinco fases: **0, 1, 2, 4 e 5**. A numeraç
 
 # FASE 0 — FUNDAÇÃO DO APLICATIVO
 
-**Status: 🔴 Não implementado**
+**Status: 🟢 Concluído**
 
 Objetivo: preparar todo o terreno técnico do Morok antes da implementação das funcionalidades. A estrutura deve ser organizada, simples de manter e sem excesso de arquivos, pastas ou documentação duplicada.
 
@@ -151,6 +151,46 @@ Objetivo: preparar todo o terreno técnico do Morok antes da implementação das
 - Sistema de ferramentas
 - Sistema de permissões
 - Sistema de logs
+
+---
+
+## Fase 0 — Validação de conclusão
+
+A Fase 0 foi implementada no repositório com a fundação técnica necessária para iniciar a aplicação.
+
+### Itens concluídos
+
+- 🟢 Monorepo configurado com npm Workspaces
+- 🟢 TypeScript centralizado
+- 🟢 Node.js 22 definido
+- 🟢 React + Vite configurados para o cliente
+- 🟢 Fastify configurado para a API
+- 🟢 MongoDB configurado para persistência
+- 🟢 Pacote compartilhado criado
+- 🟢 Estrutura de frontend criada
+- 🟢 Estrutura de backend criada
+- 🟢 Configuração de ambiente criada
+- 🟢 .gitignore configurado
+- 🟢 EditorConfig configurado
+- 🟢 Prettier configurado
+- 🟢 GitHub Actions configurado para typecheck e build
+- 🟢 Endpoint de health da API criado
+- 🟢 Endpoint de health do MongoDB criado
+- 🟢 Encerramento seguro do backend configurado
+- 🟢 CORS configurável
+- 🟢 Render configurado por render.yaml
+- 🟢 Health check do Render configurado
+- 🟢 Variáveis de produção separadas por ambiente
+- 🟢 Interface web inicial funcionando como base da Fase 1
+- 🟢 Arquitetura preparada para expansão multiplataforma
+- 🟢 README.md centralizado
+- 🟢 Estrutura mantida deliberadamente enxuta
+
+### Limite externo da fundação
+
+O repositório contém toda a configuração necessária para Render e MongoDB. A ativação efetiva desses serviços depende das credenciais e dos serviços externos associados ao ambiente de produção; nenhum segredo ou credencial é armazenado no repositório.
+
+A Fase 1 pode começar diretamente sobre esta fundação.
 
 ---
 
@@ -1014,7 +1054,7 @@ Objetivo: finalizar, estabilizar, testar, proteger, empacotar, publicar e prepar
 
 | Fase | Status |
 |---|---|
-| Fase 0 — Fundação | 🔴 Não implementado |
+| Fase 0 — Fundação | 🟢 Concluído |
 | Fase 1 — Início da aplicação | 🔴 Não implementado |
 | Fase 2 — Assistente de sistema | 🔴 Não implementado |
 | Fase 4 — Funcionalidades e revisão | 🔴 Não implementado |
