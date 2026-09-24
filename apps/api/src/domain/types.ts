@@ -1,6 +1,1 @@
-export type MorokEventName = "message.received" | "message.completed" | "tool.started" | "tool.completed" | "task.created" | "task.completed" | "system.alert";
-export interface MorokEvent<T = unknown> { id: string; name: MorokEventName; timestamp: string; payload: T; }
-export interface Session { id: string; userId: string; createdAt: string; updatedAt: string; }
-export interface Command { id: string; name: string; description: string; }
-export interface Tool { id: string; name: string; description: string; }
-export interface Permission { id: string; name: string; description: string; }
+export type MorokEventName="message.received"|"message.completed"|"tool.started"|"tool.completed"|"task.created"|"task.completed"|"system.alert"; export interface MorokEvent<T=unknown>{id:string;name:MorokEventName;timestamp:string;payload:T} export interface Session{id:string;userId:string;createdAt:string;updatedAt:string} export interface Command{id:string;name:string;description:string} export interface Tool{id:string;name:string;description:string} export interface Permission{id:string;name:string;description:string}
