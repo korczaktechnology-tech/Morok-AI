@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { MongoClient } from "mongodb";
 import { buildApp } from "../app.js";
-import { initializeDatabase } from "../db.js";
+import { closeDatabase, initializeDatabase } from "../db.js";
 
 const uri = process.env.MONGODB_URI ?? "mongodb://127.0.0.1:27017";
 const databaseName = process.env.MONGODB_DATABASE ?? "morok_test";
@@ -73,5 +73,6 @@ test("authentication, message persistence and memory persistence work end-to-end
   assert.ok(audit.some((entry) => entry.action === "conversation.message.completed"));
 
   await app.close();
+  await closeDatabase();
   await client.close();
 });
