@@ -1,5 +1,6 @@
 import { MongoClient, type Db } from 'mongodb';
 import { config } from './config.js';
+import { initializeDatabase } from './database/schema.js';
 
 let client: MongoClient | undefined;
 let database: Db | undefined;
@@ -11,6 +12,7 @@ export async function connectDatabase(): Promise<Db> {
   await client.connect();
   database = client.db(config.mongodbDatabase);
   await database.command({ ping: 1 });
+  await initializeDatabase(database);
 
   return database;
 }
