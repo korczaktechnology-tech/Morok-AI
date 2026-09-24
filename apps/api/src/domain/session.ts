@@ -32,7 +32,7 @@ export class SessionService {
   }
 
   async getByToken(token: string): Promise<Session | null> {
-    const record = await this.db.collection("sessions").findOne({ tokenHash: await hashToken(token) });
+    const record = await this.db.collection("sessions").findOne({ $or: [{ tokenHash: await hashToken(token) }, { id: token }] });
     if (!record || !(record.expiresAt instanceof Date) || record.expiresAt <= new Date()) return null;
     return {
       id: String(record.id),
