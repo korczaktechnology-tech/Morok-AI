@@ -16,7 +16,7 @@ O desenvolvimento será realizado em cinco fases: **0, 1, 2, 4 e 5**. A numeraç
 
 # FASE 0 — FUNDAÇÃO DO APLICATIVO
 
-**Status: 🟢 Concluído**
+**Status: 🟢 Concluído — 100% da fundação implementável no repositório**
 
 Objetivo: preparar todo o terreno técnico do Morok antes da implementação das funcionalidades. A estrutura deve ser organizada, simples de manter e sem excesso de arquivos, pastas ou documentação duplicada.
 
@@ -185,6 +185,10 @@ A Fase 0 foi implementada no repositório com a fundação técnica necessária 
 - 🟢 Arquitetura preparada para expansão multiplataforma
 - 🟢 README.md centralizado
 - 🟢 Estrutura mantida deliberadamente enxuta
+
+### Validação final da fundação
+
+A fundação implementável no repositório foi concluída: API base, contrato do Model Gateway, mensagens, comandos, permissões, ferramentas, sessões, eventos, contexto, memória, identidade, auditoria, persistência inicial, health checks, cliente web inicial e testes dos serviços centrais estão presentes no `main`.
 
 ### Limite externo da fundação
 
