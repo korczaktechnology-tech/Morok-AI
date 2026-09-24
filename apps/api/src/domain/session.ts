@@ -6,11 +6,6 @@ import type { Session } from "./types.js";
 const scrypt = promisify(scryptCallback);
 const TOKEN_TTL_MS = 1000 * 60 * 60 * 24 * 30;
 
-export interface SessionRecord extends Session {
-  tokenHash: string;
-  expiresAt: Date;
-}
-
 async function hashToken(token: string): Promise<string> {
   const derived = (await scrypt(token, "morok-session", 32)) as Buffer;
   return derived.toString("hex");
@@ -43,10 +38,10 @@ export class SessionService {
   }
 
   async touch(sessionId: string): Promise<Session | null> {
-    const now = new Date();
+    const now = new Date().toISOString();
     const result = await this.db.collection("sessions").findOneAndUpdate(
       { id: sessionId },
-      { $set: { updatedAt: now.toISOString() } },
+      { $set: { updatedAt: now } },
       { returnDocument: "after" }
     );
     if (!result) return null;
