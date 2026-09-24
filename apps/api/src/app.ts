@@ -10,7 +10,6 @@ import { ToolRegistry } from "./domain/tools.js";
 import { MOROK_IDENTITY } from "./domain/identity.js";
 import { StubModelGateway } from "./domain/gateway.js";
 import { AuthService } from "./domain/auth.js";
-import { SessionService } from "./domain/session.js";
 import { MemoryService } from "./domain/memory.js";
 import { ContextService } from "./domain/context.js";
 import { assertPermission } from "./domain/security.js";
