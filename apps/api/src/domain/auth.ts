@@ -1,6 +1,7 @@
 import { randomBytes, randomUUID, scrypt as scryptCallback, timingSafeEqual } from "node:crypto";
 import { promisify } from "node:util";
 import type { Db } from "mongodb";
+import { SessionService } from "./session.js";
 
 const scrypt = promisify(scryptCallback);
 const TOKEN_TTL_MS = 1000 * 60 * 60 * 24 * 30;
@@ -25,7 +26,11 @@ async function hashToken(token: string): Promise<string> {
 }
 
 export class AuthService {
-  constructor(private readonly db: Db) {}
+  private readonly sessions: SessionService;
+
+  constructor(private readonly db: Db) {
+    this.sessions = new SessionService(db);
+  }
   async register(email: string, password: string): Promise<AuthSession> {
     const normalized = email.trim().toLowerCase();
     if (!/^\S+@\S+\.\S+$/.test(normalized)) throw new Error("invalid_email");
@@ -44,16 +49,14 @@ export class AuthService {
     return this.createSession(authUser);
   }
   async authenticate(token: string): Promise<AuthUser | null> {
-    const session = await this.db.collection("sessions").findOne({ tokenHash: await hashToken(token) });
-    if (!session || !(session.expiresAt instanceof Date) || session.expiresAt <= new Date()) return null;
+    const session = await this.sessions.getByToken(token);
+    if (!session) return null;
     const user = await this.db.collection("users").findOne({ id: session.userId });
     if (!user) return null;
     return { id: String(user.id), email: String(user.email), roles: Array.isArray(user.roles) ? user.roles.map(String) : ["user"], createdAt: user.createdAt instanceof Date ? user.createdAt : new Date(user.createdAt) };
   }
   private async createSession(user: AuthUser): Promise<AuthSession> {
-    const token = randomBytes(32).toString("base64url");
-    const expiresAt = new Date(Date.now() + TOKEN_TTL_MS);
-    await this.db.collection("sessions").insertOne({ id: randomUUID(), userId: user.id, tokenHash: await hashToken(token), createdAt: new Date(), updatedAt: new Date(), expiresAt });
-    return { token, user, expiresAt };
+    const authenticated = await this.sessions.createAuthenticated(user.id);
+    return { token: authenticated.token, user, expiresAt: authenticated.expiresAt };
   }
 }
