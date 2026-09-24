@@ -15,15 +15,20 @@ export class SessionService {
   constructor(private readonly db: Db) {}
 
   async create(userId: string): Promise<Session> {
+    return (await this.createAuthenticated(userId)).session;
+  }
+
+  async createAuthenticated(userId: string): Promise<{ session: Session; token: string; expiresAt: Date }> {
     const now = new Date();
     const session: Session = { id: randomUUID(), userId, createdAt: now.toISOString(), updatedAt: now.toISOString() };
     const token = randomBytes(32).toString("base64url");
+    const expiresAt = new Date(Date.now() + TOKEN_TTL_MS);
     await this.db.collection("sessions").insertOne({
       ...session,
       tokenHash: await hashToken(token),
-      expiresAt: new Date(Date.now() + TOKEN_TTL_MS)
+      expiresAt
     });
-    return session;
+    return { session, token, expiresAt };
   }
 
   async getByToken(token: string): Promise<Session | null> {
