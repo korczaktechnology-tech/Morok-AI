@@ -82,7 +82,15 @@ export function buildApp() {
 
   app.setErrorHandler((error, _request, reply) => {
     app.log.error(error);
-    return reply.code(error.statusCode ?? 500).send({ error: "internal_error" });
+    const statusCode =
+      typeof error === "object" &&
+      error !== null &&
+      "statusCode" in error &&
+      typeof error.statusCode === "number"
+        ? error.statusCode
+        : 500;
+
+    return reply.code(statusCode).send({ error: "internal_error" });
   });
 
   return app;
