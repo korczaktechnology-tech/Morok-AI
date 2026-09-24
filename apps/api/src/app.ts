@@ -1,30 +1,36 @@
-import Fastify, { type FastifyInstance } from 'fastify';
-import cors from '@fastify/cors';
-import { config } from './config.js';
-import { connectDatabase } from './db.js';
+import Fastify from "fastify";
+import cors from "@fastify/cors";
+import { MongoClient } from "mongodb";
+import { loadConfig } from "./config.js";
+import { initializeDatabase } from "./db.js";
 
-export async function buildApp(): Promise<FastifyInstance> {
-  const app = Fastify({ logger: true });
+export function buildApp() {
+  const config = loadConfig();
+  const app = Fastify({ logger: { level: config.logLevel } });
+  app.register(cors, { origin: config.corsOrigin === "*" ? true : config.corsOrigin });
 
-  await app.register(cors, {
-    origin: config.corsOrigin,
-  });
-
-  app.get('/health', async () => ({
-    status: 'ok',
-    service: 'morok-api',
-    environment: config.nodeEnv,
+  app.get("/health", async () => ({
+    status: "ok", service: "morok-api", environment: config.nodeEnv
   }));
 
-  app.get('/health/database', async () => {
-    const database = await connectDatabase();
-    await database.command({ ping: 1 });
+  app.get("/health/database", async (_request, reply) => {
+    const client = new MongoClient(config.mongodbUri, { serverSelectionTimeoutMS: 3000 });
+    try {
+      await client.connect();
+      const db = client.db(config.mongodbDatabase);
+      await db.command({ ping: 1 });
+      await initializeDatabase(db);
+      return { status: "ok", service: "mongodb", database: config.mongodbDatabase };
+    } catch {
+      return reply.code(503).send({ status: "error", service: "mongodb" });
+    } finally {
+      await client.close().catch(() => undefined);
+    }
+  });
 
-    return {
-      status: 'ok',
-      service: 'mongodb',
-      database: config.mongodbDatabase,
-    };
+  app.setErrorHandler((error, _request, reply) => {
+    app.log.error(error);
+    return reply.code(error.statusCode ?? 500).send({ error: "internal_error" });
   });
 
   return app;
