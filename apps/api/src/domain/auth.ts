@@ -4,8 +4,6 @@ import type { Db } from "mongodb";
 import { SessionService } from "./session.js";
 
 const scrypt = promisify(scryptCallback);
-const TOKEN_TTL_MS = 1000 * 60 * 60 * 24 * 30;
-
 export interface AuthUser { id: string; email: string; roles: string[]; createdAt: Date }
 export interface AuthSession { token: string; sessionId: string; user: AuthUser; expiresAt: Date }
 
@@ -19,10 +17,6 @@ async function verifyPassword(password: string, stored: string): Promise<boolean
   const derived = (await scrypt(password, salt, 64)) as Buffer;
   const expected = Buffer.from(hash, "hex");
   return expected.length === derived.length && timingSafeEqual(expected, derived);
-}
-async function hashToken(token: string): Promise<string> {
-  const derived = (await scrypt(token, "morok-session", 32)) as Buffer;
-  return derived.toString("hex");
 }
 
 export class AuthService {
