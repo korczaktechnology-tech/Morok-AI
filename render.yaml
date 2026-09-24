@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: morok-api
+    runtime: node
+    plan: free
+    rootDir: apps/api
+    buildCommand: npm ci --include=dev --workspace=@morok/api --include-workspace-root && npm run build --workspace=@morok/api
+    startCommand: npm run start --workspace=@morok/api
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 10000
+      - key: CORS_ORIGIN
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+      - key: MONGODB_DATABASE
+        value: morok
