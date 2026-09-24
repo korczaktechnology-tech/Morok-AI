@@ -1,30 +1,8 @@
-import Fastify from 'fastify';
-import cors from '@fastify/cors';
+import { buildApp } from './app.js';
+import { closeDatabase } from './db.js';
 import { config } from './config.js';
-import { closeDatabase, connectDatabase } from './db.js';
 
-const app = Fastify({ logger: true });
-
-await app.register(cors, {
-  origin: config.corsOrigin,
-});
-
-app.get('/health', async () => ({
-  status: 'ok',
-  service: 'morok-api',
-  environment: config.nodeEnv,
-}));
-
-app.get('/health/database', async () => {
-  const database = await connectDatabase();
-  await database.command({ ping: 1 });
-
-  return {
-    status: 'ok',
-    service: 'mongodb',
-    database: config.mongodbDatabase,
-  };
-});
+const app = await buildApp();
 
 const shutdown = async () => {
   await app.close();
