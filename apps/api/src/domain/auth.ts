@@ -7,7 +7,7 @@ const scrypt = promisify(scryptCallback);
 const TOKEN_TTL_MS = 1000 * 60 * 60 * 24 * 30;
 
 export interface AuthUser { id: string; email: string; roles: string[]; createdAt: Date }
-export interface AuthSession { token: string; user: AuthUser; expiresAt: Date }
+export interface AuthSession { token: string; sessionId: string; user: AuthUser; expiresAt: Date }
 
 async function hashPassword(password: string, salt = randomBytes(16).toString("hex")): Promise<string> {
   const derived = (await scrypt(password, salt, 64)) as Buffer;
@@ -57,6 +57,6 @@ export class AuthService {
   }
   private async createSession(user: AuthUser): Promise<AuthSession> {
     const authenticated = await this.sessions.createAuthenticated(user.id);
-    return { token: authenticated.token, user, expiresAt: authenticated.expiresAt };
+    return { token: authenticated.token, sessionId: authenticated.session.id, user, expiresAt: authenticated.expiresAt };
   }
 }
