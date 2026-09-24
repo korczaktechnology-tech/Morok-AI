@@ -15,6 +15,9 @@ import { ContextService } from "./domain/context.js";
 import { SessionService } from "./domain/session.js";
 import { assertPermission } from "./domain/security.js";
 
+interface ConversationMessage { role: string; content: string; model?: string; createdAt: Date }
+interface ConversationDocument { id: string; userId: string; createdAt: Date; updatedAt: Date; messages: ConversationMessage[] }
+
 export function buildApp() {
   const app = Fastify({ logger: { level: config.logLevel } });
   const tools = new ToolRegistry();
@@ -26,12 +29,7 @@ export function buildApp() {
   app.get("/api/v1/status", async () => ({
     status: "ok",
     identity: MOROK_IDENTITY,
-    capabilities: {
-      commands: coreCommands.length,
-      permissions: corePermissions.length,
-      tools: tools.list().length,
-      modelGateway: true
-    }
+    capabilities: { commands: coreCommands.length, permissions: corePermissions.length, tools: tools.list().length, modelGateway: true }
   }));
   app.get("/api/v1/commands", async () => ({ commands: coreCommands }));
   app.get("/api/v1/permissions", async () => ({ permissions: corePermissions }));
@@ -40,11 +38,11 @@ export function buildApp() {
     return { permission: id, requiresConfirmation: requiresConfirmation(id) };
   });
   app.post("/api/v1/permissions/check", async (request, reply) => {
-    const user = await authenticateRequest(request.headers.authorization);
-    if (!user) return reply.code(401).send({ error: "unauthorized" });
+    const auth = await authenticateRequest(request.headers.authorization);
+    if (!auth) return reply.code(401).send({ error: "unauthorized" });
     const body = request.body as { permission?: string; confirmed?: boolean };
     if (!body?.permission) return reply.code(400).send({ error: "permission_required" });
-    return decidePermission(user.roles, body.permission, body.confirmed === true);
+    return decidePermission(auth.user.roles, body.permission, body.confirmed === true);
   });
 
   app.post("/api/v1/auth/register", async (request, reply) => {
@@ -81,7 +79,7 @@ export function buildApp() {
     if (!auth) return reply.code(401).send({ error: "unauthorized" });
     assertPermission({ userId: auth.user.id, roles: auth.user.roles }, "conversation.read");
     const { id } = request.params as { id: string };
-    const conversation = await (await connectDatabase()).collection("conversations").findOne({ id, userId: auth.user.id });
+    const conversation = await (await connectDatabase()).collection<ConversationDocument>("conversations").findOne({ id, userId: auth.user.id });
     if (!conversation) return reply.code(404).send({ error: "conversation_not_found" });
     return { conversation };
   });
@@ -110,31 +108,13 @@ export function buildApp() {
     const decision = decidePermission(auth.user.roles, "tool.execute", body?.confirmed === true);
     const db = await connectDatabase();
     if (!decision.allowed) {
-      await db.collection("audit_logs").insertOne({
-        action: decision.reason === "confirmation_required" ? "tool.confirmation.required" : "tool.execution.denied",
-        actorId: auth.user.id,
-        toolId: id,
-        createdAt: new Date()
-      });
+      await db.collection("audit_logs").insertOne({ action: decision.reason === "confirmation_required" ? "tool.confirmation.required" : "tool.execution.denied", actorId: auth.user.id, toolId: id, createdAt: new Date() });
       return reply.code(decision.reason === "confirmation_required" ? 409 : 403).send(decision);
     }
     try {
       const result = await tools.execute(id, body?.input);
-      await db.collection("tool_executions").insertOne({
-        id: randomUUID(),
-        toolId: id,
-        actorId: auth.user.id,
-        input: body?.input,
-        result,
-        confirmed: true,
-        createdAt: new Date()
-      });
-      await db.collection("audit_logs").insertOne({
-        action: "tool.execution.completed",
-        actorId: auth.user.id,
-        toolId: id,
-        createdAt: new Date()
-      });
+      await db.collection("tool_executions").insertOne({ id: randomUUID(), toolId: id, actorId: auth.user.id, input: body?.input, result, confirmed: true, createdAt: new Date() });
+      await db.collection("audit_logs").insertOne({ action: "tool.execution.completed", actorId: auth.user.id, toolId: id, createdAt: new Date() });
       return { ok: true, result };
     } catch (error) {
       const code = error instanceof Error && error.message === "tool_not_found" ? 404 : 400;
@@ -153,40 +133,31 @@ export function buildApp() {
 
     const now = new Date();
     const message = body.message.trim();
-    const session = body.sessionId
-      ? await new SessionService(db).getByToken(body.sessionId)
-      : null;
+    const session = body.sessionId ? await new SessionService(db).getByToken(body.sessionId) : null;
     const sessionId = body.sessionId ?? auth.sessionId;
     const conversationId = body.conversationId ?? randomUUID();
 
-    if (body.sessionId && (!session || session.userId !== auth.user.id)) {
-      return reply.code(401).send({ error: "invalid_session" });
-    }
+    if (body.sessionId && (!session || session.userId !== auth.user.id)) return reply.code(401).send({ error: "invalid_session" });
 
-    await db.collection("conversations").updateOne(
+    const conversations = db.collection<ConversationDocument>("conversations");
+    await conversations.updateOne(
       { id: conversationId, userId: auth.user.id },
       { $set: { userId: auth.user.id, updatedAt: now }, $setOnInsert: { id: conversationId, createdAt: now, messages: [] } },
       { upsert: true }
     );
-    await db.collection("conversations").updateOne(
+    await conversations.updateOne(
       { id: conversationId, userId: auth.user.id },
       { $push: { messages: { role: "user", content: message, createdAt: now } } }
     );
 
     const context = await new ContextService(db).create(auth.user.id, sessionId, conversationId);
-    const response = await gateway.complete({ message, context });
+    const response = await gateway.complete({ message, context: context as unknown as Record<string, unknown> });
 
-    await db.collection("conversations").updateOne(
+    await conversations.updateOne(
       { id: conversationId, userId: auth.user.id },
       { $push: { messages: { role: "assistant", content: response.content, model: response.model, createdAt: new Date() } }, $set: { updatedAt: new Date() } }
     );
-    await db.collection("audit_logs").insertOne({
-      action: "conversation.message.completed",
-      actorId: auth.user.id,
-      conversationId,
-      sessionId,
-      createdAt: new Date()
-    });
+    await db.collection("audit_logs").insertOne({ action: "conversation.message.completed", actorId: auth.user.id, conversationId, sessionId, createdAt: new Date() });
 
     return { ...response, conversationId, sessionId, context };
   });
