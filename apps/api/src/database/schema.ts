@@ -39,4 +39,11 @@ export async function initializeDatabase(db: Db): Promise<void> {
     db.collection('system_events').createIndex({ createdAt: -1 }),
     db.collection('schema_migrations').createIndex({ version: 1 }, { unique: true }),
   ]);
+
+  await db.collection('schema_migrations').updateOne(
+    { version: 1 },
+    { $setOnInsert: { version: 1, appliedAt: new Date(), name: 'initial-foundation' } },
+    { upsert: true },
+  );
 }
+
