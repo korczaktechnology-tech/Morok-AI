@@ -1,0 +1,1 @@
+import {randomUUID} from "node:crypto"; import type {Session} from "./types.js"; export class SessionService{create(userId:string):Session{const now=new Date().toISOString();return{id:randomUUID(),userId,createdAt:now,updatedAt:now}} touch(s:Session):Session{return{...s,updatedAt:new Date().toISOString()}}}
