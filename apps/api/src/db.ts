@@ -1,6 +1,6 @@
-import { MongoClient, type Db } from 'mongodb';
-import { config } from './config.js';
-import { initializeDatabase } from './database/schema.js';
+import { MongoClient, type Db } from "mongodb";
+import { config } from "./config.js";
+import { initializeDatabase } from "./database/schema.js";
 
 let client: MongoClient | undefined;
 let database: Db | undefined;
@@ -22,3 +22,5 @@ export async function closeDatabase(): Promise<void> {
   client = undefined;
   database = undefined;
 }
+
+export { initializeDatabase };
