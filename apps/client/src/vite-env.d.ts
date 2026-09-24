@@ -1,6 +1,8 @@
 /// <reference types="vite/client" />
 
 declare module "react" {
+  const StrictMode: any;
+  export { StrictMode };
   export const useEffect: any;
   export const useState: any;
 }
