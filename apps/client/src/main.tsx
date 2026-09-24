@@ -1,5 +1,5 @@
 import React,{useEffect,useState}from"react";import{createRoot}from"react-dom/client";import"./styles.css";
-const API=import.meta.env.VITE_API_URL??"http://localhost:10000";
+const API=import.meta.env.VITE_API_URL??"https://morok-ai.onrender.com";
 function App(){
  const[token,setToken]=useState(localStorage.getItem("morok_token")??"");const[email,setEmail]=useState("");const[password,setPassword]=useState("");const[message,setMessage]=useState("");const[reply,setReply]=useState("");const[status,setStatus]=useState("Verificando...");const[loading,setLoading]=useState(false);
  useEffect(()=>{fetch(API+"/health").then(r=>r.ok?setStatus("Online"):setStatus("API indisponível")).catch(()=>setStatus("API indisponível"))},[]);
