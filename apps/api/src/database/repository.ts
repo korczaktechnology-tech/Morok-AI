@@ -1,14 +1,33 @@
-import type { Db, Document } from "mongodb";
+import type {
+  Db,
+  Document,
+  Filter,
+  OptionalUnlessRequiredId,
+  UpdateFilter
+} from "mongodb";
 
 export class Repository {
   constructor(private readonly db: Db) {}
-  async create<T extends Document>(collection: string, document: T) {
+
+  async create<T extends Document>(
+    collection: string,
+    document: OptionalUnlessRequiredId<T>
+  ) {
     return this.db.collection<T>(collection).insertOne(document);
   }
-  async findOne<T extends Document>(collection: string, filter: Document) {
+
+  async findOne<T extends Document>(
+    collection: string,
+    filter: Filter<T>
+  ) {
     return this.db.collection<T>(collection).findOne(filter);
   }
-  async updateOne(collection: string, filter: Document, update: Document) {
-    return this.db.collection(collection).updateOne(filter, update);
+
+  async updateOne<T extends Document>(
+    collection: string,
+    filter: Filter<T>,
+    update: UpdateFilter<T>
+  ) {
+    return this.db.collection<T>(collection).updateOne(filter, update);
   }
 }
