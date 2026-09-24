@@ -60,6 +60,36 @@ export function buildApp() {
     return { user };
   });
 
+  app.get("/api/v1/conversations/:id", async (request, reply) => {
+    const user = await authenticateRequest(request.headers.authorization);
+    if (!user) return reply.code(401).send({ error: "unauthorized" });
+    assertPermission({ userId: user.id, roles: user.roles }, "conversation.read");
+    const { id } = request.params as { id: string };
+    const conversation = await (await connectDatabase()).collection("conversations").findOne({ id, userId: user.id });
+    if (!conversation) return reply.code(404).send({ error: "conversation_not_found" });
+    return { conversation };
+  });
+
+  app.post("/api/v1/memories", async (request, reply) => {
+    const user = await authenticateRequest(request.headers.authorization);
+    if (!user) return reply.code(401).send({ error: "unauthorized" });
+    const body = request.body as { content?: string };
+    if (!body?.content?.trim()) return reply.code(400).send({ error: "content_required" });
+    const now = new Date();
+    const memory = { id: randomUUID(), userId: user.id, content: body.content.trim(), createdAt: now, updatedAt: now };
+    await (await connectDatabase()).collection("memories").insertOne(memory);
+    return reply.code(201).send({ memory });
+  });
+
+  app.get("/api/v1/memories", async (request, reply) => {
+    const user = await authenticateRequest(request.headers.authorization);
+    if (!user) return reply.code(401).send({ error: "unauthorized" });
+    const { q } = request.query as { q?: string };
+    const memories = await (await connectDatabase()).collection("memories").find({ userId: user.id }).sort({ updatedAt: -1 }).limit(100).toArray();
+    const query = q?.trim().toLowerCase();
+    return { memories: query ? memories.filter((memory) => String(memory.content).toLowerCase().includes(query)).slice(0, 50) : memories.slice(0, 50) };
+  });
+
   app.post("/api/v1/messages", async (request, reply) => {
     const db = await connectDatabase();
     const user = await authenticateRequest(request.headers.authorization);
