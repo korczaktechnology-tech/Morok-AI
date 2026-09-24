@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { EventBus } from "./bus.js";
 import { ToolRegistry } from "./tools.js";
-import { requiresConfirmation } from "./permissions.js";
+import { decidePermission, requiresConfirmation } from "./permissions.js";
 
 test("event bus dispatches events", async () => {
   const bus = new EventBus();
@@ -19,7 +19,10 @@ test("tool registry stores and executes tools", async () => {
   assert.deepEqual(await registry.execute("x", "ok"), { input: "ok" });
 });
 
-test("critical permissions require confirmation", () => {
+test("critical permissions require confirmation and role authorization", () => {
   assert.equal(requiresConfirmation("tool.execute"), true);
   assert.equal(requiresConfirmation("conversation.read"), false);
+  assert.equal(decidePermission(["admin"], "tool.execute").reason, "confirmation_required");
+  assert.equal(decidePermission(["admin"], "tool.execute", true).allowed, true);
+  assert.equal(decidePermission(["user"], "tool.execute", true).allowed, false);
 });
