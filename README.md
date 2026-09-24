@@ -4,241 +4,790 @@
 
 Morok é um assistente pessoal inteligente projetado para atuar como uma interface central entre o usuário, seus dispositivos, aplicações, arquivos, serviços e sistemas.
 
-## Funcionalidades
+O desenvolvimento será realizado em cinco fases: **0, 1, 2, 4 e 5**. A numeração mantém a organização planejada do projeto, reservando a **Fase 4** para a implementação, integração e revisão geral das funcionalidades e a **Fase 5** para o encerramento e preparação da aplicação para operação contínua.
 
-### 🧠 Inteligência
-- Inteligência artificial multimodal
-- Raciocínio e análise
-- Compreensão de contexto
-- Planejamento e execução de tarefas
-- Tomada de decisões baseada em regras
-- Resolução de problemas
-- Verificação dos próprios resultados
-- Aprendizado e adaptação às preferências
-- Funcionamento proativo
-- Agentes especializados e multiagentes
+### Legenda de status
 
-### 💬 Conversação
-- Conversação por texto e voz
-- Conversação contínua
-- Compreensão de linguagem natural
-- Contexto persistente durante conversas
-- Interrupção natural da fala
-- Personalidade e comportamento configuráveis
-- Diferentes vozes e estilos de resposta
-- Tradução e comunicação multilíngue
+- 🔴 **Não implementado**
+- 🟡 **Em andamento**
+- 🟢 **Concluído**
 
-### 🧠 Memória
-- Memória de curto e longo prazo
-- Memória contextual
-- Memória por projeto
-- Memória de preferências
-- Recuperação inteligente de informações
-- Controle sobre o que pode ser lembrado
-- Exclusão e gerenciamento de memórias
+---
 
-### 💻📱 Integração e controle de dispositivos
-- Integração profunda com computador e celular
-- Controle amplo das funcionalidades disponíveis do sistema
-- Controle de aplicativos
-- Controle de arquivos e armazenamento
-- Controle de câmera
-- Controle de microfone e áudio
-- Controle de chamadas
-- Controle de mensagens
-- Controle de contatos
-- Controle de notificações
-- Controle de calendário e agenda
-- Controle de e-mail
-- Controle de navegador
-- Controle de configurações do dispositivo
-- Controle de conectividade
-- Controle de Bluetooth e Wi-Fi
-- Controle de dispositivos conectados
-- Controle de mídia
-- Controle de recursos dependentes de localização
-- Leitura e interação com interfaces
-- Execução de ações através de aplicativos
-- Automação de sequências de ações
-- Sincronização entre computador e celular
-- Continuidade de tarefas entre dispositivos
-- Espelhamento e controle remoto
-- Transferência de arquivos entre dispositivos
-- Execução de tarefas remotamente
-- Monitoramento do estado dos dispositivos
-- Integração com periféricos e acessórios
-- Integração com recursos nativos dos sistemas operacionais
-- Acesso amplo às funcionalidades do computador e celular, respeitando permissões, APIs, políticas do sistema operacional e limites de segurança
-- Sistema de permissões granular por dispositivo, aplicativo e capacidade
+# FASE 0 — FUNDAÇÃO DO APLICATIVO
 
-### 🖥️ Controle do computador
-- Controle completo da interface gráfica
-- Controle de mouse e teclado
-- Abertura e gerenciamento de aplicativos
-- Navegação entre janelas
-- Execução de comandos e scripts
-- Automação de tarefas
-- Leitura e compreensão da tela
-- Controle de configurações do sistema
-- Monitoramento de processos e recursos
-- Execução de tarefas em segundo plano
+**Status: 🔴 Não implementado**
 
-### 👁️ Visão computacional
-- Análise de tela em tempo real
-- Reconhecimento de elementos de interface
-- OCR e leitura de textos
-- Análise de imagens
-- Análise de documentos
-- Reconhecimento de objetos
-- Interpretação de gráficos e diagramas
-- Comparação visual
-- Identificação de alterações na tela
+Objetivo: preparar todo o terreno técnico do Morok antes da implementação das funcionalidades. A estrutura deve ser organizada, simples de manter e sem excesso de arquivos, pastas ou documentação duplicada.
 
-### 📁 Arquivos e documentos
-- Gerenciamento completo de arquivos e pastas
-- Pesquisa inteligente de arquivos
-- Leitura e interpretação de documentos
-- Criação e edição de documentos
-- Conversão entre formatos
-- Organização automática
-- Comparação de documentos
-- Geração de relatórios
-- Processamento de PDFs, planilhas e apresentações
+## 0.1 — Definição tecnológica
 
-### 🌐 Internet
-- Navegação automatizada
-- Pesquisa na internet
-- Pesquisa aprofundada
-- Análise e comparação de fontes
-- Interação com sites
-- Preenchimento de formulários
-- Downloads e uploads
-- Monitoramento de páginas e informações
-- Alertas sobre mudanças relevantes
+- Linguagem principal
+- Linguagem do backend
+- Linguagem da interface
+- Linguagem de automação
+- Framework principal
+- Framework de interface
+- Runtime
+- Gerenciador de pacotes
+- Sistema de módulos
+- Sistema de build
+- Estratégia multiplataforma
+- Estratégia de exportação para aplicativos
 
-### 👨‍💻 Desenvolvimento
-- Criação e edição de código
-- Análise e correção de código
-- Criação de projetos
-- Execução e testes
-- Depuração
-- Gerenciamento de dependências
-- Git e GitHub
+## 0.2 — Arquitetura
+
+- Morok Core
+- Morok Interface
+- Morok Gateway
+- Morok Harness
+- Morok Memory
+- Morok Tools
+- Morok Skills
+- Morok Security
+- Morok Automation
+- Morok Devices
+- Morok Integrations
+- Morok Monitoring
+- Morok Configuration
+
+## 0.3 — Estrutura do projeto
+
+- Estrutura principal de pastas
+- Estrutura de frontend
+- Estrutura de backend
+- Estrutura de serviços
+- Estrutura de componentes
+- Estrutura de ferramentas
+- Estrutura de integrações
+- Estrutura de memória
+- Estrutura de automações
+- Estrutura de segurança
+- Estrutura de configuração
+- Estrutura de testes
+- Estrutura de assets
+- Estrutura de scripts
+
+## 0.4 — Repositório
+
+- Configuração do Git
+- Branch principal
+- Branches de desenvolvimento
+- .gitignore
+- Configuração do projeto
+- Dependências iniciais
+- Scripts de desenvolvimento
+- Scripts de produção
+- Versionamento
+- Controle de releases
+- Política de commits
+- Organização do código
+- README.md único e central
+
+## 0.5 — Render
+
+- Criação do serviço
+- Configuração do ambiente
+- Variáveis de ambiente
+- Secrets
+- Build
 - Deploy
-- Monitoramento de aplicações
-- Geração de documentação
-- Assistência completa no ciclo de desenvolvimento
+- Start command
+- Health check
+- Logs
+- Reinicialização automática
+- Configuração de produção
+- Configuração de desenvolvimento
 
-### ⚙️ Automação
-- Automação de tarefas
-- Rotinas personalizadas
+## 0.6 — MongoDB
+
+- Criação do banco
+- Conexão segura
+- Variáveis de ambiente
+- Estrutura inicial
+- Collections principais
+- Índices
+- Modelos
+- Sistema de migração
+- Backup
+- Recuperação
+- Controle de acesso
+
+## 0.7 — Backend inicial
+
+- Servidor
+- API
+- Rotas
+- Middleware
+- Tratamento de erros
+- Validação
+- Logs
+- Health endpoint
+- Configuração
+- Segurança básica
+
+## 0.8 — Frontend inicial
+
+- Aplicação web
+- Sistema de rotas
+- Layout base
+- Sistema de componentes
+- Sistema de estado
+- Comunicação com API
+- Tratamento de erros
+- Loading
+- Notificações
+- Configuração visual
+
+## 0.9 — Base do Morok
+
+- Identidade do Morok
+- Configuração do assistente
+- Sistema de mensagens
+- Sistema de comandos
+- Sistema de eventos
+- Sistema de contexto
+- Sistema de sessões
+- Sistema de ferramentas
+- Sistema de permissões
+- Sistema de logs
+
+---
+
+# FASE 1 — INÍCIO DA APLICAÇÃO
+
+**Status: 🔴 Não implementado**
+
+Objetivo: construir o primeiro Morok funcional no navegador. A interface web será a primeira versão, mas a arquitetura será preparada desde o início para permitir a transformação em aplicativos posteriormente, evitando reconstruir o sistema.
+
+## 1.1 — Interface principal
+
+- Interface principal
+- Área de conversa
+- Campo de comando
+- Entrada por voz
+- Saída por voz
+- Histórico
+- Indicador de processamento
+- Indicador de execução
+- Indicador de erro
+- Sistema de notificações
+- Menu principal
+- Configurações
+- Perfil
+- Status do Morok
+
+## 1.2 — Conversação
+
+- Conversação textual
+- Conversação por voz
+- Reconhecimento de linguagem
+- Interpretação de intenção
+- Contexto da conversa
+- Conversas contínuas
+- Comandos compostos
+- Perguntas de esclarecimento
+- Respostas contextuais
+- Histórico de conversa
+- Resumos
+- Cancelamento de resposta
+- Interrupção de execução
+
+## 1.3 — Inteligência
+
+- Integração com modelo de IA
+- Model Gateway
+- Seleção de modelo
+- Configuração de modelo
+- Controle de contexto
+- Controle de tokens
+- Streaming
+- Tratamento de respostas
+- Fallback de modelo
+- Verificação de resposta
+
+## 1.4 — Memória
+
+- Memória de sessão
+- Memória persistente
+- Preferências
+- Histórico
+- Contexto do usuário
+- Memória seletiva
+- Atualização de memória
+- Exclusão de memória
+- Pesquisa de memória
+
+## 1.5 — Sistema de ferramentas
+
+- Registro de ferramentas
+- Execução de ferramentas
+- Parâmetros
+- Validação
+- Permissões
+- Resultado de ferramentas
+- Falhas
+- Timeout
+- Cancelamento
+- Logs de ferramentas
+
+## 1.6 — Navegador
+
+- Pesquisa web
+- Abertura de páginas
+- Leitura de páginas
+- Extração de informações
+- Downloads
+- Uploads
+- Navegação
+- Abas
+- Histórico
+- Favoritos
+- Interação com websites
+- Preenchimento de formulários
+- Monitoramento de páginas
+
+## 1.7 — Arquivos e documentos
+
+- Upload
+- Download
+- Leitura
+- Pesquisa
+- Organização
+- Criação
+- Exclusão
+- Renomeação
+- Conversão
+- Compartilhamento
+- Criação de documentos
+- Edição de documentos
+- Leitura de PDFs
+- OCR
+- Processamento de planilhas
+- Processamento de apresentações
+- Geração de relatórios
+
+## 1.8 — Comunicação e organização
+
+- E-mail
+- Mensagens
+- Notificações
+- Calendário
+- Agenda
+- Tarefas
+- Lembretes
+- Contatos
+- Planejamento diário
+- Planejamento semanal
+- Priorização
+
+## 1.9 — Automação inicial
+
+- Criador de tarefas
 - Agendamento
-- Execução condicional
-- Gatilhos por eventos
-- Cadeias de tarefas
-- Execução paralela
-- Automação recorrente
-- Monitoramento das automações
-- Recuperação automática de falhas
+- Rotinas
+- Gatilhos
+- Ações
+- Condições
+- Execução automática
+- Execução em segundo plano
+- Histórico
+- Cancelamento
+- Recuperação de falhas
 
-### 📅 Organização pessoal
-- Agenda e calendário
-- Tarefas e projetos
-- Lembretes e notificações
-- Planejamento diário e semanal
-- Priorização automática
-- Rotinas pessoais
-- Acompanhamento de progresso
-- Resumos periódicos
-- Organização inteligente da rotina
+## 1.10 — Segurança inicial
 
-### 🔌 Integrações
-- APIs externas
-- Aplicativos do computador e celular
-- Serviços web
-- GitHub e plataformas de desenvolvimento
-- E-mail e calendário
-- Armazenamento em nuvem
-- Bancos de dados
-- Sistemas empresariais
-- ERP e CRM
-- Dispositivos inteligentes
-- Sistemas próprios do ecossistema Korczak
-
-### 🧩 Plugins e Skills
-- Sistema modular de habilidades
-- Plugins externos
-- Skills personalizadas
-- Instalação e atualização de habilidades
-- Marketplace de habilidades
-- API para criação de extensões
-- Permissões individuais para cada extensão
-- Combinação de múltiplas skills em uma única tarefa
-
-### 🔐 Segurança
 - Autenticação
-- Controle de permissões
-- Autorização por ação
-- Confirmação para ações críticas
+- Sessões
+- Permissões
+- Confirmação de ações
 - Cofre de credenciais
 - Criptografia
-- Auditoria
+- Controle de acesso
 - Registro de atividades
-- Controle de sessões
-- Revogação de acessos
-- Proteção contra ações não autorizadas
-- Botão de parada e emergência
+- Auditoria
 
-### 🕶️ Privacidade
+---
+
+# FASE 2 — TRANSFORMAÇÃO EM ASSISTENTE DE SISTEMA
+
+**Status: 🔴 Não implementado**
+
+Objetivo: transformar o Morok de uma aplicação web em um assistente capaz de operar o computador, dispositivos e ambiente do usuário.
+
+## 2.1 — Aplicativos
+
+- Aplicativo desktop
+- Aplicativo Linux
+- Aplicativo Crostini
+- Aplicativo Android
+- Aplicativo iOS
+- Empacotamento multiplataforma
+- Atualização automática
+- Inicialização automática
+- Execução em segundo plano
+
+## 2.2 — Interface sobreposta
+
+- Overlay
+- Janela flutuante
+- Janela compacta
+- Janela expandida
+- Ativação global
+- Atalho global
+- Interface sobreposta ao sistema
+- Painel rápido
+- Central de comandos
+
+## 2.3 — Controle do computador
+
+- Controle de teclado
+- Controle de mouse
+- Controle de janelas
+- Controle de aplicativos
+- Controle do sistema operacional
+- Controle da área de trabalho
+- Controle de menus
+- Controle de botões
+- Controle de campos
+- Cliques automatizados
+- Digitação automatizada
+- Seleção de texto
+- Arrastar e soltar
+- Copiar e colar
+- Captura de tela
+- Gravação de tela
+
+## 2.4 — Visão computacional
+
+- Leitura da tela
+- OCR
+- Reconhecimento de objetos
+- Reconhecimento de interfaces
+- Reconhecimento de elementos
+- Análise visual
+- Análise de imagens
+- Análise de vídeo
+- Leitura de gráficos
+- Leitura de documentos
+- Comparação visual
+- Detecção de alterações
+
+## 2.5 — Sistema operacional
+
+- Gerenciamento de processos
+- Gerenciamento de serviços
+- Monitoramento de CPU
+- Monitoramento de RAM
+- Monitoramento de armazenamento
+- Monitoramento de rede
+- Monitoramento de bateria
+- Monitoramento de temperatura
+- Gerenciamento de dispositivos
+- Controle de configurações
+- Terminal
+- Scripts
+- Pacotes
+- Logs
+
+## 2.6 — Dispositivos
+
+- Android
+- iOS
+- Computador
+- Tablet
+- Smartwatch
+- Bluetooth
+- Wi-Fi
+- Câmera
+- Microfone
+- Alto-falantes
+- Fones
+- Dispositivos externos
+
+## 2.7 — Controle remoto
+
+- Controle remoto do computador
+- Controle remoto do celular
+- Execução remota
+- Monitoramento remoto
+- Transferência remota
+- Sincronização remota
+- Bloqueio remoto
+- Notificações remotas
+- Controle entre dispositivos
+- Espelhamento de dispositivos
+- Continuidade de tarefas
+
+---
+
+# FASE 4 — IMPLEMENTAÇÃO, EXPANSÃO E REVISÃO GERAL
+
+**Status: 🔴 Não implementado**
+
+Objetivo: implementar todas as funcionalidades planejadas, integrar os componentes, revisar o funcionamento completo e adicionar novas capacidades necessárias descobertas durante o desenvolvimento.
+
+## 4.1 — Inteligência
+
+- Inteligência conversacional
+- Raciocínio contextual
+- Planejamento
+- Interpretação de intenções
+- Execução de tarefas
+- Verificação de resultados
+- Memória contextual
+- Memória persistente
+- Personalidade configurável
+- Aprendizado por preferências
+- Respostas contextuais
+- Resumos automáticos
+- Explicações
+- Perguntas de esclarecimento
+- Recuperação de contexto
+
+## 4.2 — Voz e áudio
+
+- Comandos de voz
+- Reconhecimento de voz
+- Síntese de voz
+- Conversação por voz
+- Ativação por palavra-chave
+- Detecção de fala
+- Cancelamento de ruído
+- Detecção de interrupção
+- Resposta em tempo real
+- Seleção de voz
+- Velocidade de fala
+- Múltiplos idiomas
+- Tradução por voz
+- Ditado
+- Leitura por voz
+- Transcrição de áudio
+- Identificação de áudio
+- Controle de mídia
+
+## 4.3 — Computador
+
+- Controle do sistema
+- Controle de aplicativos
+- Controle de janelas
+- Controle de teclado
+- Controle de mouse
+- Controle de arquivos
+- Controle do navegador
+- Controle do terminal
+- Execução de comandos
+- Execução de scripts
+- Gerenciamento de processos
+- Gerenciamento de serviços
+- Monitoramento de recursos
+- Configuração do sistema
+- Captura de tela
+- Gravação de tela
+- Automação de interface
+
+## 4.4 — Internet e navegador
+
+- Pesquisa na internet
+- Pesquisa avançada
+- Pesquisa por voz
+- Navegação web
+- Leitura de páginas
+- Extração de informações
+- Comparação de fontes
+- Verificação de informações
+- Abertura de sites
+- Gerenciamento de abas
+- Gerenciamento de janelas
+- Histórico
+- Favoritos
+- Downloads
+- Uploads
+- Preenchimento de formulários
+- Interação com websites
+- Monitoramento de páginas
+- Detecção de alterações
+- Alertas de pesquisa
+
+## 4.5 — Arquivos e documentos
+
+- Gerenciamento de arquivos
+- Gerenciamento de pastas
+- Pesquisa de arquivos
+- Criação de arquivos
+- Exclusão de arquivos
+- Renomeação
+- Movimentação
+- Cópia
+- Compactação
+- Descompactação
+- Conversão
+- Sincronização
+- Compartilhamento
+- Pré-visualização
+- Detecção de duplicados
+- Limpeza
+- Criação de documentos
+- Edição de documentos
+- PDF
+- OCR
+- Planilhas
+- Apresentações
+- Relatórios
+
+## 4.6 — Comunicação
+
+- E-mail
+- Mensagens
+- SMS
+- Chamadas
+- Contatos
+- Grupos
+- Videoconferências
+- Calendário
+- Agenda
+- Notificações
+- Respostas automáticas
+- Mensagens programadas
+- Transcrição de mensagens
+- Resumo de conversas
+
+## 4.7 — Celular
+
+- Integração Android
+- Integração iOS
+- Controle de aplicativos móveis
+- Controle de notificações
+- Controle de chamadas
+- Controle de contatos
+- Controle de mensagens
+- Controle de câmera
+- Controle de microfone
+- Controle de áudio
+- Controle de mídia
+- Controle de brilho
+- Controle de volume
+- Controle de Wi-Fi
+- Controle de Bluetooth
+- Controle de dados móveis
+- Controle de bateria
+- Localização
+- Arquivos móveis
+
+## 4.8 — Continuidade entre dispositivos
+
+- Sincronização de sessões
+- Sincronização de preferências
+- Sincronização de memória
+- Sincronização de arquivos
+- Transferência de arquivos
+- Área de transferência compartilhada
+- Continuidade de tarefas
+- Controle cruzado
+- Descoberta de dispositivos
+- Pareamento
+- Gerenciamento de dispositivos
+- Status dos dispositivos
+- Localização de dispositivos
+- Bloqueio remoto
+- Ações remotas
+
+## 4.9 — Programação
+
+- Geração de código
+- Explicação de código
+- Correção de código
+- Refatoração
+- Depuração
+- Testes
+- Documentação
+- Estruturação de projetos
+- Criação de arquivos
+- Gerenciamento de dependências
+- Execução de projetos
+- Análise de erros
+- Análise de logs
+- Terminal assistido
+- Compilação
+- Build
+- Deploy
+
+## 4.10 — GitHub e desenvolvimento
+
+- Git
+- GitHub
+- Repositórios
+- Commits
+- Branches
+- Issues
+- Pull requests
+- Releases
+- Tags
+- Workflows
+- CI/CD
+- Builds
+- Deploys
+- Monitoramento de builds
+- Revisão de código
+
+## 4.11 — Automação
+
+- Rotinas
+- Gatilhos
+- Ações encadeadas
+- Condições
+- Agendamento
+- Execução recorrente
+- Execução automática
+- Execução em segundo plano
+- Execução paralela
+- Workflows personalizados
+- Workflows condicionais
+- Workflows dependentes
+- Gatilhos externos
+- Gatilhos temporais
+- Gatilhos por evento
+- Gatilhos por estado
+- Monitoramento
+- Recuperação automática
+- Cancelamento
+- Retomada
+
+## 4.12 — APIs e integrações
+
+- APIs externas
+- Webhooks
+- Serviços externos
+- Serviços de nuvem
+- Bancos de dados
+- Serviços de comunicação
+- Serviços de produtividade
+- Serviços de mídia
+- Serviços de mapas
+- Serviços financeiros
+- Serviços empresariais
+- Serviços de arquivos
+- Serviços de automação
+- Gerenciamento de integrações
+
+## 4.13 — Plugins e Skills
+
+- Sistema de plugins
+- Sistema de skills
+- Registro de capacidades
+- Instalação de plugins
+- Remoção de plugins
+- Atualização de plugins
+- Permissões de plugins
+- Isolamento de plugins
+- Ferramentas externas
+- Marketplace de capacidades
+- Skills personalizadas
+- Combinação de skills
+
+## 4.14 — Automação de ambiente
+
+- IoT
+- Automação residencial
+- Iluminação
+- Climatização
+- Televisores
+- Áudio
+- Câmeras
+- Sensores
+- Tomadas inteligentes
+- Dispositivos conectados
+- Cenas
+- Rotinas residenciais
+- Monitoramento de ambiente
+
+## 4.15 — Segurança
+
+- Autenticação
+- Autorização
+- Permissões
+- Confirmação de ações críticas
+- Controle por aplicativo
+- Controle por dispositivo
+- Controle por ferramenta
+- Controle por usuário
+- Controle por sessão
+- Auditoria
+- Histórico de ações
+- Registro de eventos
+- Criptografia
+- Proteção de credenciais
+- Cofre de segredos
+- Bloqueio de ações
+- Modo emergência
+- Parada imediata
+- Revogação de acesso
+
+## 4.16 — Privacidade
+
 - Modo privado
+- Modo temporário
 - Modo offline
 - Processamento local
-- Processamento híbrido local/nuvem
-- Controle de armazenamento de dados
+- Processamento híbrido
 - Controle de memória
+- Controle de armazenamento
+- Exclusão de histórico
+- Exclusão de dados
 - Isolamento de informações sensíveis
-- Proteção de conversas privadas
-- Sessões temporárias
-- Exclusão segura de dados
+- Controle de compartilhamento
 
-### 📊 Monitoramento
-- Monitoramento do computador
-- Monitoramento de aplicações
+## 4.17 — Monitoramento
+
+- Monitoramento do sistema
+- Monitoramento de aplicativos
+- Monitoramento de processos
 - Monitoramento de servidores
 - Monitoramento de APIs
-- Monitoramento de bancos de dados
-- Monitoramento de projetos
-- Monitoramento de automações
+- Monitoramento de sites
+- Monitoramento de serviços
+- Monitoramento de armazenamento
+- Monitoramento de rede
+- Monitoramento de bateria
+- Monitoramento de memória
+- Monitoramento de CPU
+- Monitoramento de temperatura
+- Alertas
 - Detecção de falhas
-- Alertas inteligentes
-- Relatórios automáticos
+- Detecção de indisponibilidade
+- Relatórios
+- Histórico
+- Painel de status
 
-### 🏠 Automação de ambiente
-- Integração com IoT
-- Controle de dispositivos inteligentes
-- Automação residencial
-- Controle de iluminação
-- Controle de áudio
-- Controle de temperatura
-- Cenas e rotinas automatizadas
-- Monitoramento de dispositivos
+## 4.18 — Interface
 
-### 🖼️ Interface
 - Interface desktop
 - Interface web
 - Interface mobile
+- Interface Linux
+- Interface Crostini
+- Interface Android
+- Interface iOS
 - Interface por voz
+- Interface sobreposta
+- Interface flutuante
 - Painel central
-- Histórico de atividades
+- Central de comandos
+- Histórico visual
 - Central de notificações
+- Central de tarefas
+- Central de dispositivos
+- Central de automações
 - Central de permissões
 - Terminal integrado
 - Visualizador de arquivos
 - Painel de monitoramento
-- Interface personalizável
-- Temas e aparência configuráveis
+- Temas
+- Aparência configurável
+- Acessibilidade
 
-### 🤖 Modos de operação
+## 4.19 — Modos de operação
+
 - Modo assistente
 - Modo operador
 - Modo observador
@@ -250,36 +799,244 @@ Morok é um assistente pessoal inteligente projetado para atuar como uma interfa
 - Modo autônomo
 - Modo silencioso
 
-### 🚀 Autonomia
-- Execução autônoma de tarefas
+## 4.20 — Autonomia
+
+- Execução autônoma
 - Monitoramento contínuo
-- Detecção proativa de problemas
+- Detecção proativa
 - Sugestões proativas
-- Acompanhamento de tarefas até a conclusão
-- Retomada automática de tarefas interrompidas
-- Autocorreção de erros
+- Acompanhamento de tarefas
+- Retomada automática
+- Autocorreção
 - Verificação pós-execução
 - Relatórios de conclusão
-- Aprimoramento contínuo de workflows
+- Aprimoramento de workflows
+- Execução contínua
+- Operação em segundo plano
 
-### 🌌 Funcionalidades especiais
-- Ativação por palavra-chave
-- Comandos compostos
-- Comandos naturais sem sintaxe específica
-- Execução de múltiplas ações a partir de uma única solicitação
-- Continuidade de tarefas entre sessões
-- Consciência do estado atual dos sistemas
-- Contextos independentes por projeto
-- Central de atividades em tempo real
-- Histórico completo de ações
-- Sistema de notificações inteligente
-- Perfil completamente personalizável do Morok
-- Arquitetura preparada para novas capacidades sem alterar o núcleo
+## 4.21 — Revisão completa
 
-## Princípio de controle
+- Revisão de inteligência
+- Revisão de interface
+- Revisão de voz
+- Revisão de computador
+- Revisão de navegador
+- Revisão de arquivos
+- Revisão de comunicação
+- Revisão de dispositivos
+- Revisão de automações
+- Revisão de integrações
+- Revisão de segurança
+- Revisão de privacidade
+- Revisão de monitoramento
+- Revisão de desempenho
+- Revisão de estabilidade
+- Revisão multiplataforma
+- Revisão de permissões
+- Revisão de logs
+- Revisão de recuperação
+- Revisão de todas as funcionalidades
 
-O Morok deve buscar integração ampla com os dispositivos e sistemas aos quais tiver acesso, podendo executar ações de acordo com as permissões concedidas pelo usuário. Capacidades que dependam de APIs, permissões, hardware, políticas do sistema operacional ou restrições de segurança devem respeitar esses limites.
+## 4.22 — Expansão
+
+- Funcionalidades adicionais
+- Novas integrações
+- Novos dispositivos
+- Novos plugins
+- Novas skills
+- Novas automações
+- Novos comandos
+- Novos modos
+- Novos recursos de voz
+- Novos recursos de visão
+- Melhorias descobertas durante o desenvolvimento
+
+---
+
+# FASE 5 — TÉRMINO DA APLICAÇÃO
+
+**Status: 🔴 Não implementado**
+
+Objetivo: finalizar, estabilizar, testar, proteger, empacotar, publicar e preparar o Morok para operação contínua.
+
+## 5.1 — Estabilização
+
+- Correção de bugs
+- Correção de falhas
+- Otimização
+- Redução de consumo
+- Otimização de memória
+- Otimização de rede
+- Otimização de banco
+- Otimização de interface
+- Otimização de inicialização
+- Otimização de respostas
+
+## 5.2 — Testes
+
+- Testes unitários
+- Testes de integração
+- Testes de API
+- Testes de interface
+- Testes de voz
+- Testes de visão
+- Testes de automação
+- Testes de arquivos
+- Testes de dispositivos
+- Testes remotos
+- Testes multiplataforma
+- Testes de carga
+- Testes de recuperação
+- Testes de segurança
+- Testes de privacidade
+- Testes de estabilidade
+
+## 5.3 — Segurança final
+
+- Auditoria de segurança
+- Revisão de permissões
+- Revisão de credenciais
+- Revisão de APIs
+- Revisão de banco
+- Revisão de sessões
+- Revisão de logs
+- Revisão de privacidade
+- Testes de segurança
+- Proteção contra abuso
+- Verificação de criptografia
+- Verificação de isolamento
+
+## 5.4 — Produção
+
+- Configuração definitiva do Render
+- Configuração definitiva do MongoDB
+- Variáveis de produção
+- Secrets de produção
+- Domínio
+- HTTPS
+- Deploy automático
+- Monitoramento
+- Backup
+- Recuperação
+- Health checks
+- Alertas
+- Métricas
+
+## 5.5 — Aplicativos
+
+- Build desktop
+- Build Linux
+- Build Crostini
+- Build Android
+- Build iOS
+- Assinatura dos aplicativos
+- Atualizações automáticas
+- Distribuição
+- Recuperação de versão
+- Versionamento de releases
+
+## 5.6 — Experiência final
+
+- Onboarding
+- Configuração inicial
+- Tutorial
+- Permissões iniciais
+- Configuração de voz
+- Configuração de dispositivos
+- Configuração de memória
+- Configuração de integrações
+- Configuração de automações
+- Configuração de segurança
+- Configuração de aparência
+- Configuração de perfil
+
+## 5.7 — Operação contínua
+
+- Monitoramento 24/7
+- Health checks
+- Alertas
+- Logs
+- Métricas
+- Detecção de falhas
+- Recuperação automática
+- Atualizações
+- Backup automático
+- Verificação de integridade
+- Rotinas de manutenção
+
+## 5.8 — Documentação
+
+- Documentação do usuário
+- Documentação técnica
+- Documentação da API
+- Documentação de ferramentas
+- Documentação de plugins
+- Documentação de skills
+- Documentação de instalação
+- Documentação de configuração
+- Documentação de segurança
+- Documentação de manutenção
+- Guia de solução de problemas
+
+## 5.9 — Validação final
+
+- Teste completo do Morok
+- Teste de voz
+- Teste de interface
+- Teste de computador
+- Teste de celular
+- Teste de internet
+- Teste de arquivos
+- Teste de automações
+- Teste remoto
+- Teste multiplataforma
+- Teste de recuperação
+- Teste de atualização
+- Teste de segurança
+
+## 5.10 — Entrega
+
+- Versão estável
+- Versão de produção
+- Release oficial
+- Build final
+- Deploy final
+- Banco final
+- Backup inicial
+- Monitoramento ativo
+- Sistema de atualização
+- Sistema de recuperação
+- Preparação para manutenção
+
+---
+
+# STATUS GERAL DO PROJETO
+
+| Fase | Status |
+|---|---|
+| Fase 0 — Fundação | 🔴 Não implementado |
+| Fase 1 — Início da aplicação | 🔴 Não implementado |
+| Fase 2 — Assistente de sistema | 🔴 Não implementado |
+| Fase 4 — Funcionalidades e revisão | 🔴 Não implementado |
+| Fase 5 — Término da aplicação | 🔴 Não implementado |
+
+## Princípios do projeto
+
+- O Morok deve ser construído de forma modular.
+- A estrutura deve evitar arquivos e pastas desnecessários.
+- Deve existir apenas documentação realmente necessária.
+- O README.md principal deve permanecer centralizado.
+- A aplicação web será a primeira interface.
+- A arquitetura deve permitir a transformação posterior em aplicativos.
+- O núcleo do Morok deve permanecer independente da interface.
+- O sistema deve separar inteligência, execução, ferramentas, memória, segurança e interfaces.
+- Funcionalidades críticas devem respeitar permissões e exigir confirmação quando necessário.
+- O sistema deve registrar ações relevantes.
+- O Morok deve conseguir recuperar-se de falhas quando isso for seguro.
+- Cada fase deve ser validada antes de ser considerada concluída.
+- Nenhuma fase deve ser marcada como concluída apenas porque seus arquivos foram criados.
+- Uma fase somente será considerada concluída quando suas funcionalidades, integrações e testes correspondentes estiverem funcionando.
 
 ## Visão
 
-Transformar o Morok em um assistente pessoal capaz de compreender intenções, planejar ações, interagir com diferentes ambientes, executar tarefas e acompanhar seus resultados em um único ecossistema.
+Construir o Morok como um assistente pessoal multiplataforma capaz de compreender o usuário, conversar naturalmente, utilizar ferramentas, controlar dispositivos autorizados, operar aplicações, acessar informações, executar tarefas, automatizar processos e acompanhar seus resultados em um único ecossistema.
