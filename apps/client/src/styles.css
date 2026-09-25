@@ -345,3 +345,11 @@ mix-blend-mode:screen;opacity:.65}
 @media(prefers-reduced-motion:reduce){
   .appShell:after{animation:none}
 }
+
+/* MOROK // MINIMAL COMMAND CENTER: background + globe only */
+.cleanCommandCenter{position:absolute!important;inset:0!important;display:block!important;margin:0!important;padding:0!important}
+.cleanCommandCenter .heroCore{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;display:grid!important;place-items:center!important;background:transparent!important;border:0!important;box-shadow:none!important}
+.cleanCommandCenter .earthGlobe{width:min(58vw,720px)!important;height:min(58vw,720px)!important;max-width:720px!important;max-height:720px!important}
+.cleanCommandCenter .orbit,.cleanCommandCenter .coreRings{display:none!important}
+.appShell>.topBar,.appShell>.sideNav,.appShell>.imageNav{display:none!important}
+.mainStage>.stageHeader{display:none!important}
