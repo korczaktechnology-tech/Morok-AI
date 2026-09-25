@@ -346,6 +346,13 @@ function App() {
           {["KORCZAK FLOW 324 MB","KORCZAK ERP 512 MB","KORCZAK VISION 448 MB","KORCZAK OPS 287 MB","KORCZAK CONNECT 196 MB","MOROK CORE ONLINE"].map((x,i)=><div className="processRow" key={x}><i className={i === 5 ? "violet" : ""} /><span>{x}</span></div>)}
         </Panel>
       </section>
+      <section className="systemRail">
+        <Panel title="SISTEMAS">
+          {[["ERP","▦"],["FLOW","⌁"],["OPS","◈"],["VISION","◎"],["CONNECT","♧"],["MOBILE","▣"],["DOCUMENTS","▤"],["AI","✦"]].map(([name,icon]) =>
+            <button className="systemRailRow" key={name} onClick={()=>setTab(name==="AI"?"chat":name==="DOCUMENTS"?"documents":"systems")}><Icon>{icon}</Icon><span>{name}</span></button>
+          )}
+        </Panel>
+      </section>
       <section className="heroCore">
         <div className="coreLabel"><span>KOS</span><small>ONLINE</small></div>
         <div className="scanLines" />
@@ -385,9 +392,12 @@ function App() {
       <div className="sideFooter"><span className={status==="ONLINE"?"dot online":"dot"} /> API {status}<small>v0.1 · CORE READY</small></div>
     </aside>
     <section className="mainStage">
-      <div className="stageHeader"><div><span className="eyebrow">KOS // MOROK COMMAND CENTER</span><h1>{title}</h1></div><div className="headerStatus"><span>◉</span> SISTEMA {status}</div></div>
+      {tab!=="home" && <div className="stageHeader"><div><span className="eyebrow">KOS // MOROK COMMAND CENTER</span><h1>{title}</h1></div><div className="headerStatus"><span>◉</span> SISTEMA {status}</div></div>}
       {tab==="home" ? <Dashboard /> : tab==="systems" ? <Systems setTab={setTab} /> : tab==="processes" ? <Processes tasks={tasks} automations={automations} integrations={integrations} /> : tab==="teams" ? <Teams contacts={contacts} /> : tab==="reports" ? <Reports tasks={tasks} events={events} docs={docs} /> : tab==="chat" ? <Chat messages={messages} input={input} setInput={setInput} send={send} loading={loading} startVoice={startVoice} listening={listening} speaking={speaking} setSpeaking={setSpeaking} /> : tab==="documents" ? <Module title="Documentos" action={addDoc}>{docs.map(d=><Item key={d.id} title={d.name} meta={d.format}><button onClick={()=>void openDoc(d.id)}>ABRIR</button><button onClick={()=>void deleteDoc(d.id)}>EXCLUIR</button></Item>)}</Module> : tab==="tasks" ? <Module title="Tarefas" action={addTask}>{tasks.map(t=><Item key={t.id} title={t.title} meta={t.status}>{t.status!=="completed"&&<button onClick={()=>void completeTask(t.id)}>CONCLUIR</button>}</Item>)}</Module> : tab==="memory" ? <Module title="Memória" action={addMemory}>{memories.map(m=><Item key={m.id} title={m.content} meta="MEMÓRIA PERSISTENTE" />)}</Module> : tab==="files" ? <Module title="Arquivos" action={addFile}>{files.map(f=><Item key={f.id} title={f.name} meta={f.mimeType}><button onClick={()=>void deleteFile(f.id)}>EXCLUIR</button></Item>)}</Module> : tab==="calendar" ? <Module title="Agenda" action={addEvent}>{events.map(e=><Item key={e.id} title={e.title} meta={new Date(e.startsAt).toLocaleString("pt-BR")} />)}</Module> : tab==="contacts" ? <Module title="Contatos" action={addContact}>{contacts.map(c=><Item key={c.id} title={c.name} meta={c.email ?? c.phone ?? "SEM CONTATO"} />)}</Module> : tab==="notifications" ? <Module title="Notificações" action={addNotification}>{notifications.map(n=><Item key={n.id} title={n.content} meta={new Date(n.createdAt).toLocaleString("pt-BR")} />)}</Module> : tab==="automations" ? <Module title="Automações" action={addAutomation}>{automations.map(a=><Item key={a.id} title={a.name} meta={a.trigger.type + ":" + a.trigger.value}><button onClick={()=>void toggleAutomation(a)}>{a.enabled?"DESATIVAR":"ATIVAR"}</button></Item>)}</Module> : tab==="integrations" ? <Module title="Integrações" action={addIntegration}>{integrations.map(a=><Item key={a.id} title={a.name} meta={a.type}><button onClick={()=>void toggleIntegration(a)}>{a.enabled?"DESATIVAR":"ATIVAR"}</button></Item>)}</Module> : tab==="vault" ? <Module title="Cofre" action={addSecret}><Item title={String(secretCount)} meta="CREDENCIAIS PROTEGIDAS POR CRIPTOGRAFIA" /></Module> : <Settings speaking={speaking} setSpeaking={setSpeaking} secretCount={secretCount} newConversation={()=>{localStorage.removeItem("morok_conversation");setConversationId("");setMessages([])}} localAgent={localAgent} notice={notice} /> }
     </section>
+    <aside className="imageNav">
+      {[["home","⌂","INÍCIO"],["systems","▦","SISTEMAS"],["documents","▤","DOCUMENTOS"],["processes","◌","PROCESSOS"],["teams","♙","EQUIPES"],["reports","▥","RELATÓRIOS"],["settings","⚙","CONFIGURAÇÕES"]].map(([key,icon,label])=><button className={tab===key?"active":""} key={key} onClick={()=>setTab(key as ModuleKey)}><Icon>{icon}</Icon><span>{label}</span></button>)}
+    </aside>
   </main>;
 }
 
