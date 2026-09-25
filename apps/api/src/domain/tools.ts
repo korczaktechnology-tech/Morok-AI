@@ -5,13 +5,14 @@ import { MemoryService } from "./memory.js";
 import { TaskService } from "./tasks.js";
 import { WebService } from "./web.js";
 import { OrganizerService } from "./organizer.js";
+import { assertPermission } from "./security.js";
 
 export class ToolRegistry {
   private readonly tools=new Map<string,Tool>();
   register(tool:Tool){this.tools.set(tool.id,tool);}
   get(id:string){return this.tools.get(id);}
   list(){return [...this.tools.values()];}
-  async execute(id:string,input:unknown){const tool=this.get(id);if(!tool)throw new Error("tool_not_found");if(!tool.execute)throw new Error("tool_not_executable");return tool.execute(input);}
+  async execute(id:string,input:unknown,security?:{userId:string;roles:string[];confirmed?:boolean}){const tool=this.get(id);if(!tool)throw new Error("tool_not_found");if(!tool.execute)throw new Error("tool_not_executable");if(security)assertPermission(security,"tool.execute",security.confirmed===true);return tool.execute(input);}
 }
 
 export function createCoreToolRegistry(db:Db):ToolRegistry {
