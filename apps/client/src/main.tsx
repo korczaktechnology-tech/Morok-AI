@@ -493,43 +493,69 @@ function MobileDashboard(){
 }
 
 const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? "0.1.0";
-const GITHUB_RELEASES = "https://api.github.com/repos/korczaktechnology-tech/Morok-AI/releases/latest";
+const GITHUB_RELEASES = "https://api.github.com/repos/korczaktechnology-tech/Morok-AI/releases?per_page=20";
 
 function normalizeVersion(value:string){
-  const base=value.trim().replace(/^v/i,"").split("-")[0]?.split("+")[0] ?? ""; return base.split(".").map(x=>Number.parseInt(x,10)||0).slice(0,3).concat([0,0,0]).slice(0,3);
+  const base=value.trim().replace(/^v/i,"").split("-")[0]?.split("+")[0] ?? "";
+  return base.split(".").map(x=>Number.parseInt(x,10)||0).slice(0,3).concat([0,0,0]).slice(0,3);
 }
-function isNewerVersion(latest:string,current:string){
-  const a=normalizeVersion(latest),b=normalizeVersion(current);
-  for(let i=0;i<3;i++){ const av=a[i] ?? 0; const bv=b[i] ?? 0; if(av>bv)return true; if(av<bv)return false; }
-  return false;
+function compareVersions(a:string,b:string){
+  const av=normalizeVersion(a),bv=normalizeVersion(b);
+  for(let i=0;i<3;i++){ if(av[i]>bv[i])return 1; if(av[i]<bv[i])return -1; }
+  return 0;
 }
 
 function UpdateChecker(){
   const [update,setUpdate]=useState<{version:string;url:string;notes:string}|null>(null);
-  const [checking,setChecking]=useState(true);
+  const [checking,setChecking]=useState(false);
 
   useEffect(()=>{
     let active=true;
     const check=async()=>{
+      if(checking)return;
+      setChecking(true);
       try{
-        const response=await fetch(GITHUB_RELEASES,{headers:{Accept:"application/vnd.github+json"}});
-        if(!response.ok) return;
-        const release=await response.json();
-        if(!active || release?.draft || release?.prerelease || !release?.tag_name)return;
-        if(!isNewerVersion(release.tag_name,APP_VERSION))return;
+        const response=await fetch(GITHUB_RELEASES,{
+          headers:{Accept:"application/vnd.github+json"},
+          cache:"no-store"
+        });
+        if(!response.ok)return;
+        const releases=await response.json();
+        if(!active || !Array.isArray(releases))return;
+
+        const release=releases
+          .filter((item:any)=>item && !item.draft && !item.prerelease && item.tag_name)
+          .sort((a:any,b:any)=>compareVersions(String(b.tag_name),String(a.tag_name)))[0];
+
+        if(!release || compareVersions(String(release.tag_name),APP_VERSION)<=0)return;
+
         const apk=Array.isArray(release.assets)
           ? release.assets.find((asset:any)=>String(asset?.name||"").toLowerCase().endsWith(".apk"))
           : null;
         const url=apk?.browser_download_url || release.html_url;
-        if(url)setUpdate({version:String(release.tag_name).replace(/^v/i,""),url,notes:String(release.body||"")});
+        if(url && active){
+          setUpdate({
+            version:String(release.tag_name).replace(/^v/i,""),
+            url,
+            notes:String(release.body||"")
+          });
+        }
       }catch{}
-      finally{if(active)setChecking(false);}
+      finally{
+        if(active)setChecking(false);
+      }
     };
+
     check();
-    return()=>{active=false};
+    const onVisibility=()=>{if(document.visibilityState==="visible")check();};
+    document.addEventListener("visibilitychange",onVisibility);
+    return()=>{
+      active=false;
+      document.removeEventListener("visibilitychange",onVisibility);
+    };
   },[]);
 
-  if(checking || !update)return null;
+  if(!update)return null;
   return <div className="morokUpdateOverlay" role="dialog" aria-modal="true" aria-label="Atualização disponível">
     <div className="morokUpdatePanel">
       <div className="morokUpdateCore"><span>M</span></div>
@@ -539,7 +565,7 @@ function UpdateChecker(){
       {update.notes && <div className="morokUpdateNotes">{update.notes.slice(0,700)}</div>}
       <div className="morokUpdateCurrent">VERSÃO ATUAL <b>{APP_VERSION}</b></div>
       <div className="morokUpdateActions">
-        <button className="morokUpdateButton" onClick={()=>window.open(update.url,"_blank","noopener,noreferrer")}>ATUALIZAR AGORA</button>
+        <button className="morokUpdateButton" onClick={()=>window.location.href=update.url}>ATUALIZAR AGORA</button>
         <button className="morokUpdateLater" onClick={()=>setUpdate(null)}>AGORA NÃO</button>
       </div>
     </div>
