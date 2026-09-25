@@ -31,3 +31,95 @@ linear-gradient(135deg,#020309,#050713 55%,#020309)}
 .settingsNotice{margin-top:18px;color:#7985a6;font-family:'Share Tech Mono';font-size:9px}
 .loginShell{min-height:100vh;display:grid;place-items:center;background:radial-gradient(circle at 50% 50%,#131a4d 0, #08091a 23%,#020308 65%);position:relative;overflow:hidden}.loginGlow{position:absolute;width:55vw;height:55vw;border-radius:50%;border:1px solid rgba(80,100,255,.2);box-shadow:0 0 90px rgba(83,52,255,.12)}.glowOne{transform:rotate(30deg)}.glowTwo{width:75vw;height:20vw;border-color:rgba(205,45,255,.15);transform:rotate(-20deg)}.loginPanel{width:min(510px,92vw);padding:38px;border:1px solid #2b3970;background:rgba(4,7,17,.9);box-shadow:0 30px 120px rgba(0,0,0,.8);position:relative;clip-path:polygon(0 15px,15px 0,100% 0,100% calc(100% - 15px),calc(100% - 15px) 100%,0 100%)}.brandMark{display:flex;align-items:center;gap:12px}.brandHex{width:42px;height:42px;display:grid;place-items:center;border:1px solid #5a6fff;color:#c6ceff;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:linear-gradient(135deg,#171e4d,#7e35e9)}.brandMark strong,.brandMark small{display:block}.brandMark strong{letter-spacing:.3em;font-size:18px}.brandMark small{font-family:'Share Tech Mono';font-size:7px;color:#677394;letter-spacing:.16em;margin-top:3px}.loginOrb{width:120px;height:120px;margin:30px auto 18px;border-radius:50%;background:radial-gradient(circle,#fff 0 2%,#a875ff 6%,#4b5fff 20%,#11174b 55%,#04050d 70%);box-shadow:0 0 60px #3e4eff;position:relative}.loginOrb:before,.loginOrb:after{content:"";position:absolute;inset:-15px;border:1px solid #3f5cff;border-radius:50%;transform:rotate(35deg)}.loginOrb:after{inset:-27px;border-color:#a83fff;transform:rotate(-35deg)}.loginPanel h1{font-size:40px;margin:12px 0 7px;letter-spacing:.04em}.loginCopy{font-family:'Share Tech Mono';font-size:9px;line-height:1.7;color:#697596;margin-bottom:22px}.loginPanel input{width:100%;padding:13px;margin:5px 0;background:#050812;border:1px solid #202d53;color:#fff;outline:0;letter-spacing:.08em}.loginPanel input:focus{border-color:#5a6eff;box-shadow:0 0 20px rgba(67,88,255,.12)}.loginActions{display:flex;gap:8px;margin-top:9px}.loginActions button{flex:1;padding:13px;border:1px solid #4a5fff;background:linear-gradient(90deg,#3c51dd,#7d38d8);color:#fff;font-weight:700;letter-spacing:.12em}.loginActions .ghost{background:#0b1020;border-color:#252f53;color:#8f9abb}.loginHint{font-family:'Share Tech Mono';font-size:8px;color:#556181;margin:16px 0 0}
 @keyframes spin{to{transform:rotate(360deg)}}@media(max-width:1100px){.appShell{grid-template-columns:185px 1fr}.topInfo span:nth-child(n+3){display:none}.dashboard{grid-template-columns:1fr 1.7fr}.rightTelemetry{display:none}.quickActions{grid-column:1/-1}.morokBrief{grid-column:1}.statsStrip{grid-column:2!important}.heroCore{min-height:470px}}@media(max-width:800px){.appShell{display:block}.topBar{height:auto;min-height:72px;padding:13px 16px}.tagline,.topInfo span:not(.clock){display:none}.sideNav{display:none}.mainStage{padding:15px}.dashboard{display:flex;flex-direction:column}.leftTelemetry{display:grid;grid-template-columns:1fr 1fr}.heroCore{order:-1;min-height:400px}.rightTelemetry{display:grid}.morokBrief,.quickActions,.statsStrip{width:100%}.quickActions{grid-template-columns:repeat(5,1fr)}.systemsGrid,.reportGrid{grid-template-columns:1fr}.stageHeader{margin-bottom:7px}.modulePanel,.chatPanel{min-height:calc(100vh - 125px)}.chatMessages article{max-width:90%}}@media(max-width:520px){.leftTelemetry{grid-template-columns:1fr}.quickActions button{min-height:58px}.quickActions button span{font-size:7px}.quickActions .navIcon{font-size:18px}.topBrand small{display:none}.stageHeader h1{font-size:19px}.mainStage{padding:12px}.modulePanel{padding:16px}.loginPanel{padding:24px}.loginPanel h1{font-size:31px}.loginActions{flex-direction:column}.dataItem{align-items:flex-start;flex-direction:column}.itemActions{width:100%}.itemActions button{flex:1}.coreMetrics{display:none}}
+
+
+/* KOS REFERENCE MODE — desktop command-center composition */
+.appShell{display:block!important;position:relative;width:100vw;height:100vh;min-height:680px;overflow:hidden;background:#010208!important}
+.appShell:before{opacity:.9!important}
+.topBar{position:absolute!important;inset:0 0 auto 0!important;height:84px!important;padding:0 28px!important;z-index:30!important;border-bottom:0!important;background:linear-gradient(180deg,rgba(1,3,9,.96),rgba(1,3,9,.55),transparent)!important;pointer-events:none}
+.topBar>*{pointer-events:auto}
+.topBrand{min-width:390px!important;gap:14px!important}
+.kosLogo{font-size:43px!important;line-height:1!important;letter-spacing:-.2em!important;text-shadow:0 0 18px rgba(94,110,255,.28)}
+.topBrand small{font-size:10px!important;letter-spacing:.14em!important;color:#b2bad3!important}
+.tagline{font-size:11px!important;letter-spacing:.13em!important;color:#9da7c4!important}
+.topInfo{font-size:10px!important;gap:11px!important;align-items:flex-start!important;padding-top:1px}
+.topInfo .clock{font-size:17px!important;line-height:1!important}
+.sideNav{display:none!important}
+.mainStage{position:absolute!important;inset:0!important;padding:78px 105px 28px 22px!important;overflow:hidden!important;z-index:2!important}
+.mainStage>.stageHeader{display:none!important}
+.imageNav{position:absolute;right:22px;top:125px;width:190px;padding:8px 9px;z-index:25;display:grid;gap:3px;border:1px solid #27345d;background:linear-gradient(180deg,rgba(8,11,25,.94),rgba(3,5,13,.9));clip-path:polygon(0 12px,12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%);box-shadow:0 0 45px rgba(41,48,145,.12),inset 0 0 30px rgba(74,70,190,.04)}
+.imageNav button{height:48px;border:1px solid transparent;background:transparent;color:#9aa4c3;display:flex;align-items:center;gap:12px;padding:7px 12px;text-align:left;font:600 12px Rajdhani,Arial,sans-serif;letter-spacing:.08em}
+.imageNav button .navIcon{width:24px;height:24px;color:#8e9cff;font-size:20px}
+.imageNav button:hover{background:rgba(46,58,125,.24);color:#fff;border-color:#26356f}
+.imageNav button.active{color:#fff;background:linear-gradient(90deg,#17289a,#10105b 65%,#26105d);border-color:#4b5fff;box-shadow:inset 3px 0 #6f75ff,0 0 28px rgba(67,69,255,.2)}
+.imageNav button.active:after{content:"";position:absolute;right:0;width:3px;height:48px;background:#ff2447;box-shadow:0 0 15px #ff2447}
+
+.dashboard{width:100%;height:100%;min-height:0;display:grid!important;grid-template-columns:minmax(215px,1.05fr) minmax(160px,.72fr) minmax(480px,2.35fr) minmax(245px,1.2fr)!important;grid-template-rows:minmax(0,1fr) 118px!important;gap:14px!important;position:relative!important;padding:18px 0 0!important}
+.dashboard:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 52% 47%,rgba(71,39,206,.12),transparent 38%),linear-gradient(110deg,transparent 0 25%,rgba(81,74,190,.035) 25.1% 25.2%,transparent 25.3% 73%,rgba(255,28,64,.025) 73.1% 73.2%,transparent 73.3%);pointer-events:none}
+.leftTelemetry{grid-column:1;grid-row:1;gap:9px!important;min-width:0}
+.leftTelemetry .telemetryCard{min-height:67px}
+.systemRail{grid-column:2;grid-row:1;min-width:0;z-index:3}
+.systemRail .holoPanel{height:100%;padding:15px 12px}
+.systemRailRow{width:100%;height:39px;display:flex;align-items:center;gap:8px;border:0;border-bottom:1px solid #161d37;background:transparent;color:#9da8c8;font:600 11px Rajdhani,Arial,sans-serif;letter-spacing:.08em;text-align:left;padding:0 4px}
+.systemRailRow .navIcon{width:23px;height:23px;color:#8c83ff;font-size:16px}
+.systemRailRow:hover{color:#fff;background:rgba(76,54,179,.13)}
+.heroCore{grid-column:3;grid-row:1;min-height:0!important;height:100%!important;z-index:2}
+.heroCore:before{width:86%;height:86%;border-color:rgba(92,76,201,.35)!important;box-shadow:0 0 100px rgba(57,43,210,.14),inset 0 0 90px rgba(67,63,200,.08)}
+.heroCore:after{width:72%;height:72%;border-color:rgba(77,112,255,.32)}
+.globe{width:min(370px,52%);box-shadow:0 0 40px #365fff,0 0 110px rgba(100,50,255,.42),inset -40px -14px 48px #000}
+.globeGrid{opacity:.8}
+.coreRings{width:76%;height:76%}
+.orbitA{width:108%;height:30%}.orbitB{width:101%;height:38%}.orbitC{width:113%;height:21%}
+.coreLabel{top:16px}
+.coreReadout{bottom:10px;left:10px}
+.coreMetrics{bottom:10px;right:10px}
+.rightTelemetry{grid-column:4;grid-row:1;gap:12px!important;min-width:0;padding-top:12px}
+.rightTelemetry .holoPanel{padding:14px}
+.rightTelemetry .objective{margin-top:auto;min-height:83px}
+.morokBrief{grid-column:1/3!important;grid-row:2!important;height:100%;padding:10px 16px!important}
+.miniOrb{width:62px;height:62px}
+.quickActions{grid-column:3!important;grid-row:2!important;height:100%;padding:5px!important}
+.quickActions button{min-height:0!important}
+.statsStrip{grid-column:4!important;grid-row:2!important;height:100%;padding:8px!important}
+.statsStrip div{padding:5px 8px!important}
+.statsStrip div small{font-size:7px!important}.statsStrip div b{font-size:15px!important}
+
+/* precise panel geometry inspired by the supplied reference */
+.telemetryCard,.holoPanel,.objective,.morokBrief,.quickActions,.statsStrip{border-color:#27345e!important;background:linear-gradient(145deg,rgba(7,10,23,.94),rgba(2,4,11,.9))!important;box-shadow:inset 0 0 26px rgba(61,72,175,.045),0 0 22px rgba(0,0,0,.18)!important}
+.telemetryCard:before,.holoPanel:before,.objective:before,.morokBrief:before,.quickActions:before,.statsStrip:before{content:"";position:absolute;inset:0;pointer-events:none;border:1px solid rgba(106,91,255,.06);clip-path:inherit}
+.panelTitle{margin-bottom:9px!important;color:#b0bad7!important}
+.processRow{padding:6px 0!important}
+.feedRow{padding:6px 0!important;font-size:10px!important}
+.dashboard .statsStrip{display:grid!important;grid-template-columns:1fr 1fr!important}
+.dashboard .statsStrip div{display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center!important}
+
+/* remove the old title chrome only from home while retaining it for modules */
+.dashboard~*{box-sizing:border-box}
+
+@media(max-width:1250px){
+  .mainStage{padding-right:88px!important}
+  .imageNav{width:160px;right:12px}
+  .dashboard{grid-template-columns:190px 140px minmax(380px,1fr) 210px!important}
+  .topBrand{min-width:320px!important}.tagline{display:none}
+}
+@media(max-width:900px){
+  .appShell{min-height:100vh;height:auto;overflow:auto}
+  .topBar{position:sticky!important;height:68px!important;background:#02040b!important}
+  .mainStage{position:relative!important;inset:auto!important;padding:14px!important;overflow:visible!important}
+  .imageNav{position:sticky;top:0;right:auto;width:100%;display:flex;overflow:auto;clip-path:none;margin-bottom:10px}
+  .imageNav button{min-width:125px}
+  .dashboard{height:auto;min-height:0;grid-template-columns:1fr 1fr!important;grid-template-rows:auto!important;padding:0!important}
+  .leftTelemetry,.systemRail,.heroCore,.rightTelemetry,.morokBrief,.quickActions,.statsStrip{grid-column:auto!important;grid-row:auto!important}
+  .heroCore{min-height:480px!important}
+  .rightTelemetry{padding-top:0}
+  .morokBrief{min-height:110px}
+  .quickActions{min-height:80px}
+  .statsStrip{min-height:90px}
+}
+@media(max-width:620px){
+  .topBrand{min-width:0!important}.topBrand small{display:none}.kosLogo{font-size:34px!important}
+  .topInfo span:not(.clock){display:none}
+  .dashboard{display:flex!important;flex-direction:column!important}
+  .systemRail{order:2}.heroCore{order:1}.leftTelemetry{order:3}.rightTelemetry{order:4}.morokBrief{order:5}.quickActions{order:6}.statsStrip{order:7}
+  .heroCore{min-height:390px!important}.imageNav button{min-width:112px}
+}
