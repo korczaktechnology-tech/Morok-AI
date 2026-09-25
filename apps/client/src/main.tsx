@@ -390,7 +390,7 @@ function EarthGlobe(){
       alpha:false,
       powerPreference:"high-performance"
     });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.25));
     renderer.outputColorSpace=THREE.SRGBColorSpace;
     renderer.toneMapping=THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure=1.15;
@@ -412,7 +412,7 @@ function EarthGlobe(){
       shininess:18,
       specular:new THREE.Color(0x6f7cff)
     });
-    const earth=new THREE.Mesh(new THREE.SphereGeometry(1,96,96),earthMaterial);
+    const earth=new THREE.Mesh(new THREE.SphereGeometry(1,64,64),earthMaterial);
     earthSystem.add(earth);
 
     const toSphere=(lon:number,lat:number,radius=1.012)=>{
@@ -436,17 +436,17 @@ function EarthGlobe(){
     });
     for(let lat=-80;lat<=80;lat+=10){
       const pts:THREE.Vector3[]=[];
-      for(let lon=-180;lon<=180;lon+=4)pts.push(toSphere(lon,lat,1.008));
+      for(let lon=-180;lon<=180;lon+=6)pts.push(toSphere(lon,lat,1.008));
       gridGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),gridMaterial));
     }
     for(let lon=-180;lon<180;lon+=10){
       const pts:THREE.Vector3[]=[];
-      for(let lat=-90;lat<=90;lat+=4)pts.push(toSphere(lon,lat,1.008));
+      for(let lat=-90;lat<=90;lat+=6)pts.push(toSphere(lon,lat,1.008));
       gridGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),gridMaterial));
     }
 
     const atmosphere=new THREE.Mesh(
-      new THREE.SphereGeometry(1.075,64,64),
+      new THREE.SphereGeometry(1.075,40,40),
       new THREE.MeshBasicMaterial({
         color:0x426dff,
         transparent:true,
@@ -503,7 +503,7 @@ function EarthGlobe(){
       const group=new THREE.Group();
 
       const ring=new THREE.Mesh(
-        new THREE.TorusGeometry(radius,thickness,8,160),
+        new THREE.TorusGeometry(radius,thickness,6,96),
         new THREE.MeshBasicMaterial({
           color,
           transparent:true,
@@ -543,11 +543,11 @@ function EarthGlobe(){
     const outerRings=new THREE.Group();
     scene.add(outerRings);
     const outerStates:{group:THREE.Group;radius:number;phase:number;speed:number}[]=[];
-    for(let i=0;i<7;i++){
-      const r=1.83+i*.075;
+    for(let i=0;i<5;i++){
+      const r=1.83+i*.09;
       const group=new THREE.Group();
       const ring=new THREE.Mesh(
-        new THREE.TorusGeometry(r,.0012+(i%3)*.0007,6,160),
+        new THREE.TorusGeometry(r,.0012+(i%3)*.0007,5,80),
         new THREE.MeshBasicMaterial({
           color:i%2?0x6f55ff:0xff315f,
           transparent:true,
@@ -562,7 +562,7 @@ function EarthGlobe(){
       group.add(ring);
 
       const marker=new THREE.Mesh(
-        new THREE.SphereGeometry(.009,7,7),
+        new THREE.SphereGeometry(.007,6,6),
         new THREE.MeshBasicMaterial({
           color:i%2?0x9d8cff:0xff6f86,
           transparent:true,
