@@ -24,6 +24,14 @@ test("phase 1 end-to-end capabilities persist and execute", async () => {
   const body=message.json() as {conversationId:string;intent:{kind:string}}; assert.equal(body.intent.kind,"chat");
   const taskIntent=await app.inject({method:"POST",url:"/api/v1/messages",headers:{authorization:`Bearer ${auth.token}`},payload:{message:"crie uma tarefa Revisar testes"}}); assert.equal(taskIntent.statusCode,200);
   assert.equal((taskIntent.json() as {intent:{kind:string}}).intent.kind,"task.create");
+  const blockedIntent=await app.inject({method:"POST",url:"/api/v1/messages",headers:{authorization:`Bearer ${auth.token}`},payload:{message:"crie uma tarefa Não executar sem confirmação"}}); assert.equal(blockedIntent.statusCode,409); assert.equal(blockedIntent.json().error,"confirmation_required");
+  const confirmedIntent=await app.inject({method:"POST",url:"/api/v1/messages",headers:{authorization:`Bearer ${auth.token}`},payload:{message:"crie uma tarefa Executar com confirmação",confirmed:true}}); assert.equal(confirmedIntent.statusCode,200);
+  const vault=await app.inject({method:"POST",url:"/api/v1/vault",headers:{authorization:`Bearer ${auth.token}`},payload:{name:"teste",kind:"api",value:"segredo"}}); assert.equal(vault.statusCode,201);
+  const docs=await app.inject({method:"POST",url:"/api/v1/documents",headers:{authorization:`Bearer ${auth.token}`},payload:{name:"teste.md",format:"markdown",content:"# Morok"}}); assert.equal(docs.statusCode,201);
+  const notifications=await app.inject({method:"GET",url:"/api/v1/notifications",headers:{authorization:`Bearer ${auth.token}`}}); assert.equal(notifications.statusCode,200);
+  const contacts=await app.inject({method:"GET",url:"/api/v1/contacts",headers:{authorization:`Bearer ${auth.token}`}}); assert.equal(contacts.statusCode,200);
+  const integrations=await app.inject({method:"GET",url:"/api/v1/integrations",headers:{authorization:`Bearer ${auth.token}`}}); assert.equal(integrations.statusCode,200);
+
   const stored=await db.collection("conversations").findOne({id:body.conversationId,userId:auth.user.id}); assert.ok(stored); assert.equal((stored?.messages as unknown[]).length,2);
   assert.ok(await db.collection("files").findOne({userId:auth.user.id,name:"nota.txt"})); assert.ok(await db.collection("audit_logs").findOne({actorId:auth.user.id}));
   await app.close(); await closeDatabase(); await client.close();
