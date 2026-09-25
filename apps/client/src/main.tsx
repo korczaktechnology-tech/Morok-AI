@@ -551,16 +551,35 @@ function EarthGlobe(){
     const animate=(now:number)=>{
       const dt=Math.min(.05,(now-lastTime)/1000);
       lastTime=now;
-      // Continuous angular motion: rotations are unbounded, so no ring
-      // ever reaches a reset point or snaps back to its initial position.
-      orbitalGroup.rotation.y+=dt*.055;
-      orbitalGroup.rotation.x+=dt*.021;
-      ringA.rotation.z+=dt*.19;
-      ringB.rotation.z-=dt*.13;
-      ringC.rotation.x+=dt*.085;
-      ringD.rotation.y-=dt*.061;
-      outerRings.rotation.y-=dt*.017;
-      outerRings.rotation.z+=dt*.011;
+      // Drive the rings with incremental quaternions instead of bounded
+      // Euler angles. Their orientation is accumulated continuously, with
+      // different axes/speeds and slow precession so the orbital motion does
+      // not visibly snap back into a repeated starting pose.
+      const qx=new THREE.Quaternion();
+      const qy=new THREE.Quaternion();
+      const qz=new THREE.Quaternion();
+
+      qy.setFromAxisAngle(new THREE.Vector3(0,1,0),dt*.055);
+      qx.setFromAxisAngle(new THREE.Vector3(1,0,0),dt*.021);
+      orbitalGroup.quaternion.premultiply(qy);
+      orbitalGroup.quaternion.multiply(qx);
+
+      qz.setFromAxisAngle(new THREE.Vector3(0,0,1),dt*.19);
+      ringA.quaternion.multiply(qz);
+
+      qz.setFromAxisAngle(new THREE.Vector3(0,0,1),-dt*.13);
+      ringB.quaternion.multiply(qz);
+
+      qx.setFromAxisAngle(new THREE.Vector3(1,0,0),dt*.085);
+      ringC.quaternion.multiply(qx);
+
+      qy.setFromAxisAngle(new THREE.Vector3(0,1,0),-dt*.061);
+      ringD.quaternion.multiply(qy);
+
+      qy.setFromAxisAngle(new THREE.Vector3(0,1,0),-dt*.017);
+      qz.setFromAxisAngle(new THREE.Vector3(0,0,1),dt*.011);
+      outerRings.quaternion.premultiply(qy);
+      outerRings.quaternion.multiply(qz);
       renderer.render(scene,camera);
       raf=requestAnimationFrame(animate);
     };
