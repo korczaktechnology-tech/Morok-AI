@@ -237,3 +237,35 @@ mix-blend-mode:screen;opacity:.65}
  .rightTelemetry{display:none!important}
  .systemRail{grid-column:1}.heroCore{grid-column:2}.leftTelemetry{grid-column:1}.morokBrief{grid-column:1}.quickActions{grid-column:2}
 }
+
+/* JARVIS-LIKE INTERACTION LAYER */
+.earthGlobe{position:absolute;width:min(390px,62%);aspect-ratio:1;left:50%;top:50%;transform:translate(-50%,-50%);cursor:grab;z-index:8;filter:drop-shadow(0 0 18px rgba(50,100,255,.5));touch-action:none}
+.earthGlobe:active{cursor:grabbing}
+.earthGlobe canvas{width:100%;height:100%;display:block}
+.earthGlow{position:absolute;inset:-7%;border-radius:50%;pointer-events:none;background:radial-gradient(circle,transparent 62%,rgba(69,105,255,.12) 72%,rgba(124,46,255,.18) 78%,transparent 80%);box-shadow:0 0 26px rgba(54,101,255,.55),0 0 80px rgba(94,47,255,.32);z-index:-1}
+.operationChart{grid-column:2;grid-row:2;position:relative;height:100%;min-width:0;padding:8px 12px;background:transparent;border:0;z-index:4}
+.operationChart:before{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:linear-gradient(90deg,transparent,#536cff 20%,#a44dff 55%,transparent);box-shadow:0 0 14px rgba(82,92,255,.7)}
+.operationChart .chartTitle{font:600 9px Rajdhani,Arial,sans-serif;letter-spacing:.12em;color:#9ba6c8}
+.operationChart .chartTitle span{color:#4b9bff;margin-left:8px}
+.operationChart svg{position:absolute;inset:25px 7px 4px;width:calc(100% - 14px);height:72px;overflow:visible}
+.quickActions{grid-column:3!important}
+.quickActions button{position:relative;background:linear-gradient(180deg,rgba(6,9,21,.8),rgba(3,5,13,.38))!important;border:1px solid #334171!important;clip-path:polygon(0 8px,8px 0,calc(100% - 8px) 0,100% 8px,100% calc(100% - 8px),calc(100% - 8px) 100%,8px 100%,0 calc(100% - 8px));color:#aab5d5!important;transition:.18s transform,.18s border-color,.18s color,.18s background!important}
+.quickActions button:before{content:"";position:absolute;inset:1px;background:linear-gradient(90deg,transparent,rgba(85,101,255,.06),transparent);opacity:0;transition:.18s}
+.quickActions button:hover{transform:translateY(-2px);border-color:#7181ff!important;color:#fff!important;background:rgba(21,29,66,.48)!important}
+.quickActions button:hover:before{opacity:1}
+.quickActions button.execute{background:linear-gradient(180deg,rgba(106,7,32,.42),rgba(25,5,17,.35))!important;border-color:#ff284e!important;color:#ff5872!important;box-shadow:0 0 24px rgba(255,32,68,.12)}
+.systemRail .holoPanel{background:transparent!important;border-color:rgba(55,69,119,.55)!important;box-shadow:none!important}
+.systemRailRow{background:transparent!important;border-color:rgba(45,57,99,.4)!important;clip-path:polygon(0 4px,4px 0,100% 0,100% calc(100% - 4px),calc(100% - 4px) 100%,0 100%)}
+.systemRailRow:hover{background:rgba(52,57,124,.12)!important;color:#dce3ff!important}
+.rightTelemetry .holoPanel:first-child{background:linear-gradient(120deg,rgba(5,8,19,.72),transparent)!important}
+.rightTelemetry .holoPanel:nth-child(2){background:transparent!important;border-color:rgba(51,64,108,.48)!important}
+.telemetryCard{background:linear-gradient(90deg,rgba(8,11,24,.9),rgba(4,6,15,.48))!important}
+.telemetryCard .bar{background:rgba(74,85,145,.18)!important}
+.telemetryCard .bar i{background:linear-gradient(90deg,#4b5cff,#8e43ff)!important;box-shadow:0 0 10px rgba(83,91,255,.7)}
+.imageNav{background:linear-gradient(180deg,rgba(7,10,24,.95),rgba(2,4,12,.7))!important}
+.imageNav button{background:transparent!important}
+.imageNav button.active{background:linear-gradient(90deg,rgba(28,45,160,.95),rgba(28,17,91,.78))!important}
+.objective{background:transparent!important;border-color:rgba(69,80,135,.55)!important;box-shadow:none!important}
+.morokBrief{background:transparent!important;border-color:rgba(55,68,117,.55)!important;box-shadow:none!important}
+.topInfo .clock{font-variant-numeric:tabular-nums;min-width:84px}
+@media(max-width:1450px){.earthGlobe{width:340px}.operationChart{display:none}}
