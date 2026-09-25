@@ -407,7 +407,7 @@ function EarthGlobe(){
     earthSystem.rotation.y=-0.48;
     scene.add(earthSystem);
 
-    const earthTexture=new THREE.TextureLoader().load("/earth.jpg");
+    const earthTexture=new THREE.TextureLoader().load("https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg");
     earthTexture.colorSpace=THREE.SRGBColorSpace;
     earthTexture.anisotropy=renderer.capabilities.getMaxAnisotropy();
 
