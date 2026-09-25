@@ -475,6 +475,7 @@ function EarthGlobe(){
     const loadTexture=(url:string,onLoad:(tex:THREE.Texture)=>void)=>{
       textureLoader.load(url,tex=>{
         loadedTextures.push(tex);
+        tex.needsUpdate=true;
         onLoad(tex);
       },undefined,()=>{});
     };
