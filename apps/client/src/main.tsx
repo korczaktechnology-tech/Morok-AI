@@ -763,15 +763,10 @@ function EarthGlobe(){
       velocity={x:dx*.0008,y:dy*.0005};
     };
     const onPointerUp=()=>{dragging=false};
-    const onWheel=(e:WheelEvent)=>{
-      e.preventDefault();
-      camera.position.z=THREE.MathUtils.clamp(camera.position.z+e.deltaY*.0018,2.15,4.5);
-    };
     renderer.domElement.addEventListener("pointerdown",onPointerDown);
     renderer.domElement.addEventListener("pointermove",onPointerMove);
     renderer.domElement.addEventListener("pointerup",onPointerUp);
     renderer.domElement.addEventListener("pointercancel",onPointerUp);
-    renderer.domElement.addEventListener("wheel",onWheel,{passive:false});
 
     const resize=()=>{
       const w=Math.max(1,mount.clientWidth);
@@ -789,10 +784,10 @@ function EarthGlobe(){
       lastTime=now;
 
       if(!dragging){
-        earthSystem.rotation.y+=dt*.035+velocity.x;
+        earthSystem.rotation.y+=dt*.04+velocity.x;
         earthSystem.rotation.x+=velocity.y;
-        velocity.x*=.94;
-        velocity.y*=.94;
+        velocity.x*=.96;
+        velocity.y*=.96;
       }
 
       clouds.rotation.y+=dt*.004;
