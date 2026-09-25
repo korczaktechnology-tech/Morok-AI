@@ -670,18 +670,6 @@ function EarthGlobe(){
       gridGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),gridMaterial));
     }
 
-    const networkGroup=new THREE.Group();
-    earthSystem.add(networkGroup);
-    const nodeMaterial=new THREE.MeshBasicMaterial({color:0xff315c});
-    const nodeGeometry=new THREE.SphereGeometry(.009,8,8);
-    for(let i=0;i<160;i++){
-      const lon=-180+Math.random()*360;
-      const lat=-70+Math.random()*140;
-      const node=new THREE.Mesh(nodeGeometry,nodeMaterial);
-      node.position.copy(toSphere(lon,lat,1.018));
-      networkGroup.add(node);
-    }
-
     const orbitalGroup=new THREE.Group();
     scene.add(orbitalGroup);
 
@@ -753,7 +741,6 @@ function EarthGlobe(){
     let lastTime=performance.now();
     let dragging=false;
     let lastPointer={x:0,y:0};
-    let velocity={x:0,y:0};
 
     const onPointerDown=(e:PointerEvent)=>{
       dragging=true;
@@ -768,7 +755,6 @@ function EarthGlobe(){
       earthSystem.rotation.y+=dx*.006;
       earthSystem.rotation.x+=dy*.0045;
       earthSystem.rotation.x=Math.max(-1.25,Math.min(1.25,earthSystem.rotation.x));
-      velocity={x:dx*.0008,y:dy*.0005};
     };
     const onPointerUp=()=>{dragging=false};
     renderer.domElement.addEventListener("pointerdown",onPointerDown);
@@ -792,24 +778,19 @@ function EarthGlobe(){
       lastTime=now;
 
       if(!dragging){
-        earthSystem.rotation.y+=dt*.04+velocity.x;
-        earthSystem.rotation.x+=velocity.y;
-        velocity.x*=.96;
-        velocity.y*=.96;
+        // The Earth remains stationary until the user actively drags it.
       }
 
-      clouds.rotation.y+=dt*.004;
-      networkGroup.rotation.y+=dt*.002;
-      orbitalGroup.rotation.y+=dt*.08;
-      orbitalGroup.rotation.x+=dt*.017;
-      ringA.rotation.z+=dt*.13;
-      ringB.rotation.z-=dt*.09;
-      ringC.rotation.x+=dt*.05;
-      ringD.rotation.y-=dt*.035;
-      outerRings.rotation.y-=dt*.012;
-      outerRings.rotation.z+=dt*.006;
-      pulse.rotation.y+=dt*.14;
-      stars.rotation.y+=dt*.002;
+      orbitalGroup.rotation.y+=dt*.055;
+      orbitalGroup.rotation.x+=dt*.021;
+      ringA.rotation.z+=dt*.19;
+      ringB.rotation.z-=dt*.13;
+      ringC.rotation.x+=dt*.085;
+      ringD.rotation.y-=dt*.061;
+      outerRings.rotation.y-=dt*.017;
+      outerRings.rotation.z+=dt*.011;
+      pulse.rotation.y+=dt*.09;
+      stars.rotation.y+=dt*.001;
       renderer.render(scene,camera);
       raf=requestAnimationFrame(animate);
     };
