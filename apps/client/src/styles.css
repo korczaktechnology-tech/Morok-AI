@@ -123,3 +123,117 @@ linear-gradient(135deg,#020309,#050713 55%,#020309)}
   .systemRail{order:2}.heroCore{order:1}.leftTelemetry{order:3}.rightTelemetry{order:4}.morokBrief{order:5}.quickActions{order:6}.statsStrip{order:7}
   .heroCore{min-height:390px!important}.imageNav button{min-width:112px}
 }
+
+
+/* FINAL REFERENCE PASS — pixel-oriented KOS command center */
+:root{
+  --ref-bg:#02030a;--ref-panel:#070a15;--ref-line:#27335f;--ref-blue:#496cff;
+  --ref-violet:#8c3dff;--ref-red:#ff2148;--ref-text:#d8def5;--ref-muted:#707b9d;
+}
+*{box-sizing:border-box}
+.appShell{background:
+ radial-gradient(ellipse at 50% 48%,rgba(48,38,145,.13),transparent 30%),
+ radial-gradient(ellipse at 77% 32%,rgba(255,20,57,.035),transparent 22%),
+ #010208!important}
+.appShell:after{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;background:
+ linear-gradient(90deg,transparent 0 24%,rgba(73,92,190,.035) 24.1%,transparent 24.2% 75%,rgba(255,30,67,.025) 75.1%,transparent 75.2%),
+ repeating-linear-gradient(135deg,transparent 0 78px,rgba(100,108,190,.025) 79px,transparent 80px 160px);
+}
+.topBar{height:93px!important;padding:16px 28px 0!important;background:linear-gradient(#02030a 0%,rgba(2,3,10,.93) 58%,transparent)!important}
+.topBrand{min-width:430px!important;align-items:flex-start!important}
+.kosLogo{font-family:Arial,sans-serif!important;font-weight:800!important;font-style:italic!important;letter-spacing:-7px!important;font-size:42px!important;color:#dfe5ff!important;text-shadow:0 0 10px rgba(78,103,255,.32)!important}
+.kosLogo span{color:#eef2ff}.kosLogo i{color:#714eff}.kosLogo b{color:#aebcff}
+.topBrand small{font-family:Rajdhani,Arial,sans-serif!important;font-size:10px!important;letter-spacing:.18em!important;color:#aab4d2!important}
+.tagline{margin-top:5px!important;font-size:10px!important;letter-spacing:.15em!important}
+.topInfo{margin-top:1px!important;display:grid!important;grid-template-columns:auto auto;column-gap:13px;row-gap:1px!important;text-align:right}
+.topInfo .clock{font-family:'Share Tech Mono',monospace!important;font-size:18px!important;color:#f0f3ff!important}
+.topInfo span:nth-child(2){font-family:'Share Tech Mono';font-size:8px;color:#9aa6c4}
+.topInfo span:nth-child(3){font-size:9px;color:#d4dbef}.topInfo span:nth-child(4){font-size:8px;color:#73809e}
+.mainStage{padding:90px 230px 28px 20px!important}
+.imageNav{right:18px!important;top:128px!important;width:190px!important;padding:7px!important;background:linear-gradient(180deg,rgba(8,11,24,.97),rgba(2,4,12,.96))!important;border-color:#26345f!important}
+.imageNav:before{content:"";position:absolute;left:-1px;top:0;width:28px;height:1px;background:#6575ff;box-shadow:0 0 12px #6575ff}
+.imageNav button{height:52px!important;padding:7px 10px!important;font-size:12px!important;border-bottom:1px solid rgba(40,49,88,.45)!important}
+.imageNav button .navIcon{font-size:21px!important;color:#8a96ff!important}
+.imageNav button.active{background:linear-gradient(90deg,#1a2b98 0%,#17135c 58%,#26105b 100%)!important;border-color:#394fc5!important}
+.dashboard{grid-template-columns:285px 180px minmax(520px,1fr) 255px!important;grid-template-rows:minmax(0,1fr) 110px!important;gap:12px!important;padding-top:7px!important}
+.leftTelemetry{gap:10px!important}
+.telemetryCard{height:67px!important;min-height:67px!important;padding:11px 14px!important}
+.telemetryCard .telemetryIcon{width:32px!important;height:32px!important}
+.telemetryCard .telemetryValue{font-size:17px!important}
+.leftTelemetry>.holoPanel{flex:1!important;min-height:0!important;padding:12px 14px!important}
+.panelTitle{font-size:12px!important;letter-spacing:.11em!important}
+.processRow{font-size:9px!important;height:29px!important}
+.systemRail .holoPanel{padding:12px 12px!important}
+.systemRailRow{height:41px!important;font-size:11px!important}
+.systemRailRow .navIcon{font-size:17px!important}
+.heroCore{height:100%!important;min-height:0!important}
+.heroCore:before{width:86%!important;height:88%!important;border-width:1px!important}
+.heroCore:after{width:74%!important;height:74%!important}
+.coreLabel{top:8px!important;letter-spacing:.13em!important}
+.coreLabel span{font-size:19px!important}.coreLabel small{font-size:9px!important}
+.scanLines{opacity:.5!important}
+.globe{width:390px!important;height:390px!important;position:absolute!important;isolation:isolate;transform-style:preserve-3d;filter:saturate(1.15);box-shadow:none!important}
+.globeAtmosphere{position:absolute;inset:-10px;border-radius:50%;background:radial-gradient(circle at 35% 27%,rgba(149,190,255,.92) 0,rgba(74,107,255,.7) 8%,rgba(29,39,151,.38) 28%,rgba(4,8,35,.06) 59%,transparent 72%);box-shadow:0 0 22px rgba(62,105,255,.85),0 0 75px rgba(93,48,255,.5),inset -30px -20px 45px rgba(0,0,0,.9);z-index:-2}
+.globeSurface{position:absolute;inset:0;border-radius:50%;overflow:hidden;transform-style:preserve-3d;background:
+ radial-gradient(circle at 29% 25%,rgba(207,227,255,.98) 0 1.5%,rgba(89,125,255,.92) 7%,rgba(35,56,192,.86) 20%,rgba(7,14,66,.96) 56%,#01030e 76%);
+ box-shadow:inset 24px 18px 30px rgba(255,255,255,.12),inset -48px -24px 70px rgba(0,0,0,.98),inset 0 0 22px rgba(81,103,255,.85),0 0 22px rgba(52,91,255,.9);
+}
+.globeSurface:before{content:"";position:absolute;inset:0;border-radius:50%;background:
+ radial-gradient(ellipse at 62% 52%,rgba(255,29,75,.42),transparent 23%),
+ radial-gradient(ellipse at 31% 45%,rgba(55,112,255,.5),transparent 31%),
+ repeating-linear-gradient(25deg,transparent 0 17px,rgba(126,165,255,.12) 18px 19px,transparent 20px 32px);
+mix-blend-mode:screen;opacity:.65}
+.globeSurface:after{content:"";position:absolute;inset:-4%;border-radius:50%;border:1px solid rgba(124,162,255,.75);box-shadow:inset 0 0 16px rgba(102,142,255,.75)}
+.longitude,.latitude{position:absolute;border:1px solid rgba(129,165,255,.32);border-radius:50%;pointer-events:none}
+.longitude{top:-7%;bottom:-7%;width:43%;left:28.5%;transform:rotateY(62deg)}
+.longitude.l2{width:67%;left:16.5%;transform:rotateY(28deg)}
+.longitude.l3{width:86%;left:7%;transform:rotateY(0deg)}
+.longitude.l4{width:67%;left:16.5%;transform:rotateY(-28deg)}
+.latitude{left:-7%;right:-7%;height:30%;top:35%;transform:rotateX(67deg)}
+.latitude.lat2{height:49%;top:25%;transform:rotateX(38deg)}
+.latitude.lat3{height:66%;top:17%;transform:rotateX(0deg)}
+.latitude.lat4{height:49%;top:25%;transform:rotateX(-38deg)}
+.continent{position:absolute;z-index:2;filter:drop-shadow(0 0 5px rgba(59,125,255,.9));background:linear-gradient(145deg,#b5ddff,#397fff 55%,#122eae);opacity:.82}
+.continent.c1{left:25%;top:35%;width:29%;height:20%;clip-path:polygon(0 25%,16% 5%,32% 12%,43% 0,55% 13%,70% 15%,83% 32%,100% 40%,83% 54%,73% 72%,55% 67%,48% 88%,34% 78%,28% 100%,18% 74%,5% 64%,12% 48%)}
+.continent.c2{left:57%;top:48%;width:25%;height:25%;clip-path:polygon(16% 0,32% 8%,45% 4%,57% 18%,73% 22%,65% 35%,88% 42%,100% 57%,81% 68%,72% 88%,56% 77%,46% 100%,34% 74%,17% 67%,22% 47%,4% 36%,14% 21%)}
+.globePoint{width:5px!important;height:5px!important;background:#ff3658!important;box-shadow:0 0 12px #ff3658!important;z-index:4}
+.globeHighlight{position:absolute;inset:7%;border-radius:50%;background:linear-gradient(125deg,rgba(255,255,255,.19),transparent 22% 72%,rgba(0,0,0,.36));pointer-events:none;z-index:5}
+.coreRings{width:82%!important;height:82%!important;border-color:rgba(150,76,255,.55)!important;box-shadow:0 0 0 13px rgba(70,84,255,.04),0 0 0 30px rgba(185,55,255,.035),0 0 50px rgba(90,56,255,.12)!important}
+.orbitA{width:114%!important;height:30%!important;border-color:rgba(255,32,71,.82)!important;box-shadow:0 0 9px rgba(255,32,71,.35)}
+.orbitB{width:109%!important;height:38%!important;border-color:rgba(69,91,255,.88)!important;box-shadow:0 0 9px rgba(69,91,255,.35)}
+.orbitC{width:120%!important;height:23%!important;border-color:rgba(190,51,255,.62)!important}
+.rightTelemetry{padding-top:4px!important;gap:10px!important}
+.rightTelemetry>.holoPanel{min-height:142px!important;padding:12px 14px!important}
+.rightTelemetry>.holoPanel:nth-child(2){min-height:165px!important}
+.feedRow{height:27px!important;padding:4px 0!important;font-size:9px!important}
+.feedRow b{color:#7286ff!important}
+.objective{min-height:76px!important;padding:11px!important}
+.objective small{font-size:8px!important}.objective b{font-size:9px!important}
+.morokBrief{grid-column:1/3!important;padding:10px 13px!important}
+.miniOrb{width:70px!important;height:70px!important}
+.quickActions{grid-column:3!important;padding:5px!important}
+.quickActions button{height:91px!important;font-size:8px!important}
+.quickActions .navIcon{font-size:23px!important}
+.statsStrip{grid-column:4!important}
+.statsStrip div{padding:5px 8px!important}.statsStrip div b{font-size:14px!important}
+.dashboard .statsStrip{display:none!important}
+
+/* exact lower command rail: actions span the center-bottom, status objective remains at right */
+.quickActions{align-self:stretch}
+.morokBrief{align-self:stretch}
+.rightTelemetry{align-self:stretch}
+
+@media(max-width:1450px){
+ .mainStage{padding-right:205px!important}
+ .dashboard{grid-template-columns:250px 155px minmax(450px,1fr) 225px!important}
+ .globe{width:340px!important;height:340px!important}
+ .imageNav{width:178px!important}
+}
+@media(max-width:1100px){
+ .mainStage{padding-right:20px!important}
+ .imageNav{position:fixed!important;right:10px!important;bottom:10px!important;top:auto!important;width:calc(100% - 20px)!important;display:flex!important;overflow:auto!important}
+ .imageNav button{min-width:135px}
+ .dashboard{grid-template-columns:1fr 1.4fr!important}
+ .rightTelemetry{display:none!important}
+ .systemRail{grid-column:1}.heroCore{grid-column:2}.leftTelemetry{grid-column:1}.morokBrief{grid-column:1}.quickActions{grid-column:2}
+}
