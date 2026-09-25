@@ -261,16 +261,16 @@ function OrbitalRings(){
       ringStates.push({group,markerA,markerB,markerC,radius,axis,speed,phase});
     };
 
-    makeRing(.9525,.0045,0x7448ff,.72,new THREE.Vector3(.3,.8,.2).normalize(),.225,.35,1.34);
-    makeRing(1.0425,.0025,0xff2d56,.52,new THREE.Vector3(-.6,.2,.7).normalize(),-.162,2.1,.78);
-    makeRing(1.14,.002,0x3e74ff,.42,new THREE.Vector3(.7,-.4,.3).normalize(),.098,4.0,1.22);
-    makeRing(1.26,.0015,0xb23dff,.28,new THREE.Vector3(.2,.6,-.7).normalize(),-.070,1.25,.86);
+    makeRing(.714375,.0045,0x7448ff,.72,new THREE.Vector3(.3,.8,.2).normalize(),.225,.35,1.34);
+    makeRing(.781875,.0025,0xff2d56,.52,new THREE.Vector3(-.6,.2,.7).normalize(),-.162,2.1,.78);
+    makeRing(.855,.002,0x3e74ff,.42,new THREE.Vector3(.7,-.4,.3).normalize(),.098,4.0,1.22);
+    makeRing(.945,.0015,0xb23dff,.28,new THREE.Vector3(.2,.6,-.7).normalize(),-.070,1.25,.86);
 
     const outerRings=new THREE.Group();
     scene.add(outerRings);
     const outerStates:{group:THREE.Group;radius:number;phase:number;speed:number}[]=[];
     for(let i=0;i<5;i++){
-      const r=1.3725+i*.0675;
+      const r=1.029375+i*.050625;
       const group=new THREE.Group();
       const ring=new THREE.Mesh(
         new THREE.TorusGeometry(r,.00105+(i%3)*.0005,5,80),
