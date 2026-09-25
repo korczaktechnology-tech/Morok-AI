@@ -551,6 +551,8 @@ function EarthGlobe(){
     const animate=(now:number)=>{
       const dt=Math.min(.05,(now-lastTime)/1000);
       lastTime=now;
+      // Continuous angular motion: rotations are unbounded, so no ring
+      // ever reaches a reset point or snaps back to its initial position.
       orbitalGroup.rotation.y+=dt*.055;
       orbitalGroup.rotation.x+=dt*.021;
       ringA.rotation.z+=dt*.19;
