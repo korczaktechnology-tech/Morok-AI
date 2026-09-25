@@ -503,7 +503,7 @@ const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? "0.1.0";
 const GITHUB_RELEASES = "https://api.github.com/repos/korczaktechnology-tech/Morok-AI/releases/latest";
 
 function normalizeVersion(value:string){
-  return value.trim().replace(/^v/i,"").split("-")[0].split("+")[0].split(".").map(x=>Number.parseInt(x,10)||0).slice(0,3).concat([0,0,0]).slice(0,3);
+  const base=value.trim().replace(/^v/i,"").split("-")[0]?.split("+")[0] ?? ""; return base.split(".").map(x=>Number.parseInt(x,10)||0).slice(0,3).concat([0,0,0]).slice(0,3);
 }
 function isNewerVersion(latest:string,current:string){
   const a=normalizeVersion(latest),b=normalizeVersion(current);
