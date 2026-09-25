@@ -751,3 +751,121 @@ mix-blend-mode:screen;opacity:.65}
     width:24%;
   }
 }
+
+/* Mobile usability pass — reorganiza o conteúdo sem perder a identidade visual */
+@media (max-width:700px){
+  .mobileBody{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    grid-template-rows:auto!important;
+    gap:10px!important;
+    padding:0 4% 22px!important;
+  }
+
+  /* Sistemas: faixa compacta e legível em vez de uma coluna espremida */
+  .mobileSide{
+    grid-column:1!important;
+    display:grid!important;
+    grid-template-columns:repeat(4,1fr)!important;
+    gap:5px 4px!important;
+    padding:8px 5px!important;
+    min-height:0!important;
+    font-size:7px!important;
+    line-height:1.4!important;
+    border:1px solid rgba(52,132,234,.25);
+    clip-path:polygon(0 8px,8px 0,calc(100% - 8px) 0,100% 8px,100% calc(100% - 8px),calc(100% - 8px) 100%,8px 100%,0 calc(100% - 8px));
+    background:rgba(2,8,20,.62);
+  }
+  .mobileSide b{grid-column:1/-1;color:#a9d7f8;font-size:8px;letter-spacing:.14em}
+  .mobileSide span{color:#6ea8d5;text-align:center;border:1px solid rgba(51,130,226,.18);padding:4px 2px}
+  .mobileSide i{display:none}
+  .mobileSide p,.mobileSide small{display:none}
+
+  /* Núcleo principal ocupa toda a largura */
+  .mobileCore{
+    grid-column:1!important;
+    min-height:300px!important;
+    width:100%!important;
+  }
+  .mobileCoreRings{width:min(82vw,320px)!important}
+
+  /* Telemetria em grade, mantendo todos os indicadores visíveis */
+  .mobileTelemetry{
+    grid-column:1!important;
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:0 8px!important;
+    padding:8px 9px!important;
+    min-height:0!important;
+  }
+  .mTelemetry{
+    min-width:0;
+    padding:8px 2px!important;
+  }
+  .mGauge{width:42px!important;height:42px!important;flex:0 0 42px}
+  .mSimpleStat{
+    min-height:52px;
+    padding:8px 2px!important;
+  }
+
+  /* Cada bloco vira uma seção completa e fácil de ler */
+  .mobileRecent,
+  .mobileKosCard,
+  .mobileProjects,
+  .mobileEcosystem{
+    grid-column:1!important;
+    width:100%!important;
+    box-sizing:border-box;
+  }
+  .mobileRecent{min-height:0!important;padding:12px!important}
+  .mActivity{height:28px!important;grid-template-columns:10px 48px 1fr!important;font-size:8px!important}
+  .mobileKosCard{min-height:0!important;padding:14px!important}
+  .mobileKosCard>p{font-size:8px!important;max-width:85%}
+  .mobileProjects{min-height:0!important;padding:12px!important}
+  .mProject{
+    grid-template-columns:22px minmax(0,1fr) 92px 12px!important;
+    min-height:48px;
+    gap:6px!important;
+  }
+  .mProject div b{font-size:8px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mProject div small{font-size:6px!important}
+  .mProject section>span{width:62px!important}
+  .mProject section>b{font-size:7px!important}
+
+  .mobileEcosystem{
+    min-height:0!important;
+    grid-template-columns:52px minmax(0,1fr)!important;
+    padding:13px!important;
+  }
+  .mobileEcosystem p{font-size:7px!important}
+  .mobileEcosystem button{margin-top:5px;min-height:30px}
+
+  /* Atalhos: cinco itens continuam em uma única faixa, mas com área de toque adequada */
+  .mobileQuick{
+    grid-column:1!important;
+    min-height:105px!important;
+    display:grid!important;
+    grid-template-columns:repeat(5,minmax(0,1fr))!important;
+    gap:2px!important;
+  }
+  .mobileQuick button{min-width:0;padding:4px 0!important}
+  .mobileQuick button i{width:48px!important;height:48px!important;font-size:20px!important}
+  .mobileQuick b{font-size:6px!important;white-space:nowrap}
+  .mobileQuick small{font-size:5px!important;white-space:nowrap}
+
+  /* Cabeçalho: evitar texto cortado em telas estreitas */
+  .mobileHeaderPanel{
+    grid-template-columns:minmax(0,1.5fr) minmax(52px,.7fr) minmax(66px,.85fr)!important;
+    padding:0 8px!important;
+  }
+  .mobileBrand{gap:6px!important}
+  .mobileLogo{width:38px!important;height:38px!important;flex:0 0 38px;font-size:23px!important}
+  .mobileBrand b{font-size:16px!important}
+  .mobileBrand small{font-size:5px!important}
+  .mobileKos b{font-size:12px!important}
+  .mobileDate b{font-size:10px!important}
+
+  /* Texto nunca sai para fora da tela */
+  .mobileMorok *{box-sizing:border-box}
+  .mobileMorok b,.mobileMorok span,.mobileMorok small,.mobileMorok p{overflow-wrap:anywhere}
+}
