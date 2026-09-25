@@ -19,12 +19,14 @@ import { TaskService } from "./domain/tasks.js";
 import { FileService } from "./domain/files.js";
 import { OrganizerService } from "./domain/organizer.js";
 import { AutomationService } from "./domain/automation.js";
+import { registerPhase1Routes } from "./phase1-routes.js";
 
 interface ConversationMessage { role:string;content:string;model?:string;createdAt:Date }
 interface ConversationDocument { id:string;userId:string;createdAt:Date;updatedAt:Date;messages:ConversationMessage[] }
 
 export function buildApp(){
   const app=Fastify({logger:{level:config.logLevel}}); const gateway=new MorokModelGateway();
+  void registerPhase1Routes(app);
   app.register(cors,{origin:config.corsOrigin==="*" ? true:config.corsOrigin});
 
   app.get("/health",async()=>({status:"ok",service:"morok-api",environment:config.nodeEnv}));
