@@ -5,7 +5,8 @@ const API=import.meta.env.VITE_API_URL??"https://morok-ai.onrender.com";
 type Msg={role:"user"|"assistant";content:string};
 type Task={id:string;title:string;status:string;dueAt?:string};
 type Memory={id:string;content:string};
-type Doc={id:string;name:string;format:string;content?:string};\ntype Event={id:string;title:string;startsAt:string;endsAt?:string;notes?:string};
+type Doc={id:string;name:string;format:string;content?:string};
+type Event={id:string;title:string;startsAt:string;endsAt?:string;notes?:string};
 function App(){
  const[token,setToken]=useState(localStorage.getItem("morok_token")??"");const[email,setEmail]=useState("");const[password,setPassword]=useState("");const[input,setInput]=useState("");const[messages,setMessages]=useState<Msg[]>([]);const[loading,setLoading]=useState(false);const[status,setStatus]=useState("OFFLINE");const[listening,setListening]=useState(false);const[speaking,setSpeaking]=useState(true);const[tab,setTab]=useState("chat");const[notice,setNotice]=useState("");const[conversationId,setConversationId]=useState(localStorage.getItem("morok_conversation")??"");const[tasks,setTasks]=useState<Task[]>([]);const[events,setEvents]=useState<Event[]>([]);const[memories,setMemories]=useState<Memory[]>([]);const[docs,setDocs]=useState<Doc[]>([]);const[secretCount,setSecretCount]=useState(0);
  const speech=useMemo(()=>{const C=window.SpeechRecognition??window.webkitSpeechRecognition;return C?new C():null},[]);
