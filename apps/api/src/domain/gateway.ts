@@ -1,6 +1,7 @@
 import { config } from "../config.js";
 
 export interface ModelMessage { role: "system" | "user" | "assistant"; content: string }
+export interface ModelGateway { complete(request: ModelRequest): Promise<ModelResponse>; stream?(request: ModelRequest): AsyncGenerator<string> }
 export interface ModelRequest { message: string; context?: Record<string, unknown>; history?: ModelMessage[]; stream?: boolean }
 export interface ModelResponse { content: string; model: string; finished: boolean }
 
