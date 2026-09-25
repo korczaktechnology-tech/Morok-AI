@@ -226,15 +226,27 @@ function OrbitalRings(){
       axis:THREE.Vector3,speed:number,phase:number,scaleX:number
     )=>{
       const group=new THREE.Group();
+      const ringMaterial=new THREE.MeshBasicMaterial({
+        color,transparent:true,opacity,
+        blending:THREE.AdditiveBlending,depthWrite:false
+      });
       const ring=new THREE.Mesh(
         new THREE.TorusGeometry(radius,thickness,6,96),
-        new THREE.MeshBasicMaterial({
-          color,transparent:true,opacity,
-          blending:THREE.AdditiveBlending,depthWrite:false
-        })
+        ringMaterial
       );
       ring.scale.x=scaleX;
       group.add(ring);
+
+      const techTrace=new THREE.Mesh(
+        new THREE.TorusGeometry(radius*1.012,Math.max(.0012,thickness*.58),4,96),
+        new THREE.MeshBasicMaterial({
+          color,transparent:true,opacity:Math.min(1,opacity*.62),
+          blending:THREE.AdditiveBlending,depthWrite:false
+        })
+      );
+      techTrace.scale.x=scaleX;
+      techTrace.rotation.z=.012;
+      group.add(techTrace);
 
       const markerMaterial=new THREE.MeshBasicMaterial({
         color,transparent:true,opacity:Math.min(1,opacity+.25),
@@ -249,23 +261,23 @@ function OrbitalRings(){
       ringStates.push({group,markerA,markerB,markerC,radius,axis,speed,phase});
     };
 
-    makeRing(1.27,.0045,0x7448ff,.72,new THREE.Vector3(.3,.8,.2).normalize(),.191,.35,1.34);
-    makeRing(1.39,.0025,0xff2d56,.52,new THREE.Vector3(-.6,.2,.7).normalize(),-.137,2.1,.78);
-    makeRing(1.52,.002,0x3e74ff,.42,new THREE.Vector3(.7,-.4,.3).normalize(),.083,4.0,1.22);
-    makeRing(1.68,.0015,0xb23dff,.28,new THREE.Vector3(.2,.6,-.7).normalize(),-.059,1.25,.86);
+    makeRing(.9525,.0045,0x7448ff,.72,new THREE.Vector3(.3,.8,.2).normalize(),.225,.35,1.34);
+    makeRing(1.0425,.0025,0xff2d56,.52,new THREE.Vector3(-.6,.2,.7).normalize(),-.162,2.1,.78);
+    makeRing(1.14,.002,0x3e74ff,.42,new THREE.Vector3(.7,-.4,.3).normalize(),.098,4.0,1.22);
+    makeRing(1.26,.0015,0xb23dff,.28,new THREE.Vector3(.2,.6,-.7).normalize(),-.070,1.25,.86);
 
     const outerRings=new THREE.Group();
     scene.add(outerRings);
     const outerStates:{group:THREE.Group;radius:number;phase:number;speed:number}[]=[];
     for(let i=0;i<5;i++){
-      const r=1.83+i*.09;
+      const r=1.3725+i*.0675;
       const group=new THREE.Group();
       const ring=new THREE.Mesh(
-        new THREE.TorusGeometry(r,.0012+(i%3)*.0007,5,80),
+        new THREE.TorusGeometry(r,.00105+(i%3)*.0005,5,80),
         new THREE.MeshBasicMaterial({
-          color:i%2?0x6f55ff:0xff315f,
+          color:i%2?0x765cff:0xff3d69,
           transparent:true,
-          opacity:.16+(i%3)*.035,
+          opacity:.19+(i%3)*.035,
           blending:THREE.AdditiveBlending,
           depthWrite:false
         })
@@ -274,6 +286,21 @@ function OrbitalRings(){
       ring.scale.x=i%2?1.08:.94;
       ring.rotation.z=i*.31;
       group.add(ring);
+
+      const techTrace=new THREE.Mesh(
+        new THREE.TorusGeometry(r*1.008,.00065,4,80),
+        new THREE.MeshBasicMaterial({
+          color:i%2?0x9b8aff:0xff708d,
+          transparent:true,
+          opacity:.24,
+          blending:THREE.AdditiveBlending,
+          depthWrite:false
+        })
+      );
+      techTrace.rotation.x=Math.PI/2;
+      techTrace.scale.x=i%2?1.08:.94;
+      techTrace.rotation.z=i*.31+.018;
+      group.add(techTrace);
       const marker=new THREE.Mesh(
         new THREE.SphereGeometry(.007,6,6),
         new THREE.MeshBasicMaterial({
@@ -292,7 +319,7 @@ function OrbitalRings(){
       );
       group.add(marker,marker2);
       outerRings.add(group);
-      outerStates.push({group,radius:r,phase:i*.73,speed:(i%2?-.021:.017)*(1+i*.11)});
+      outerStates.push({group,radius:r,phase:i*.73,speed:(i%2?-.026:.021)*(1+i*.11)});
     }
 
     const resize=()=>{
