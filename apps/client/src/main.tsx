@@ -447,7 +447,7 @@ function MobileDashboard(){
     <header className="mobileTop">
       <div className="mobileStatus"><span>11:42</span><i>➤</i></div>
       <div className="mobileHeaderPanel">
-        <div className="mobileBrand"><div className="mobileLogo">M</div><div><b>MOROK</b><small>IA ASSISTENTE DO KOS</small><em><span/> ONLINE <strong>|</strong> v2.8.4</em></div></div>
+        <div className="mobileBrand"><div className="mobileLogo"><img src="/MorokLogo.png" alt="Morok" /></div><div><b>MOROK</b><small>IA ASSISTENTE DO KOS</small><em><span/> ONLINE <strong>|</strong> v2.8.4</em></div></div>
         <div className="mobileKos"><b>✦ KOS</b><small>KORCZAK<br/>OPERATIONAL<br/>SYSTEM</small></div>
         <div className="mobileDate"><span>14 SET 2025</span><b>11:42:17</b></div>
       </div>
@@ -460,7 +460,7 @@ function MobileDashboard(){
       </aside>
 
       <section className="mobileCore">
-        <div className="mobileCoreRings"><div className="mobileCoreGlyph">M</div><b>MOROK</b><span>ANALISANDO DADOS...</span><i>⌁⌁⌁</i></div>
+        <div className="mobileCoreRings"><div className="mobileCoreGlyph"><img src="/MorokLogo.png" alt="Morok" /></div><b>MOROK</b><span>ANALISANDO DADOS...</span><i>⌁⌁⌁</i></div>
       </section>
 
       <aside className="mobileTelemetry">
@@ -539,7 +539,7 @@ function UpdateChecker(){
   if(checking || !update)return null;
   return <div className="morokUpdateOverlay" role="dialog" aria-modal="true" aria-label="Atualização disponível">
     <div className="morokUpdatePanel">
-      <div className="morokUpdateCore"><span>M</span></div>
+      <div className="morokUpdateCore"><img src="/MorokLogo.png" alt="Morok" /></div>
       <small>NOVA VERSÃO DISPONÍVEL</small>
       <h2>MOROK {update.version}</h2>
       <p>Uma versão mais recente do Morok foi encontrada no GitHub.</p>
