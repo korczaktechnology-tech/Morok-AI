@@ -632,6 +632,28 @@ function EarthGlobe(){
       })
       .catch(()=>{});
 
+    const admin1Material=new THREE.LineBasicMaterial({
+      color:0xb24cff,
+      transparent:true,
+      opacity:.48,
+      depthWrite:false,
+      blending:THREE.AdditiveBlending
+    });
+    const admin1Url="https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_admin_1_states_provinces_lines.geojson";
+    fetch(admin1Url)
+      .then(r=>r.ok?r.json():null)
+      .then((geo:any)=>{
+        if(!geo?.features)return;
+        for(const feature of geo.features){
+          const g=feature.geometry;
+          if(g?.type==="LineString")addGeoLine(g.coordinates,admin1Material);
+          else if(g?.type==="MultiLineString"){
+            for(const line of g.coordinates)addGeoLine(line,admin1Material);
+          }
+        }
+      })
+      .catch(()=>{});
+
     const gridGroup=new THREE.Group();
     earthSystem.add(gridGroup);
     const gridMaterial=new THREE.LineBasicMaterial({
