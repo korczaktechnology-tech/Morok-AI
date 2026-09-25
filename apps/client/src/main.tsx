@@ -499,6 +499,60 @@ function MobileDashboard(){
   </div>;
 }
 
+const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? "0.1.0";
+const GITHUB_RELEASES = "https://api.github.com/repos/korczaktechnology-tech/Morok-AI/releases/latest";
+
+function normalizeVersion(value:string){
+  return value.trim().replace(/^v/i,"").split("-")[0].split("+")[0].split(".").map(x=>Number.parseInt(x,10)||0).slice(0,3).concat([0,0,0]).slice(0,3);
+}
+function isNewerVersion(latest:string,current:string){
+  const a=normalizeVersion(latest),b=normalizeVersion(current);
+  for(let i=0;i<3;i++){ if(a[i]>b[i])return true; if(a[i]<b[i])return false; }
+  return false;
+}
+
+function UpdateChecker(){
+  const [update,setUpdate]=useState<{version:string;url:string;notes:string}|null>(null);
+  const [checking,setChecking]=useState(true);
+
+  useEffect(()=>{
+    let active=true;
+    const check=async()=>{
+      try{
+        const response=await fetch(GITHUB_RELEASES,{headers:{Accept:"application/vnd.github+json"}});
+        if(!response.ok) return;
+        const release=await response.json();
+        if(!active || release?.draft || release?.prerelease || !release?.tag_name)return;
+        if(!isNewerVersion(release.tag_name,APP_VERSION))return;
+        const apk=Array.isArray(release.assets)
+          ? release.assets.find((asset:any)=>String(asset?.name||"").toLowerCase().endsWith(".apk"))
+          : null;
+        const url=apk?.browser_download_url || release.html_url;
+        if(url)setUpdate({version:String(release.tag_name).replace(/^v/i,""),url,notes:String(release.body||"")});
+      }catch{}
+      finally{if(active)setChecking(false);}
+    };
+    check();
+    return()=>{active=false};
+  },[]);
+
+  if(checking || !update)return null;
+  return <div className="morokUpdateOverlay" role="dialog" aria-modal="true" aria-label="Atualização disponível">
+    <div className="morokUpdatePanel">
+      <div className="morokUpdateCore"><span>M</span></div>
+      <small>NOVA VERSÃO DISPONÍVEL</small>
+      <h2>MOROK {update.version}</h2>
+      <p>Uma versão mais recente do Morok foi encontrada no GitHub.</p>
+      {update.notes && <div className="morokUpdateNotes">{update.notes.slice(0,700)}</div>}
+      <div className="morokUpdateCurrent">VERSÃO ATUAL <b>{APP_VERSION}</b></div>
+      <div className="morokUpdateActions">
+        <button className="morokUpdateButton" onClick={()=>window.open(update.url,"_blank","noopener,noreferrer")}>ATUALIZAR AGORA</button>
+        <button className="morokUpdateLater" onClick={()=>setUpdate(null)}>AGORA NÃO</button>
+      </div>
+    </div>
+  </div>;
+}
+
 function App() {
   const [token, setToken] = useState(localStorage.getItem("morok_token") ?? "");
   const [email, setEmail] = useState("");
