@@ -67,6 +67,322 @@ function Icon({ children }: { children: React.ReactNode }) {
   return <span className="navIcon" aria-hidden="true">{children}</span>;
 }
 
+function EarthGlobe(){
+  const mountRef=useRef<HTMLDivElement>(null);
+
+  useEffect(()=>{
+    const mount=mountRef.current;
+    if(!mount)return;
+
+    const scene=new THREE.Scene();
+    const camera=new THREE.PerspectiveCamera(34,1,0.1,100);
+    camera.position.set(0,0,6.3);
+
+    const renderer=new THREE.WebGLRenderer({
+      antialias:true,
+      alpha:true,
+      powerPreference:"high-performance"
+    });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.25));
+    renderer.outputColorSpace=THREE.SRGBColorSpace;
+    renderer.toneMapping=THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure=1.15;
+    renderer.setClearColor(0x000000,0);
+    mount.appendChild(renderer.domElement);
+
+    scene.add(new THREE.AmbientLight(0x4f62b8,1.15));
+    const sun=new THREE.DirectionalLight(0xc9dcff,3.1);
+    sun.position.set(-3,1.8,4);
+    scene.add(sun);
+
+    const earthSystem=new THREE.Group();
+    earthSystem.rotation.x=-0.12;
+    earthSystem.rotation.y=-0.48;
+    scene.add(earthSystem);
+
+    const earthTexture=new THREE.TextureLoader().load(
+      "https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg"
+    );
+    earthTexture.colorSpace=THREE.SRGBColorSpace;
+    earthTexture.anisotropy=renderer.capabilities.getMaxAnisotropy();
+
+    const earthMaterial=new THREE.MeshPhongMaterial({
+      map:earthTexture,
+      color:0xffffff,
+      shininess:18,
+      specular:new THREE.Color(0x6f7cff)
+    });
+    const earth=new THREE.Mesh(new THREE.SphereGeometry(1,64,64),earthMaterial);
+    earthSystem.add(earth);
+
+    const atmosphere=new THREE.Mesh(
+      new THREE.SphereGeometry(1.075,40,40),
+      new THREE.MeshBasicMaterial({
+        color:0x426dff,
+        transparent:true,
+        opacity:.18,
+        side:THREE.BackSide,
+        blending:THREE.AdditiveBlending,
+        depthWrite:false
+      })
+    );
+    earthSystem.add(atmosphere);
+
+    let dragging=false;
+    let lastPointer={x:0,y:0};
+
+    const onPointerDown=(e:PointerEvent)=>{
+      dragging=true;
+      lastPointer={x:e.clientX,y:e.clientY};
+      renderer.domElement.setPointerCapture(e.pointerId);
+    };
+    const onPointerMove=(e:PointerEvent)=>{
+      if(!dragging)return;
+      const dx=e.clientX-lastPointer.x;
+      const dy=e.clientY-lastPointer.y;
+      lastPointer={x:e.clientX,y:e.clientY};
+      earthSystem.rotation.y+=dx*.006;
+      earthSystem.rotation.x+=dy*.0045;
+      earthSystem.rotation.x=Math.max(-1.45,Math.min(1.45,earthSystem.rotation.x));
+    };
+    const onPointerUp=(e:PointerEvent)=>{
+      dragging=false;
+      if(renderer.domElement.hasPointerCapture(e.pointerId)){
+        renderer.domElement.releasePointerCapture(e.pointerId);
+      }
+    };
+    renderer.domElement.addEventListener("pointerdown",onPointerDown);
+    renderer.domElement.addEventListener("pointermove",onPointerMove);
+    renderer.domElement.addEventListener("pointerup",onPointerUp);
+    renderer.domElement.addEventListener("pointercancel",onPointerUp);
+
+    const resize=()=>{
+      const w=Math.max(1,mount.clientWidth);
+      const h=Math.max(1,mount.clientHeight);
+      camera.aspect=w/h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w,h,false);
+    };
+    const resizeObserver=new ResizeObserver(resize);
+    resizeObserver.observe(mount);
+    resize();
+
+    let raf=0;
+    const animate=()=>{
+      renderer.render(scene,camera);
+      raf=requestAnimationFrame(animate);
+    };
+    raf=requestAnimationFrame(animate);
+
+    return()=>{
+      cancelAnimationFrame(raf);
+      resizeObserver.disconnect();
+      renderer.domElement.removeEventListener("pointerdown",onPointerDown);
+      renderer.domElement.removeEventListener("pointermove",onPointerMove);
+      renderer.domElement.removeEventListener("pointerup",onPointerUp);
+      renderer.domElement.removeEventListener("pointercancel",onPointerUp);
+      scene.traverse(o=>{
+        const mesh=o as THREE.Mesh;
+        if(mesh.geometry)mesh.geometry.dispose();
+        const material=mesh.material as THREE.Material|THREE.Material[];
+        if(Array.isArray(material))material.forEach(m=>m.dispose());
+        else if(material)material.dispose();
+      });
+      earthTexture.dispose();
+      renderer.dispose();
+      if(renderer.domElement.parentElement===mount)mount.removeChild(renderer.domElement);
+    };
+  },[]);
+
+  return <div className="earthGlobe realEarth" ref={mountRef} aria-label="Globo 3D da Terra interativo" />;
+}
+
+function OrbitalRings(){
+  const mountRef=useRef<HTMLDivElement>(null);
+
+  useEffect(()=>{
+    const mount=mountRef.current;
+    if(!mount)return;
+
+    const scene=new THREE.Scene();
+    const camera=new THREE.PerspectiveCamera(34,1,0.1,100);
+    camera.position.set(0,0,6.3);
+
+    const renderer=new THREE.WebGLRenderer({
+      antialias:true,
+      alpha:true,
+      powerPreference:"high-performance"
+    });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.25));
+    renderer.outputColorSpace=THREE.SRGBColorSpace;
+    renderer.setClearColor(0x000000,0);
+    mount.appendChild(renderer.domElement);
+
+    const orbitalGroup=new THREE.Group();
+    scene.add(orbitalGroup);
+
+    type RingState={
+      group:THREE.Group;
+      markerA:THREE.Mesh;
+      markerB:THREE.Mesh;
+      radius:number;
+      axis:THREE.Vector3;
+      speed:number;
+      phase:number;
+    };
+
+    const ringStates:RingState[]=[];
+    const makeRing=(
+      radius:number,thickness:number,color:number,opacity:number,
+      axis:THREE.Vector3,speed:number,phase:number,scaleX:number
+    )=>{
+      const group=new THREE.Group();
+      const ring=new THREE.Mesh(
+        new THREE.TorusGeometry(radius,thickness,6,96),
+        new THREE.MeshBasicMaterial({
+          color,transparent:true,opacity,
+          blending:THREE.AdditiveBlending,depthWrite:false
+        })
+      );
+      ring.scale.x=scaleX;
+      group.add(ring);
+
+      const markerMaterial=new THREE.MeshBasicMaterial({
+        color,transparent:true,opacity:Math.min(1,opacity+.25),
+        blending:THREE.AdditiveBlending,depthWrite:false
+      });
+      const markerA=new THREE.Mesh(new THREE.SphereGeometry(.018,8,8),markerMaterial);
+      const markerB=new THREE.Mesh(new THREE.SphereGeometry(.010,8,8),markerMaterial);
+      group.add(markerA,markerB);
+      orbitalGroup.add(group);
+
+      ringStates.push({group,markerA,markerB,radius,axis,speed,phase});
+    };
+
+    makeRing(1.27,.0045,0x7448ff,.72,new THREE.Vector3(.3,.8,.2).normalize(),.191,.35,1.34);
+    makeRing(1.39,.0025,0xff2d56,.52,new THREE.Vector3(-.6,.2,.7).normalize(),-.137,2.1,.78);
+    makeRing(1.52,.002,0x3e74ff,.42,new THREE.Vector3(.7,-.4,.3).normalize(),.083,4.0,1.22);
+    makeRing(1.68,.0015,0xb23dff,.28,new THREE.Vector3(.2,.6,-.7).normalize(),-.059,1.25,.86);
+
+    const outerRings=new THREE.Group();
+    scene.add(outerRings);
+    const outerStates:{group:THREE.Group;radius:number;phase:number;speed:number}[]=[];
+    for(let i=0;i<5;i++){
+      const r=1.83+i*.09;
+      const group=new THREE.Group();
+      const ring=new THREE.Mesh(
+        new THREE.TorusGeometry(r,.0012+(i%3)*.0007,5,80),
+        new THREE.MeshBasicMaterial({
+          color:i%2?0x6f55ff:0xff315f,
+          transparent:true,
+          opacity:.16+(i%3)*.035,
+          blending:THREE.AdditiveBlending,
+          depthWrite:false
+        })
+      );
+      ring.rotation.x=Math.PI/2;
+      ring.scale.x=i%2?1.08:.94;
+      ring.rotation.z=i*.31;
+      group.add(ring);
+      const marker=new THREE.Mesh(
+        new THREE.SphereGeometry(.007,6,6),
+        new THREE.MeshBasicMaterial({
+          color:i%2?0x9d8cff:0xff6f86,
+          transparent:true,opacity:.7,
+          blending:THREE.AdditiveBlending,depthWrite:false
+        })
+      );
+      group.add(marker);
+      outerRings.add(group);
+      outerStates.push({group,radius:r,phase:i*.73,speed:(i%2?-.021:.017)*(1+i*.11)});
+    }
+
+    const resize=()=>{
+      const w=Math.max(1,mount.clientWidth);
+      const h=Math.max(1,mount.clientHeight);
+      camera.aspect=w/h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w,h,false);
+    };
+    const resizeObserver=new ResizeObserver(resize);
+    resizeObserver.observe(mount);
+    resize();
+
+    let raf=0;
+    const animate=(now:number)=>{
+      const elapsed=now*.001;
+      const q=new THREE.Quaternion();
+      const axis=new THREE.Vector3();
+
+      q.setFromEuler(new THREE.Euler(elapsed*.021,elapsed*.055,elapsed*.0137,"XYZ"));
+      orbitalGroup.quaternion.copy(q);
+
+      ringStates.forEach((state,index)=>{
+        axis.copy(state.axis);
+        const angle=elapsed*state.speed+Math.sin(elapsed*(.0071+index*.0013)+state.phase)*.17;
+        q.setFromAxisAngle(axis,angle);
+        state.group.quaternion.copy(q);
+        state.group.scale.set(
+          1+Math.sin(elapsed*(.023+index*.0047)+state.phase)*.055,
+          1+Math.cos(elapsed*(.017+index*.0031)+state.phase*1.7)*.035,
+          1
+        );
+
+        const markerPhase=elapsed*(.31+index*.071)+state.phase;
+        state.markerA.position.set(
+          Math.cos(markerPhase)*state.radius,
+          Math.sin(markerPhase)*state.radius,
+          Math.sin(markerPhase*.73)*.08
+        );
+        state.markerB.position.set(
+          Math.cos(markerPhase*1.37+1.4)*state.radius*.48,
+          Math.sin(markerPhase*1.37+1.4)*state.radius*.48,
+          Math.cos(markerPhase*.91)*.11
+        );
+      });
+
+      outerStates.forEach((state,index)=>{
+        const angle=elapsed*state.speed+Math.sin(elapsed*(.009+index*.0011)+state.phase)*.11;
+        const wobble=1+Math.sin(elapsed*(.019+index*.0023)+state.phase)*.035;
+        state.group.quaternion.setFromEuler(new THREE.Euler(
+          Math.PI/2+Math.sin(elapsed*.013+index)*.08,
+          angle,
+          index*.31+Math.cos(elapsed*.011+index*.7)*.12,
+          "XYZ"
+        ));
+        state.group.scale.set(wobble,1,1);
+        const marker=state.group.children[1] as THREE.Mesh;
+        const markerPhase=elapsed*(.17+index*.023)+state.phase;
+        marker.position.set(
+          Math.cos(markerPhase)*state.radius,
+          Math.sin(markerPhase)*state.radius,
+          Math.sin(markerPhase*.67)*.05
+        );
+      });
+
+      renderer.render(scene,camera);
+      raf=requestAnimationFrame(animate);
+    };
+    raf=requestAnimationFrame(animate);
+
+    return()=>{
+      cancelAnimationFrame(raf);
+      resizeObserver.disconnect();
+      scene.traverse(o=>{
+        const mesh=o as THREE.Mesh;
+        if(mesh.geometry)mesh.geometry.dispose();
+        const material=mesh.material as THREE.Material|THREE.Material[];
+        if(Array.isArray(material))material.forEach(m=>m.dispose());
+        else if(material)material.dispose();
+      });
+      renderer.dispose();
+      if(renderer.domElement.parentElement===mount)mount.removeChild(renderer.domElement);
+    };
+  },[]);
+
+  return <div className="orbitalLayer" ref={mountRef} aria-hidden="true" />;
+}
+
 function App() {
   const [token, setToken] = useState(localStorage.getItem("morok_token") ?? "");
   const [email, setEmail] = useState("");
@@ -365,10 +681,7 @@ function App() {
   return <div className="dashboard cleanCommandCenter">
     <section className="heroCore">
       <EarthGlobe />
-      <div className="orbit orbitA" />
-      <div className="orbit orbitB" />
-      <div className="orbit orbitC" />
-      <div className="coreRings" />
+      <OrbitalRings />
     </section>
   </div>;
 }
@@ -377,329 +690,7 @@ function EarthGlobe(){
 
   useEffect(()=>{
     const mount=mountRef.current;
-    if(!mount)return;
-
-    const scene=new THREE.Scene();
-    scene.background=new THREE.Color(0x010107);
-
-    const camera=new THREE.PerspectiveCamera(34,1,0.1,100);
-    camera.position.set(0,0,6.3);
-
-    const renderer=new THREE.WebGLRenderer({
-      antialias:true,
-      alpha:false,
-      powerPreference:"high-performance"
-    });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.25));
-    renderer.outputColorSpace=THREE.SRGBColorSpace;
-    renderer.toneMapping=THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure=1.15;
-    renderer.setClearColor(0x010107,1);
-    mount.appendChild(renderer.domElement);
-
-    scene.add(new THREE.AmbientLight(0x4f62b8,1.15));
-    const sun=new THREE.DirectionalLight(0xc9dcff,3.1);
-    sun.position.set(-3,1.8,4);
-    scene.add(sun);
-
-    const earthSystem=new THREE.Group();
-    earthSystem.rotation.x=-0.12;
-    earthSystem.rotation.y=-0.48;
-    scene.add(earthSystem);
-
-    const earthTexture=new THREE.TextureLoader().load("https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg");
-    earthTexture.colorSpace=THREE.SRGBColorSpace;
-    earthTexture.anisotropy=renderer.capabilities.getMaxAnisotropy();
-
-    const earthMaterial=new THREE.MeshPhongMaterial({
-      map:earthTexture,
-      color:0xffffff,
-      shininess:18,
-      specular:new THREE.Color(0x6f7cff)
-    });
-    const earth=new THREE.Mesh(new THREE.SphereGeometry(1,64,64),earthMaterial);
-    earthSystem.add(earth);
-
-    const atmosphere=new THREE.Mesh(
-      new THREE.SphereGeometry(1.075,40,40),
-      new THREE.MeshBasicMaterial({
-        color:0x426dff,
-        transparent:true,
-        opacity:.18,
-        side:THREE.BackSide,
-        blending:THREE.AdditiveBlending,
-        depthWrite:false
-      })
-    );
-    earthSystem.add(atmosphere);
-
-    /*
-     * IMPORTANT:
-     * Do not animate the rings by repeatedly adding to Euler angles or by
-     * accumulating quaternions. Closed toruses are symmetrical, so those
-     * approaches eventually create a visually convincing "return to start".
-     *
-     * Instead, every frame derives the complete pose from elapsed time.
-     * Several independent irrational/non-commensurate frequencies are used
-     * for orientation, precession, scale and asymmetric markers. The result
-     * is deterministic, smooth and does not contain a reset point.
-     */
-    const orbitalGroup=new THREE.Group();
-    scene.add(orbitalGroup);
-
-    type RingState={
-      group:THREE.Group;
-      markerA:THREE.Mesh;
-      markerB:THREE.Mesh;
-      radius:number;
-      baseScaleX:number;
-      baseScaleY:number;
-      tiltX:number;
-      tiltZ:number;
-      axis:THREE.Vector3;
-      speed:number;
-      phase:number;
-    };
-
-    const ringStates:RingState[]=[];
-
-    const makeRing=(
-      radius:number,
-      thickness:number,
-      color:number,
-      opacity:number,
-      tiltX:number,
-      tiltZ:number,
-      axis:THREE.Vector3,
-      speed:number,
-      phase:number,
-      scaleX:number
-    ):RingState=>{
-      const group=new THREE.Group();
-
-      const ring=new THREE.Mesh(
-        new THREE.TorusGeometry(radius,thickness,6,96),
-        new THREE.MeshBasicMaterial({
-          color,
-          transparent:true,
-          opacity,
-          blending:THREE.AdditiveBlending,
-          depthWrite:false
-        })
-      );
-      ring.scale.x=scaleX;
-      group.add(ring);
-
-      const markerMaterial=new THREE.MeshBasicMaterial({
-        color,
-        transparent:true,
-        opacity:Math.min(1,opacity+.25),
-        blending:THREE.AdditiveBlending,
-        depthWrite:false
-      });
-      const markerA=new THREE.Mesh(new THREE.SphereGeometry(.018,8,8),markerMaterial);
-      const markerB=new THREE.Mesh(new THREE.SphereGeometry(.010,8,8),markerMaterial);
-      group.add(markerA,markerB);
-
-      group.rotation.x=tiltX;
-      group.rotation.z=tiltZ;
-      orbitalGroup.add(group);
-
-      const state={group,markerA,markerB,radius,baseScaleX:scaleX,baseScaleY:1,tiltX,tiltZ,axis,speed,phase};
-      ringStates.push(state);
-      return state;
-    };
-
-    makeRing(1.27,.0045,0x7448ff,.72,.34,-.22,new THREE.Vector3(.3,.8,.2).normalize(),.191,.35,1.34);
-    makeRing(1.39,.0025,0xff2d56,.52,-.5,.3,new THREE.Vector3(-.6,.2,.7).normalize(),-.137,2.1,.78);
-    makeRing(1.52,.002,0x3e74ff,.42,.92,.1,new THREE.Vector3(.7,-.4,.3).normalize(),.083,4.0,1.22);
-    makeRing(1.68,.0015,0xb23dff,.28,-.2,.78,new THREE.Vector3(.2,.6,-.7).normalize(),-.059,1.25,.86);
-
-    const outerRings=new THREE.Group();
-    scene.add(outerRings);
-    const outerStates:{group:THREE.Group;radius:number;phase:number;speed:number}[]=[];
-    for(let i=0;i<5;i++){
-      const r=1.83+i*.09;
-      const group=new THREE.Group();
-      const ring=new THREE.Mesh(
-        new THREE.TorusGeometry(r,.0012+(i%3)*.0007,5,80),
-        new THREE.MeshBasicMaterial({
-          color:i%2?0x6f55ff:0xff315f,
-          transparent:true,
-          opacity:.16+(i%3)*.035,
-          blending:THREE.AdditiveBlending,
-          depthWrite:false
-        })
-      );
-      ring.rotation.x=Math.PI/2;
-      ring.scale.x=i%2?1.08:.94;
-      ring.rotation.z=i*.31;
-      group.add(ring);
-
-      const marker=new THREE.Mesh(
-        new THREE.SphereGeometry(.007,6,6),
-        new THREE.MeshBasicMaterial({
-          color:i%2?0x9d8cff:0xff6f86,
-          transparent:true,
-          opacity:.7,
-          blending:THREE.AdditiveBlending,
-          depthWrite:false
-        })
-      );
-      group.add(marker);
-      outerRings.add(group);
-      outerStates.push({group,radius:r,phase:i*.73,speed:(i%2?-.021:.017)*(1+i*.11)});
-    }
-
-    let dragging=false;
-    let lastPointer={x:0,y:0};
-
-    const onPointerDown=(e:PointerEvent)=>{
-      dragging=true;
-      lastPointer={x:e.clientX,y:e.clientY};
-      renderer.domElement.setPointerCapture(e.pointerId);
-    };
-    const onPointerMove=(e:PointerEvent)=>{
-      if(!dragging)return;
-      const dx=e.clientX-lastPointer.x;
-      const dy=e.clientY-lastPointer.y;
-      lastPointer={x:e.clientX,y:e.clientY};
-      earthSystem.rotation.y+=dx*.006;
-      earthSystem.rotation.x+=dy*.0045;
-      earthSystem.rotation.x=Math.max(-1.25,Math.min(1.25,earthSystem.rotation.x));
-    };
-    const onPointerUp=(e:PointerEvent)=>{
-      dragging=false;
-      if(renderer.domElement.hasPointerCapture(e.pointerId)){
-        renderer.domElement.releasePointerCapture(e.pointerId);
-      }
-    };
-    renderer.domElement.addEventListener("pointerdown",onPointerDown);
-    renderer.domElement.addEventListener("pointermove",onPointerMove);
-    renderer.domElement.addEventListener("pointerup",onPointerUp);
-    renderer.domElement.addEventListener("pointercancel",onPointerUp);
-    renderer.domElement.addEventListener("pointerleave",onPointerUp);
-
-    const resize=()=>{
-      const w=Math.max(1,mount.clientWidth);
-      const h=Math.max(1,mount.clientHeight);
-      camera.aspect=w/h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w,h,false);
-    };
-    const resizeObserver=new ResizeObserver(resize);
-    resizeObserver.observe(mount);
-    resize();
-
-    let raf=0;
-    let lastTime=performance.now();
-
-    const animate=(now:number)=>{
-      const rawDt=(now-lastTime)/1000;
-      lastTime=now;
-      const dt=Math.min(.033,Math.max(0,rawDt));
-      const elapsed=now*.001;
-
-      /*
-       * One continuous time source. There is no modulo, no reset, no
-       * angle wrapping and no state assignment back to an initial pose.
-       */
-      const q=new THREE.Quaternion();
-      const axis=new THREE.Vector3();
-
-      const orbitalYaw=elapsed*.055;
-      const orbitalPitch=elapsed*.021;
-      const orbitalRoll=elapsed*.0137;
-      q.setFromEuler(new THREE.Euler(orbitalPitch,orbitalYaw,orbitalRoll,"XYZ"));
-      orbitalGroup.quaternion.copy(q);
-
-      ringStates.forEach((state,index)=>{
-        axis.copy(state.axis);
-        const angle=elapsed*state.speed+Math.sin(elapsed*(.0071+index*.0013)+state.phase)*.17;
-        q.setFromAxisAngle(axis,angle);
-        state.group.quaternion.copy(q);
-
-        const wobbleX=1+Math.sin(elapsed*(.023+index*.0047)+state.phase)*.055;
-        const wobbleY=1+Math.cos(elapsed*(.017+index*.0031)+state.phase*1.7)*.035;
-        state.group.scale.set(wobbleX,wobbleY,1);
-
-        const markerPhase=elapsed*(.31+index*.071)+state.phase;
-        const markerRadius=state.radius;
-        state.markerA.position.set(
-          Math.cos(markerPhase)*markerRadius,
-          Math.sin(markerPhase)*markerRadius,
-          Math.sin(markerPhase*.73)*.08
-        );
-        state.markerB.position.set(
-          Math.cos(markerPhase*1.37+1.4)*markerRadius*.48,
-          Math.sin(markerPhase*1.37+1.4)*markerRadius*.48,
-          Math.cos(markerPhase*.91)*.11
-        );
-      });
-
-      outerStates.forEach((state,index)=>{
-        const angle=elapsed*state.speed+Math.sin(elapsed*(.009+index*.0011)+state.phase)*.11;
-        const wobble=1+Math.sin(elapsed*(.019+index*.0023)+state.phase)*.035;
-        state.group.quaternion.setFromEuler(
-          new THREE.Euler(
-            Math.PI/2+Math.sin(elapsed*.013+index)*.08,
-            angle,
-            index*.31+Math.cos(elapsed*.011+index*.7)*.12,
-            "XYZ"
-          )
-        );
-        state.group.scale.set(wobble,1,1);
-        const marker=state.group.children[1] as THREE.Mesh;
-        const markerPhase=elapsed*(.17+index*.023)+state.phase;
-        marker.position.set(
-          Math.cos(markerPhase)*state.radius,
-          Math.sin(markerPhase)*state.radius,
-          Math.sin(markerPhase*.67)*.05
-        );
-      });
-
-      // Keep the loop alive even if the tab was backgrounded for a long time.
-      // The capped delta prevents a visibility pause from becoming a giant
-      // simulation jump; animation itself is timestamp-derived.
-      void dt;
-
-      renderer.render(scene,camera);
-      raf=requestAnimationFrame(animate);
-    };
-
-    raf=requestAnimationFrame(animate);
-
-    return()=>{
-      cancelAnimationFrame(raf);
-      resizeObserver.disconnect();
-      renderer.domElement.removeEventListener("pointerdown",onPointerDown);
-      renderer.domElement.removeEventListener("pointermove",onPointerMove);
-      renderer.domElement.removeEventListener("pointerup",onPointerUp);
-      renderer.domElement.removeEventListener("pointercancel",onPointerUp);
-      renderer.domElement.removeEventListener("pointerleave",onPointerUp);
-      scene.traverse(o=>{
-        const mesh=o as THREE.Mesh;
-        if(mesh.geometry)mesh.geometry.dispose();
-        const material=mesh.material as THREE.Material|THREE.Material[];
-        if(Array.isArray(material))material.forEach(m=>m.dispose());
-        else if(material)material.dispose();
-      });
-      earthTexture.dispose();
-      renderer.dispose();
-      if(renderer.domElement.parentElement===mount)mount.removeChild(renderer.domElement);
-    };
-  },[]);
-
-  return <div className="earthGlobe realEarth" ref={mountRef} aria-label="Globo 3D da Terra interativo" />;
-}
-
-
-  return (
-    <main className="appShell">
-      <section className="mainStage">
-        <Dashboard />
-      </section>
-    </main>
+    if(ain>
   );
 
 
