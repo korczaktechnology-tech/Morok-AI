@@ -430,6 +430,75 @@ function Dashboard() {
   );
 }
 
+function MobileDashboard(){
+  const activities=[
+    ["11:41","Projeto KOS atualizado","blue"],
+    ["11:32","Backup concluído","green"],
+    ["10:58","Firewall ativo","purple"],
+    ["10:23","Conexão com servidor","cyan"],
+    ["09:17","Análise de segurança","red"]
+  ];
+  const projects=[
+    ["KOS - Core System","Desenvolvimento","78%","78"],
+    ["KOS - Integrações","Testes","43%","43"],
+    ["Infraestrutura Cloud","Implantação","58%","58"]
+  ];
+  return <div className="mobileMorok">
+    <header className="mobileTop">
+      <div className="mobileStatus"><span>11:42</span><i>➤</i></div>
+      <div className="mobileHeaderPanel">
+        <div className="mobileBrand"><div className="mobileLogo">M</div><div><b>MOROK</b><small>IA ASSISTENTE DO KOS</small><em><span/> ONLINE <strong>|</strong> v2.8.4</em></div></div>
+        <div className="mobileKos"><b>✦ KOS</b><small>KORCZAK<br/>OPERATIONAL<br/>SYSTEM</small></div>
+        <div className="mobileDate"><span>14 SET 2025</span><b>11:42:17</b></div>
+      </div>
+    </header>
+
+    <main className="mobileBody">
+      <aside className="mobileSide">
+        <b>SISTEMAS</b><span>PROJETOS</span><span>REDE</span><span>SEGURANÇA</span><span>ANALYTICS</span><i/>
+        <p>“Mais do que<br/>tecnologia,<br/>é sobre<br/>o que você<br/>constrói.”</p><small>— MOROK</small>
+      </aside>
+
+      <section className="mobileCore">
+        <div className="mobileCoreRings"><div className="mobileCoreGlyph">M</div><b>MOROK</b><span>ANALISANDO DADOS...</span><i>⌁⌁⌁</i></div>
+      </section>
+
+      <aside className="mobileTelemetry">
+        {[
+          ["CPU","34%","cpu"],["RAM","61%","ram"],["DISCO","42%","disk"],["GPU","28%","gpu"]
+        ].map(([label,value,type])=><div className={"mTelemetry "+type} key={label}><div className="mGauge"><b>{value}</b></div><section><b>{label}</b><i/><div className="mSpark"/></section></div>)}
+        <div className="mSimpleStat"><b>♨</b><span>TEMP.<strong>42°C</strong></span></div>
+        <div className="mSimpleStat"><b>◎</b><span>REDE<strong>98%</strong></span><i>▁▃▅▆▇</i></div>
+      </aside>
+
+      <section className="mobileRecent panelFrame">
+        <h3>◷ <span>ATIVIDADE RECENTE</span></h3>
+        {activities.map(([time,title,color])=><div className="mActivity" key={time}><i className={color}/><time>{time}</time><span>{title}</span></div>)}
+      </section>
+
+      <section className="mobileKosCard panelFrame">
+        <b>KOS</b><em><span/> OPERACIONAL</em><p>Todos os sistemas funcionando normalmente.</p><i/><strong>↗</strong>
+      </section>
+
+      <nav className="mobileQuick">
+        {[
+          ["▦","PROJETOS","ACESSAR"],["☁","ARQUIVOS","ABRIR"],["♢","SEGURANÇA","PAINEL"],["◎","REDE","MONITORAR"],["⚙","UTILITÁRIOS","FERRAMENTAS"]
+        ].map(([icon,title,sub])=><button key={title}><i>{icon}</i><b>{title}</b><small>{sub}</small></button>)}
+      </nav>
+
+      <section className="mobileProjects panelFrame">
+        <h3>▱ <span>PROJETOS EM ANDAMENTO</span><em>3</em></h3>
+        {projects.map(([title,meta,value,width])=><div className="mProject" key={title}><i>◇</i><div><b>{title}</b><small>{meta}</small></div><section><span><i style={{width:width+"%"}}/></span><b>{value}</b></section><strong>›</strong></div>)}
+      </section>
+
+      <section className="mobileEcosystem panelFrame">
+        <div className="mEcoOrb">✦</div><div><b>KOS</b><small>ECOSSISTEMA INTEGRADO</small><p>Infraestrutura, processos<br/>e pessoas em um só lugar.</p><i/></div><button>↗ &nbsp; VER MAIS</button>
+      </section>
+    </main>
+    <div className="mobileHomeBar"/>
+  </div>;
+}
+
 function App() {
   const [token, setToken] = useState(localStorage.getItem("morok_token") ?? "");
   const [email, setEmail] = useState("");
@@ -728,7 +797,7 @@ function App() {
   return (
     <main className="appShell">
       <section className="mainStage">
-        <Dashboard />
+        <div className="desktopDashboard"><Dashboard /></div><div className="mobileDashboard"><MobileDashboard /></div>
       </section>
     </main>
   );
