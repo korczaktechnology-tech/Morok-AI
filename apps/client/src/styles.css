@@ -353,3 +353,84 @@ mix-blend-mode:screen;opacity:.65}
 .cleanCommandCenter .orbit,.cleanCommandCenter .coreRings{display:none!important}
 .appShell>.topBar,.appShell>.sideNav,.appShell>.imageNav{display:none!important}
 .mainStage>.stageHeader{display:none!important}
+
+
+/* MOROK // REAL EARTH COMMAND CENTER */
+.cleanCommandCenter{
+  position:absolute!important;
+  inset:0!important;
+  overflow:hidden!important;
+  background:
+    radial-gradient(ellipse 54% 48% at 50% 46%,rgba(62,42,190,.18),transparent 62%),
+    radial-gradient(ellipse 38% 64% at 8% 48%,rgba(117,20,190,.13),transparent 72%),
+    radial-gradient(ellipse 36% 58% at 91% 52%,rgba(222,28,67,.10),transparent 70%),
+    radial-gradient(ellipse 24% 32% at 74% 15%,rgba(86,28,160,.09),transparent 72%),
+    linear-gradient(180deg,#020208 0%,#010107 55%,#020108 100%)!important;
+}
+.cleanCommandCenter:before{
+  content:"";
+  position:absolute;
+  inset:-20%;
+  pointer-events:none;
+  background:
+    radial-gradient(ellipse 28% 12% at 18% 28%,rgba(126,38,255,.12),transparent 72%),
+    radial-gradient(ellipse 22% 11% at 80% 72%,rgba(255,35,74,.10),transparent 72%),
+    radial-gradient(ellipse 18% 9% at 64% 8%,rgba(67,82,255,.10),transparent 70%);
+  filter:blur(34px);
+  animation:morokNebulaDrift 34s ease-in-out infinite alternate;
+}
+.cleanCommandCenter:after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(117deg,transparent 0 12%,rgba(79,75,255,.07) 12.1%,transparent 12.35% 22%,rgba(255,34,77,.045) 22.1%,transparent 22.35% 100%),
+    linear-gradient(63deg,transparent 0 72%,rgba(107,47,255,.065) 72.1%,transparent 72.4% 84%,rgba(255,43,74,.04) 84.1%,transparent 84.4% 100%);
+  mix-blend-mode:screen;
+  opacity:.7;
+}
+.realEarth{
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  max-height:none!important;
+  position:absolute!important;
+  inset:0!important;
+  z-index:4!important;
+  cursor:grab;
+  touch-action:none;
+}
+.realEarth:active{cursor:grabbing}
+.realEarth canvas{
+  display:block;
+  width:100%!important;
+  height:100%!important;
+}
+.cleanCommandCenter .heroCore{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  display:block!important;
+  overflow:hidden!important;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+.cleanCommandCenter .heroCore:before,
+.cleanCommandCenter .heroCore:after,
+.cleanCommandCenter .orbit,
+.cleanCommandCenter .coreRings{display:none!important}
+@keyframes morokNebulaDrift{
+  0%{transform:translate3d(-2%,-1%,0) scale(1)}
+  50%{transform:translate3d(2%,1%,0) scale(1.035)}
+  100%{transform:translate3d(-1%,2%,0) scale(1.02)}
+}
+@media (max-width:900px){
+  .realEarth{transform:scale(1.08)}
+}
+@media (prefers-reduced-motion:reduce){
+  .cleanCommandCenter:before{animation:none}
+}
