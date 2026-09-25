@@ -113,7 +113,7 @@ function EarthGlobe(){
       specular:new THREE.Color(0x6f7cff)
     });
     const earth=new THREE.Mesh(new THREE.SphereGeometry(1,64,64),earthMaterial);
-    earth.scale.setScalar(.75);
+    earth.scale.setScalar(.5625);
     earthSystem.add(earth);
 
     let dragging=false;
