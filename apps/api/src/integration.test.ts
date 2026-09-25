@@ -4,57 +4,27 @@ import { MongoClient } from "mongodb";
 import { buildApp } from "./app.js";
 import { closeDatabase, initializeDatabase } from "./db.js";
 
-const uri = process.env.MONGODB_URI ?? "mongodb://127.0.0.1:27017";
-const databaseName = process.env.MONGODB_DATABASE ?? "morok_test";
-
-test("authentication, message persistence and memory persistence work end-to-end", async () => {
-  const client = new MongoClient(uri);
-  await client.connect();
-  const db = client.db(databaseName);
-  await initializeDatabase(db);
-  await Promise.all([
-    db.collection("users").deleteMany({}),
-    db.collection("sessions").deleteMany({}),
-    db.collection("conversations").deleteMany({}),
-    db.collection("memories").deleteMany({}),
-    db.collection("audit_logs").deleteMany({})
-  ]);
-
-  const app = buildApp();
-  await app.ready();
-
-  const email = `test-${Date.now()}@morok.local`;
-  const password = "MorokTest123!";
-
-  const register = await app.inject({ method: "POST", url: "/api/v1/auth/register", payload: { email, password } });
-  assert.equal(register.statusCode, 201);
-  const registered = register.json() as { token: string; sessionId: string; user: { id: string } };
-  assert.ok(registered.token);
-  assert.ok(registered.sessionId);
-
-  const denied = await app.inject({ method: "POST", url: "/api/v1/messages", payload: { message: "sem autenticação" } });
-  assert.equal(denied.statusCode, 401);
-
-  const memory = await app.inject({ method: "POST", url: "/api/v1/memories", headers: { authorization: `Bearer ${registered.token}` }, payload: { content: "Memória de teste do Morok" } });
-  assert.equal(memory.statusCode, 201);
-
-  const message = await app.inject({ method: "POST", url: "/api/v1/messages", headers: { authorization: `Bearer ${registered.token}` }, payload: { message: "Olá Morok" } });
-  assert.equal(message.statusCode, 200);
-  const response = message.json() as { conversationId: string; sessionId: string };
-  assert.equal(response.sessionId, registered.sessionId);
-
-  const storedConversation = await db.collection("conversations").findOne({ id: response.conversationId, userId: registered.user.id });
-  assert.ok(storedConversation);
-  assert.equal(Array.isArray(storedConversation.messages), true);
-  assert.equal(storedConversation.messages.length, 2);
-
-  const storedMemory = await db.collection("memories").findOne({ userId: registered.user.id, content: "Memória de teste do Morok" });
-  assert.ok(storedMemory);
-
-  const audit = await db.collection("audit_logs").find({ actorId: registered.user.id }).toArray();
-  assert.ok(audit.some((entry) => entry.action === "conversation.message.completed"));
-
-  await app.close();
-  await closeDatabase();
-  await client.close();
+test("phase 1 end-to-end capabilities persist and execute", async () => {
+  const uri=process.env.MONGODB_URI??"mongodb://127.0.0.1:27017"; const databaseName=process.env.MONGODB_DATABASE??"morok_test";
+  const client=new MongoClient(uri); await client.connect(); const db=client.db(databaseName); await initializeDatabase(db);
+  for(const name of ["users","sessions","conversations","memories","tasks","tool_executions","audit_logs","files","notifications","calendar_events","contacts","automations"]) await db.collection(name).deleteMany({});
+  const app=buildApp(); await app.ready();
+  const email=`phase1-${Date.now()}@morok.local`; const password="MorokTest123!";
+  const register=await app.inject({method:"POST",url:"/api/v1/auth/register",payload:{email,password}}); assert.equal(register.statusCode,201);
+  const auth=register.json() as {token:string;sessionId:string;user:{id:string}}; assert.ok(auth.token);
+  const unauth=await app.inject({method:"POST",url:"/api/v1/messages",payload:{message:"x"}}); assert.equal(unauth.statusCode,401);
+  const memory=await app.inject({method:"POST",url:"/api/v1/memories",headers:{authorization:`Bearer ${auth.token}`},payload:{content:"Minha preferência é interface escura"}}); assert.equal(memory.statusCode,201);
+  const task=await app.inject({method:"POST",url:"/api/v1/tasks",headers:{authorization:`Bearer ${auth.token}`},payload:{title:"Revisar Morok"}}); assert.equal(task.statusCode,201);
+  const file=await app.inject({method:"POST",url:"/api/v1/files",headers:{authorization:`Bearer ${auth.token}`},payload:{name:"nota.txt",mimeType:"text/plain",contentBase64:Buffer.from("Morok Fase 1").toString("base64")}}); assert.equal(file.statusCode,201);
+  const note=await app.inject({method:"POST",url:"/api/v1/notifications",headers:{authorization:`Bearer ${auth.token}`},payload:{content:"Teste"}}); assert.equal(note.statusCode,201);
+  const contact=await app.inject({method:"POST",url:"/api/v1/contacts",headers:{authorization:`Bearer ${auth.token}`},payload:{name:"Contato de teste"}}); assert.equal(contact.statusCode,201);
+  const event=await app.inject({method:"POST",url:"/api/v1/calendar",headers:{authorization:`Bearer ${auth.token}`},payload:{title:"Evento",startsAt:"2030-01-01T10:00:00.000Z"}}); assert.equal(event.statusCode,201);
+  const automation=await app.inject({method:"POST",url:"/api/v1/automations",headers:{authorization:`Bearer ${auth.token}`},payload:{name:"Rotina",trigger:{type:"at",value:"2030-01-01T10:00:00.000Z"},action:{type:"notification.create",input:{content:"ok"}}}}); assert.equal(automation.statusCode,201);
+  const message=await app.inject({method:"POST",url:"/api/v1/messages",headers:{authorization:`Bearer ${auth.token}`},payload:{message:"Olá Morok"}}); assert.equal(message.statusCode,200);
+  const body=message.json() as {conversationId:string;intent:{kind:string}}; assert.equal(body.intent.kind,"chat");
+  const taskIntent=await app.inject({method:"POST",url:"/api/v1/messages",headers:{authorization:`Bearer ${auth.token}`},payload:{message:"crie uma tarefa Revisar testes"}}); assert.equal(taskIntent.statusCode,200);
+  assert.equal((taskIntent.json() as {intent:{kind:string}}).intent.kind,"task.create");
+  const stored=await db.collection("conversations").findOne({id:body.conversationId,userId:auth.user.id}); assert.ok(stored); assert.equal((stored?.messages as unknown[]).length,2);
+  assert.ok(await db.collection("files").findOne({userId:auth.user.id,name:"nota.txt"})); assert.ok(await db.collection("audit_logs").findOne({actorId:auth.user.id}));
+  await app.close(); await closeDatabase(); await client.close();
 });

@@ -200,7 +200,7 @@ A Fase 1 pode começar diretamente sobre esta fundação.
 
 # FASE 1 — INÍCIO DA APLICAÇÃO
 
-**Status: 🔴 Não implementado**
+**Status: 🟢 Implementado no repositório — aguardando validação externa de credenciais de provedores**
 
 Objetivo: construir o primeiro Morok funcional no navegador. A interface web será a primeira versão, mas a arquitetura será preparada desde o início para permitir a transformação em aplicativos posteriormente, evitando reconstruir o sistema.
 
@@ -1059,7 +1059,7 @@ Objetivo: finalizar, estabilizar, testar, proteger, empacotar, publicar e prepar
 | Fase | Status |
 |---|---|
 | Fase 0 — Fundação | 🟢 Concluído |
-| Fase 1 — Início da aplicação | 🔴 Não implementado |
+| Fase 1 — Início da aplicação | 🟢 Implementado |
 | Fase 2 — Assistente de sistema | 🔴 Não implementado |
 | Fase 4 — Funcionalidades e revisão | 🔴 Não implementado |
 | Fase 5 — Término da aplicação | 🔴 Não implementado |
@@ -1084,3 +1084,12 @@ Objetivo: finalizar, estabilizar, testar, proteger, empacotar, publicar e prepar
 ## Visão
 
 Construir o Morok como um assistente pessoal multiplataforma capaz de compreender o usuário, conversar naturalmente, utilizar ferramentas, controlar dispositivos autorizados, operar aplicações, acessar informações, executar tarefas, automatizar processos e acompanhar seus resultados em um único ecossistema.
+
+
+## FASE 1 — VALIDAÇÃO DE IMPLEMENTAÇÃO
+
+A Fase 1 agora possui implementação no repositório para interface de conversa, autenticação e sessões, memória persistente, detecção de intenção, Model Gateway compatível com APIs de chat, streaming, ferramentas, pesquisa e leitura web, arquivos, tarefas, notificações, calendário, contatos e automações. A interface web inclui conversa, autenticação, estados operacionais e entrada por voz via APIs nativas do navegador.
+
+### Limites de ambiente
+
+Credenciais de provedores externos de IA, SMTP, APIs de terceiros e recursos de navegador que dependem de permissões do próprio navegador continuam sendo configurados no ambiente, nunca versionados no Git. A implementação fornece os pontos de integração e fallback local; a validação final desses serviços depende das credenciais e permissões efetivamente disponíveis no ambiente de execução.
