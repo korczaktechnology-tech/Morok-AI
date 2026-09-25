@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
 
@@ -90,10 +90,35 @@ function App() {
   const [integrations, setIntegrations] = useState<any[]>([]);
   const [files, setFiles] = useState<any[]>([]);
   const [localAgent, setLocalAgent] = useState(false);
+  const [brasiliaTime, setBrasiliaTime] = useState("00:00:00");
+  const [brasiliaDate, setBrasiliaDate] = useState("00/00/0000");
+  const [temperature, setTemperature] = useState<string | null>(null);
+  const [weatherPlace, setWeatherPlace] = useState("LOCALIZAÇÃO NÃO DISPONÍVEL");
 
   const speech = useMemo(() => {
     const C = window.SpeechRecognition ?? window.webkitSpeechRecognition;
     return C ? new C() : null;
+  }, []);
+
+  useEffect(() => {
+    const tick = () => {
+      const now = new Date();
+      setBrasiliaTime(new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).format(now));
+      setBrasiliaDate(new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric" }).format(now));
+    };
+    tick(); const id = window.setInterval(tick, 1000); return () => window.clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(async ({ coords }) => {
+      try {
+        const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${coords.latitude}&longitude=${coords.longitude}&current=temperature_2m&timezone=auto`);
+        if (!r.ok) return; const d = await r.json();
+        if (Number.isFinite(d.current?.temperature_2m)) setTemperature(`${Math.round(d.current.temperature_2m)}°C`);
+        setWeatherPlace(`${coords.latitude.toFixed(1)}°, ${coords.longitude.toFixed(1)}°`);
+      } catch {}
+    }, () => setWeatherPlace("LOCALIZAÇÃO BLOQUEADA"), { timeout: 8000, maximumAge: 300000 });
   }, []);
 
   useEffect(() => {
@@ -356,7 +381,7 @@ function App() {
       <section className="heroCore">
         <div className="coreLabel"><span>KOS</span><small>ONLINE</small></div>
         <div className="scanLines" />
-        <div className="globe"><div className="globeAtmosphere" /><div className="globeSurface"><div className="longitude l1"/><div className="longitude l2"/><div className="longitude l3"/><div className="longitude l4"/><div className="latitude lat1"/><div className="latitude lat2"/><div className="latitude lat3"/><div className="latitude lat4"/><div className="continent c1"/><div className="continent c2"/><div className="globePoint p1"/><div className="globePoint p2"/><div className="globePoint p3"/></div><div className="globeHighlight" /></div>
+        <EarthGlobe />
         <div className="orbit orbitA" /><div className="orbit orbitB" /><div className="orbit orbitC" />
         <div className="coreRings" />
         <div className="coreReadout"><span>◉</span><b>MOROK CORE</b><small>OPERAÇÃO ESTÁVEL</small></div>
@@ -371,7 +396,7 @@ function App() {
       <div className="quickActions">{[
         ["ANALISAR","⌕","chat"],["PLANEJAR","▦","calendar"],["EXECUTAR","▶","tasks"],["MONITORAR","▥","processes"],["OTIMIZAR","⚙","settings"]
       ].map(([label,icon,key],i)=><button key={label} className={i===2?"execute":""} onClick={()=>setTab(key as ModuleKey)}><Icon>{icon}</Icon><span>{label}</span></button>)}</div>
-      <div className="statsStrip">
+      <div className="operationChart"><div className="chartTitle">OPERAÇÕES <span>ESTÁVEIS</span></div><svg viewBox="0 0 420 100" preserveAspectRatio="none"><path d="M0 76 L28 70 L52 78 L79 53 L104 61 L132 45 L158 52 L184 32 L211 48 L239 37 L266 43 L294 22 L321 34 L349 18 L377 29 L420 10 L420 100 L0 100Z" fill="rgba(75,95,255,.16)"/><path d="M0 76 L28 70 L52 78 L79 53 L104 61 L132 45 L158 52 L184 32 L211 48 L239 37 L266 43 L294 22 L321 34 L349 18 L377 29 L420 10" fill="none" stroke="#6678ff" strokeWidth="2"/></svg></div><div className="statsStrip">
         <Stat label="TAREFAS ATIVAS" value={String(activeTasks)} />
         <Stat label="MEMÓRIAS" value={String(memoryCount)} />
         <Stat label="AUTOMAÇÕES" value={String(activeAutomations)} />
@@ -384,7 +409,7 @@ function App() {
     <header className="topBar">
       <div className="topBrand"><div className="kosLogo"><span>K</span><i>O</i><b>S</b></div><div><small>KORCZAK OPERATIONS SYSTEM</small></div></div>
       <div className="tagline">MAIS CONTROLE. MAIS RESULTADOS.</div>
-      <div className="topInfo"><span className="clock">{new Date().toLocaleTimeString("pt-BR")}</span><span>{new Date().toLocaleDateString("pt-BR")}</span><span>◌ 22°C</span><span>BRASIL · SP</span></div>
+      <div className="topInfo"><span className="clock">{brasiliaTime}</span><span>{brasiliaDate}</span><span>◌ {temperature ?? "—°C"}</span><span>LOCAL · {weatherPlace}</span></div>
     </header>
     <aside className="sideNav">
       <div className="navSection"><small>NAVEGAÇÃO PRINCIPAL</small>{nav.map(item=><button className={tab===item.key?"active":""} onClick={()=>setTab(item.key)} key={item.key}><Icon>{item.icon}</Icon><span>{item.label}</span></button>)}</div>
@@ -399,6 +424,13 @@ function App() {
       {[["home","⌂","INÍCIO"],["systems","▦","SISTEMAS"],["documents","▤","DOCUMENTOS"],["processes","◌","PROCESSOS"],["teams","♙","EQUIPES"],["reports","▥","RELATÓRIOS"],["settings","⚙","CONFIGURAÇÕES"]].map(([key,icon,label])=><button className={tab===key?"active":""} key={key} onClick={()=>setTab(key as ModuleKey)}><Icon>{icon}</Icon><span>{label}</span></button>)}
     </aside>
   </main>;
+}
+
+function EarthGlobe(){
+  const canvasRef=useRef<HTMLCanvasElement>(null); const rotation=useRef(-0.5); const dragging=useRef(false); const lastX=useRef(0); const velocity=useRef(0);
+  useEffect(()=>{const canvas=canvasRef.current;if(!canvas)return;const ctx=canvas.getContext("2d");if(!ctx)return;let raf=0;const dpr=Math.min(devicePixelRatio||1,2);const land=[[-165,55],[-130,50],[-105,42],[-90,30],[-80,20],[-75,5],[-65,0],[-55,-20],[-50,-40],[-40,-20],[-50,0],[-70,15],[-90,32],[-120,48],[-165,55],[-80,12],[-70,4],[-62,-8],[-55,-18],[-50,-30],[-58,-35],[-68,-20],[-75,-5],[-80,12],[-10,35],[5,45],[25,50],[45,35],[50,20],[35,8],[20,10],[10,-5],[0,5],[-10,20],[-10,35],[35,-12],[55,-20],[70,-5],[75,12],[60,25],[45,12],[35,-12]];
+  const draw=()=>{const r=canvas.getBoundingClientRect(),w=r.width,h=r.height;if(canvas.width!==w*dpr||canvas.height!==h*dpr){canvas.width=w*dpr;canvas.height=h*dpr}ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);const R=Math.min(w,h)*.39,cx=w/2,cy=h/2;if(!dragging.current)rotation.current+=.0017+velocity.current*.001;velocity.current*=.96;const g=ctx.createRadialGradient(cx-R*.34,cy-R*.4,R*.02,cx,cy,R*1.15);g.addColorStop(0,"#bfe1ff");g.addColorStop(.12,"#4b91ff");g.addColorStop(.42,"#1939c5");g.addColorStop(.78,"#071150");g.addColorStop(1,"#01030e");ctx.beginPath();ctx.arc(cx,cy,R,0,7);ctx.fillStyle=g;ctx.fill();ctx.save();ctx.beginPath();ctx.arc(cx,cy,R,0,7);ctx.clip();const p=(lo,la)=>{const L=lo*Math.PI/180+rotation.current,P=la*Math.PI/180;const x=Math.sin(L)*Math.cos(P),y=Math.sin(P),z=Math.cos(L)*Math.cos(P);return{x:cx+x*R,y:cy-y*R*.96,z}};ctx.lineWidth=.65;for(let la=-60;la<=60;la+=20){ctx.beginPath();for(let lo=-180;lo<=180;lo+=4){const q=p(lo,la);lo===-180?ctx.moveTo(q.x,q.y):ctx.lineTo(q.x,q.y)}ctx.strokeStyle="rgba(130,170,255,.3)";ctx.stroke()}for(let lo=-160;lo<=180;lo+=20){ctx.beginPath();for(let la=-88;la<=88;la+=4){const q=p(lo,la);la===-88?ctx.moveTo(q.x,q.y):ctx.lineTo(q.x,q.y)}ctx.strokeStyle="rgba(120,160,255,.26)";ctx.stroke()}for(let k=0;k<3;k++){ctx.beginPath();land.slice(k===0?0:k===1?15:24,k===0?15:k===1?24:land.length).forEach(([lo,la],i)=>{const q=p(lo,la);i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y)});ctx.closePath();ctx.fillStyle="rgba(73,137,255,.72)";ctx.shadowColor="#438cff";ctx.shadowBlur=6;ctx.fill();ctx.shadowBlur=0}for(let i=0;i<28;i++){const q=p(-170+i*28,Math.sin(i*1.7)*42);if(q.z>.1){ctx.beginPath();ctx.arc(q.x,q.y,1.7,0,7);ctx.fillStyle=i%5===0?"#ff3c62":"#7ca7ff";ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=8;ctx.fill();ctx.shadowBlur=0}}const l=ctx.createLinearGradient(cx-R,cy-R,cx+R,cy+R);l.addColorStop(0,"rgba(255,255,255,.2)");l.addColorStop(.28,"transparent");l.addColorStop(.7,"rgba(0,0,0,.18)");l.addColorStop(1,"rgba(0,0,0,.8)");ctx.fillStyle=l;ctx.fillRect(cx-R,cy-R,R*2,R*2);ctx.restore();ctx.beginPath();ctx.arc(cx,cy,R+2,0,7);ctx.strokeStyle="rgba(87,137,255,.9)";ctx.shadowColor="#386cff";ctx.shadowBlur=18;ctx.stroke();ctx.shadowBlur=0;raf=requestAnimationFrame(draw)};draw();return()=>cancelAnimationFrame(raf)},[]);
+  const down=(e:React.PointerEvent)=>{dragging.current=true;lastX.current=e.clientX;(e.currentTarget as HTMLCanvasElement).setPointerCapture(e.pointerId)};const move=(e:React.PointerEvent)=>{if(!dragging.current)return;const dx=e.clientX-lastX.current;lastX.current=e.clientX;rotation.current+=dx*.008;velocity.current=dx};const up=()=>{dragging.current=false};return <div className="earthGlobe"><canvas ref={canvasRef} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}/><div className="earthGlow"/></div>;
 }
 
 function Telemetry(p:{label:string;value:string;width:string;icon:string}){return <div className="telemetryCard"><Icon>{p.icon}</Icon><div><div><span>{p.label}</span><b>{p.value}</b></div><div className="bar"><i style={{width:p.width}} /></div></div></div>}
