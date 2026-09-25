@@ -849,11 +849,14 @@ function App() {
 
 
   return (
-    <main className="appShell">
-      <section className="mainStage">
-        <div className="desktopDashboard"><Dashboard /></div><div className="mobileDashboard"><MobileDashboard /></div>
-      </section>
-    </main>
+    <>
+      <UpdateChecker />
+      <main className="appShell">
+        <section className="mainStage">
+          <div className="desktopDashboard"><Dashboard /></div><div className="mobileDashboard"><MobileDashboard /></div>
+        </section>
+      </main>
+    </>
   );
 
 function Telemetry(p:{label:string;value:string;width:string;icon:string}){return <div className="telemetryCard"><Icon>{p.icon}</Icon><div><div><span>{p.label}</span><b>{p.value}</b></div><div className="bar"><i style={{width:p.width}} /></div></div></div>}
