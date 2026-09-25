@@ -383,6 +383,17 @@ function OrbitalRings(){
   return <div className="orbitalLayer" ref={mountRef} aria-hidden="true" />;
 }
 
+function Dashboard() {
+  return (
+    <div className="dashboard cleanCommandCenter">
+      <section className="heroCore">
+        <EarthGlobe />
+        <OrbitalRings />
+      </section>
+    </div>
+  );
+}
+
 function App() {
   const [token, setToken] = useState(localStorage.getItem("morok_token") ?? "");
   const [email, setEmail] = useState("");
@@ -676,23 +687,6 @@ function App() {
   const activeAutomations = automations.filter(a => a.enabled).length;
   const memoryCount = memories.length;
   const title = nav.find(x => x.key === tab)?.label ?? secondary.find(x => x.key === tab)?.label ?? "MOROK AI";
-
-  function Dashboard() {
-  return <div className="dashboard cleanCommandCenter">
-    <section className="heroCore">
-      <EarthGlobe />
-      <OrbitalRings />
-    </section>
-  </div>;
-}
-function EarthGlobe(){
-  const mountRef=useRef<HTMLDivElement>(null);
-
-  useEffect(()=>{
-    const mount=mountRef.current;
-    if(ain>
-  );
-
 
 function Telemetry(p:{label:string;value:string;width:string;icon:string}){return <div className="telemetryCard"><Icon>{p.icon}</Icon><div><div><span>{p.label}</span><b>{p.value}</b></div><div className="bar"><i style={{width:p.width}} /></div></div></div>}
 function Panel(p:{title:string;children:React.ReactNode}){return <div className="holoPanel"><div className="panelTitle"><span>{p.title}</span><i /></div>{p.children}</div>}
