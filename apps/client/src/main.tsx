@@ -470,6 +470,14 @@ function EarthGlobe(){
 
     const textureLoader=new THREE.TextureLoader();
     textureLoader.setCrossOrigin("anonymous");
+    textureLoader.setPath("");
+    const loadedTextures:THREE.Texture[]=[];
+    const loadTexture=(url:string,onLoad:(tex:THREE.Texture)=>void)=>{
+      loadTexture(url,tex=>{
+        loadedTextures.push(tex);
+        onLoad(tex);
+      },undefined,()=>{});
+    };
 
     const earthMaterial=new THREE.MeshPhongMaterial({
       color:0xffffff,
@@ -479,7 +487,7 @@ function EarthGlobe(){
     const earth=new THREE.Mesh(new THREE.SphereGeometry(1,128,128),earthMaterial);
     earthSystem.add(earth);
 
-    textureLoader.load(
+    loadTexture(
       "https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg",
       tex=>{
         tex.colorSpace=THREE.SRGBColorSpace;
@@ -489,7 +497,7 @@ function EarthGlobe(){
       }
     );
 
-    textureLoader.load(
+    loadTexture(
       "https://threejs.org/examples/textures/planets/earth_normal_2048.jpg",
       tex=>{
         earthMaterial.normalMap=tex;
@@ -498,7 +506,7 @@ function EarthGlobe(){
       }
     );
 
-    textureLoader.load(
+    loadTexture(
       "https://threejs.org/examples/textures/planets/earth_specular_2048.jpg",
       tex=>{
         earthMaterial.specularMap=tex;
@@ -515,7 +523,7 @@ function EarthGlobe(){
     });
     const night=new THREE.Mesh(new THREE.SphereGeometry(1.006,96,96),nightMaterial);
     earthSystem.add(night);
-    textureLoader.load(
+    loadTexture(
       "https://threejs.org/examples/textures/planets/earth_lights_2048.png",
       tex=>{
         nightMaterial.map=tex;
@@ -532,7 +540,7 @@ function EarthGlobe(){
     });
     const clouds=new THREE.Mesh(new THREE.SphereGeometry(1.014,96,96),cloudMaterial);
     earthSystem.add(clouds);
-    textureLoader.load(
+    loadTexture(
       "https://threejs.org/examples/textures/planets/earth_clouds_1024.png",
       tex=>{
         cloudMaterial.map=tex;
