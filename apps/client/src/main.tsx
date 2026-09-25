@@ -90,11 +90,6 @@ function EarthGlobe(){
     renderer.setClearColor(0x000000,0);
     mount.appendChild(renderer.domElement);
 
-    scene.add(new THREE.AmbientLight(0x4f62b8,1.15));
-    const sun=new THREE.DirectionalLight(0xc9dcff,3.1);
-    sun.position.set(-3,1.8,4);
-    scene.add(sun);
-
     const earthSystem=new THREE.Group();
     earthSystem.rotation.x=-0.12;
     earthSystem.rotation.y=-0.48;
@@ -106,11 +101,9 @@ function EarthGlobe(){
     earthTexture.colorSpace=THREE.SRGBColorSpace;
     earthTexture.anisotropy=renderer.capabilities.getMaxAnisotropy();
 
-    const earthMaterial=new THREE.MeshPhongMaterial({
+    const earthMaterial=new THREE.MeshBasicMaterial({
       map:earthTexture,
-      color:0xffffff,
-      shininess:18,
-      specular:new THREE.Color(0x6f7cff)
+      color:0xffffff
     });
     const earth=new THREE.Mesh(new THREE.SphereGeometry(1,64,64),earthMaterial);
     earth.scale.setScalar(.5625);
@@ -447,7 +440,7 @@ function MobileDashboard(){
     <header className="mobileTop">
       <div className="mobileStatus"><span>11:42</span><i>➤</i></div>
       <div className="mobileHeaderPanel">
-        <div className="mobileBrand"><div className="mobileLogo"><img src="/MorokLogo.png" alt="Morok" /></div><div><b>MOROK</b><small>IA ASSISTENTE DO KOS</small><em><span/> ONLINE <strong>|</strong> v2.8.4</em></div></div>
+        <div className="mobileBrand"><div className="mobileLogo">M</div><div><b>MOROK</b><small>IA ASSISTENTE DO KOS</small><em><span/> ONLINE <strong>|</strong> v2.8.4</em></div></div>
         <div className="mobileKos"><b>✦ KOS</b><small>KORCZAK<br/>OPERATIONAL<br/>SYSTEM</small></div>
         <div className="mobileDate"><span>14 SET 2025</span><b>11:42:17</b></div>
       </div>
@@ -460,7 +453,7 @@ function MobileDashboard(){
       </aside>
 
       <section className="mobileCore">
-        <div className="mobileCoreRings"><div className="mobileCoreGlyph"><img src="/MorokLogo.png" alt="Morok" /></div><b>MOROK</b><span>ANALISANDO DADOS...</span><i>⌁⌁⌁</i></div>
+        <div className="mobileCoreRings"><div className="mobileCoreGlyph">M</div><b>MOROK</b><span>ANALISANDO DADOS...</span><i>⌁⌁⌁</i></div>
       </section>
 
       <aside className="mobileTelemetry">
@@ -539,7 +532,7 @@ function UpdateChecker(){
   if(checking || !update)return null;
   return <div className="morokUpdateOverlay" role="dialog" aria-modal="true" aria-label="Atualização disponível">
     <div className="morokUpdatePanel">
-      <div className="morokUpdateCore"><img src="/MorokLogo.png" alt="Morok" /></div>
+      <div className="morokUpdateCore"><span>M</span></div>
       <small>NOVA VERSÃO DISPONÍVEL</small>
       <h2>MOROK {update.version}</h2>
       <p>Uma versão mais recente do Morok foi encontrada no GitHub.</p>
