@@ -9,7 +9,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "tsc -p tsconfig.json --noEmit",
     "test": "node --test",
-    "android:build": "npm run build && npx cap sync android",
+    "android:build": "VITE_APP_VERSION=$npm_package_version npm run build && npx cap sync android",
     "android:add": "npx cap add android",
     "android:open": "npx cap open android"
   },
@@ -18,7 +18,8 @@
     "react-dom": "^19.1.1",
     "three": "^0.180.0",
     "@capacitor/core": "^7.4.3",
-    "@capacitor/android": "^7.4.3"
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/browser": "^7.0.2"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^5.0.2",
