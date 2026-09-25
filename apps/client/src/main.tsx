@@ -356,7 +356,7 @@ function App() {
       <section className="heroCore">
         <div className="coreLabel"><span>KOS</span><small>ONLINE</small></div>
         <div className="scanLines" />
-        <div className="globe"><div className="globeGrid" /><div className="continent c1" /><div className="continent c2" /><div className="globePoint p1" /><div className="globePoint p2" /><div className="globePoint p3" /></div>
+        <div className="globe"><div className="globeAtmosphere" /><div className="globeSurface"><div className="longitude l1"/><div className="longitude l2"/><div className="longitude l3"/><div className="longitude l4"/><div className="latitude lat1"/><div className="latitude lat2"/><div className="latitude lat3"/><div className="latitude lat4"/><div className="continent c1"/><div className="continent c2"/><div className="globePoint p1"/><div className="globePoint p2"/><div className="globePoint p3"/></div><div className="globeHighlight" /></div>
         <div className="orbit orbitA" /><div className="orbit orbitB" /><div className="orbit orbitC" />
         <div className="coreRings" />
         <div className="coreReadout"><span>◉</span><b>MOROK CORE</b><small>OPERAÇÃO ESTÁVEL</small></div>
