@@ -407,43 +407,18 @@ function EarthGlobe(){
     earthSystem.rotation.y=-0.48;
     scene.add(earthSystem);
 
+    const earthTexture=new THREE.TextureLoader().load("/earth.jpg");
+    earthTexture.colorSpace=THREE.SRGBColorSpace;
+    earthTexture.anisotropy=renderer.capabilities.getMaxAnisotropy();
+
     const earthMaterial=new THREE.MeshPhongMaterial({
-      color:0x173b6f,
+      map:earthTexture,
+      color:0xffffff,
       shininess:18,
       specular:new THREE.Color(0x6f7cff)
     });
     const earth=new THREE.Mesh(new THREE.SphereGeometry(1,64,64),earthMaterial);
     earthSystem.add(earth);
-
-    const toSphere=(lon:number,lat:number,radius=1.012)=>{
-      const lo=(lon+180)*Math.PI/180;
-      const la=lat*Math.PI/180;
-      return new THREE.Vector3(
-        -radius*Math.cos(la)*Math.sin(lo),
-        radius*Math.sin(la),
-        radius*Math.cos(la)*Math.cos(lo)
-      );
-    };
-
-    const gridGroup=new THREE.Group();
-    earthSystem.add(gridGroup);
-    const gridMaterial=new THREE.LineBasicMaterial({
-      color:0x6d8dff,
-      transparent:true,
-      opacity:.16,
-      depthWrite:false,
-      blending:THREE.AdditiveBlending
-    });
-    for(let lat=-80;lat<=80;lat+=10){
-      const pts:THREE.Vector3[]=[];
-      for(let lon=-180;lon<=180;lon+=6)pts.push(toSphere(lon,lat,1.008));
-      gridGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),gridMaterial));
-    }
-    for(let lon=-180;lon<180;lon+=10){
-      const pts:THREE.Vector3[]=[];
-      for(let lat=-90;lat<=90;lat+=6)pts.push(toSphere(lon,lat,1.008));
-      gridGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),gridMaterial));
-    }
 
     const atmosphere=new THREE.Mesh(
       new THREE.SphereGeometry(1.075,40,40),
@@ -709,6 +684,7 @@ function EarthGlobe(){
         if(Array.isArray(material))material.forEach(m=>m.dispose());
         else if(material)material.dispose();
       });
+      earthTexture.dispose();
       renderer.dispose();
       if(renderer.domElement.parentElement===mount)mount.removeChild(renderer.domElement);
     };
