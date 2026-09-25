@@ -876,3 +876,43 @@ mix-blend-mode:screen;opacity:.65}
 .morokUpdateCore{width:76px;height:76px;margin:0 auto 16px;border:1px solid #7d48ff;border-radius:50%;display:grid;place-items:center;color:#9d68ff;font-size:42px;font-weight:900;text-shadow:0 0 20px #6e43ff,8px 0 20px #178dff;box-shadow:0 0 25px rgba(102,62,255,.22)}
 .morokUpdatePanel>small{font-size:9px;letter-spacing:.22em;color:#39b8ff}.morokUpdatePanel h2{margin:9px 0 7px;font-size:25px;letter-spacing:.12em}.morokUpdatePanel p{margin:0 auto 15px;max-width:390px;font-size:12px;line-height:1.6;color:#8eafd0}.morokUpdateNotes{max-height:110px;overflow:auto;text-align:left;padding:10px;margin:12px 0;border:1px solid rgba(57,145,235,.22);font-size:10px;line-height:1.5;color:#7199bf;background:rgba(0,8,22,.5)}.morokUpdateCurrent{font-size:9px;color:#6188ad;letter-spacing:.12em}.morokUpdateCurrent b{color:#bcdcff;margin-left:6px}.morokUpdateActions{display:flex;gap:10px;justify-content:center;margin-top:22px}.morokUpdateActions button{min-height:42px;padding:0 20px;cursor:pointer;font:inherit;font-size:10px;letter-spacing:.12em;clip-path:polygon(0 8px,8px 0,calc(100% - 8px) 0,100% 8px,100% calc(100% - 8px),calc(100% - 8px) 100%,8px 100%,0 calc(100% - 8px))}.morokUpdateButton{border:1px solid #259fff;background:linear-gradient(90deg,#1555a7,#6532ba);color:#fff;box-shadow:0 0 18px rgba(40,137,255,.2)}.morokUpdateLater{border:1px solid rgba(104,153,201,.35);background:rgba(5,17,34,.7);color:#789abb}
 @media(max-width:700px){.morokUpdateOverlay{padding:16px}.morokUpdatePanel{width:100%;padding:28px 20px 22px}.morokUpdateActions{flex-direction:column}.morokUpdateActions button{width:100%}}
+
+
+/* MorokLogo.png — identidade visual oficial */
+.mobileLogo{
+  overflow:hidden!important;
+  display:grid!important;
+  place-items:center!important;
+}
+.mobileLogo img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  display:block!important;
+  filter:drop-shadow(0 0 10px rgba(72,96,255,.35));
+}
+.mobileCoreGlyph{
+  display:grid!important;
+  place-items:center!important;
+  width:clamp(70px,24vw,118px)!important;
+  height:clamp(70px,24vw,118px)!important;
+  font-size:0!important;
+}
+.mobileCoreGlyph img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  display:block!important;
+  filter:drop-shadow(0 0 18px rgba(106,61,255,.55)) drop-shadow(8px 0 18px rgba(0,145,255,.35));
+}
+.morokUpdateCore{
+  overflow:hidden!important;
+}
+.morokUpdateCore img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  display:block!important;
+  padding:7px!important;
+  filter:drop-shadow(0 0 16px rgba(100,65,255,.5));
+}
