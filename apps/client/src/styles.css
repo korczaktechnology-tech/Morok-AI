@@ -269,3 +269,79 @@ mix-blend-mode:screen;opacity:.65}
 .morokBrief{background:transparent!important;border-color:rgba(55,68,117,.55)!important;box-shadow:none!important}
 .topInfo .clock{font-variant-numeric:tabular-nums;min-width:84px}
 @media(max-width:1450px){.earthGlobe{width:340px}.operationChart{display:none}}
+
+
+/* MOROK // COMMAND-CENTER BACKGROUND — independent visual layer */
+.appShell{
+  position:relative!important;
+  isolation:isolate!important;
+  overflow:hidden!important;
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 48%,rgba(31,45,145,.16),transparent 62%),
+    radial-gradient(ellipse 42% 70% at 8% 52%,rgba(91,30,190,.11),transparent 68%),
+    radial-gradient(ellipse 38% 58% at 92% 48%,rgba(210,25,65,.08),transparent 70%),
+    linear-gradient(180deg,#03050c 0%,#02030a 48%,#010207 100%)!important;
+}
+.appShell:before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-3;
+  pointer-events:none;
+  background:
+    linear-gradient(rgba(82,103,180,.045) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(82,103,180,.045) 1px,transparent 1px);
+  background-size:46px 46px;
+  mask-image:radial-gradient(ellipse 76% 82% at 50% 48%,#000 0%,rgba(0,0,0,.78) 55%,transparent 100%);
+}
+.appShell:after{
+  content:"";
+  position:absolute;
+  inset:-25%;
+  z-index:-2;
+  pointer-events:none;
+  background:
+    repeating-linear-gradient(112deg,transparent 0 170px,rgba(70,93,180,.035) 171px,transparent 172px 340px),
+    repeating-linear-gradient(68deg,transparent 0 220px,rgba(186,42,111,.025) 221px,transparent 222px 440px);
+  transform:rotate(-2deg);
+  animation:morokAmbientDrift 26s linear infinite;
+}
+.mainStage{
+  position:relative!important;
+  background:
+    radial-gradient(ellipse 52% 72% at 52% 47%,rgba(47,67,184,.055),transparent 70%),
+    transparent!important;
+}
+.mainStage:before{
+  content:"";
+  position:absolute;
+  width:min(72vw,1100px);
+  aspect-ratio:1;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  pointer-events:none;
+  z-index:-1;
+  border:1px solid rgba(73,93,177,.075);
+  box-shadow:
+    0 0 0 70px rgba(56,72,161,.018),
+    0 0 0 150px rgba(116,42,185,.014),
+    0 0 140px rgba(44,72,210,.07);
+}
+.heroCore{
+  position:relative!important;
+}
+.heroCore:before{
+  box-shadow:
+    0 0 0 1px rgba(89,108,210,.08),
+    0 0 55px rgba(62,78,205,.08),
+    inset 0 0 55px rgba(39,57,152,.035)!important;
+}
+@keyframes morokAmbientDrift{
+  from{transform:translate3d(-2%,0,0) rotate(-2deg)}
+  to{transform:translate3d(2%,0,0) rotate(-2deg)}
+}
+@media(prefers-reduced-motion:reduce){
+  .appShell:after{animation:none}
+}
