@@ -6,17 +6,23 @@ function blockedHost(host:string):boolean {
   const h=host.toLowerCase();
   if (h==="localhost" || h.endsWith(".localhost") || h==="metadata.google.internal") return true;
   if (net.isIP(h)) {
-    const parts=h.split(".").map(Number);
-    if (parts.length===4 && (parts[0]===10 || parts[0]===127 || parts[0]===169 && parts[1]===254 || parts[0]===192 && parts[1]===168 || parts[0]===172 && parts[1]>=16 && parts[1]<=31)) return true;
     if (h.includes(":")) return true;
+    const parts=h.split(".").map(Number);
+    const a=parts[0] ?? -1; const b=parts[1] ?? -1;
+    if (parts.length===4 && (a===10 || a===127 || (a===169 && b===254) || (a===192 && b===168) || (a===172 && b>=16 && b<=31))) return true;
   }
   return false;
 }
 async function assertSafeUrl(raw:string):Promise<URL>{
   const url=new URL(raw.startsWith("www.")?"https://"+raw:raw);
-  if (!["http:","https:"].includes(url.protocol)) throw new Error("unsupported_url_protocol");
-  if (blockedHost(url.hostname)) throw new Error("blocked_private_url");
-  try { const addresses=await dns.lookup(url.hostname,{all:true}); if(addresses.some(a=>blockedHost(a.address))) throw new Error("blocked_private_url"); } catch(e){ if(e instanceof Error && e.message==="blocked_private_url") throw e; }
+  if(!["http:","https:"].includes(url.protocol)) throw new Error("unsupported_url_protocol");
+  if(blockedHost(url.hostname)) throw new Error("blocked_private_url");
+  try {
+    const addresses=await dns.lookup(url.hostname,{all:true});
+    if(addresses.some(a=>blockedHost(a.address))) throw new Error("blocked_private_url");
+  } catch(e) {
+    if(e instanceof Error && e.message==="blocked_private_url") throw e;
+  }
   return url;
 }
 function stripHtml(html:string):string {
@@ -34,9 +40,16 @@ export class WebService {
   }
   async search(query:string):Promise<Array<{title:string;url:string;snippet:string}>>{
     const endpoint="https://html.duckduckgo.com/html/?q="+encodeURIComponent(query);
-    const page=await this.open(endpoint);
+    const safe=await assertSafeUrl(endpoint);
+    const response=await fetch(safe,{signal:AbortSignal.timeout(config.webTimeoutMs),headers:{"user-agent":"Morok/1.0"}});
+    if(!response.ok) throw new Error(`web_search_http_${response.status}`);
+    const html=await response.text();
     const results:Array<{title:string;url:string;snippet:string}>=[]; const re=/<a[^>]+class="result__a"[^>]+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>[\s\S]*?<a[^>]+class="result__snippet"[^>]*>([\s\S]*?)<\/a>/gi;
-    let m:RegExpExecArray|null; while((m=re.exec(page.text)) && results.length<10) results.push({url:m[1],title:stripHtml(m[2]),snippet:stripHtml(m[3])});
+    let m:RegExpExecArray|null;
+    while((m=re.exec(html)) && results.length<10) {
+      const url=m[1] ?? ""; const title=m[2] ?? ""; const snippet=m[3] ?? "";
+      results.push({url,title:stripHtml(title),snippet:stripHtml(snippet)});
+    }
     return results;
   }
 }

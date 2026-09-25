@@ -88,7 +88,7 @@ export function buildApp(){
       const toolId=toolMap[intent.kind];
       if(toolId){try{const result=await registry.execute(toolId,input);responseContent=JSON.stringify(result,null,2);}catch(error){responseContent=error instanceof Error?error.message:"Falha ao executar intenção";}}
     }
-    if(!responseContent){responseContent=(await gateway.complete({message,context:context as unknown as Record<string,unknown>,history:context.messages as never})).content;}
+    if(!responseContent){responseContent=(await gateway.complete({message,context:context as unknown as Record<string,unknown>,history:context.history.map((item) => ({ role: (item.role === "user" || item.role === "assistant" || item.role === "system") ? item.role : "user", content: item.content }))})).content;}
     await conversations.updateOne({id:conversationId,userId:auth.user.id},{$push:{messages:{role:"assistant",content:responseContent,model:config.modelName,createdAt:new Date()}},$set:{updatedAt:new Date()}});
     await db.collection("audit_logs").insertOne({action:"conversation.message.completed",actorId:auth.user.id,conversationId,sessionId:auth.sessionId,intent:intent.kind,createdAt:new Date()});
     return {content:responseContent,model:config.modelName,finished:true,conversationId,sessionId:auth.sessionId,intent};
