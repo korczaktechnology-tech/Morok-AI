@@ -507,7 +507,7 @@ function normalizeVersion(value:string){
 }
 function isNewerVersion(latest:string,current:string){
   const a=normalizeVersion(latest),b=normalizeVersion(current);
-  for(let i=0;i<3;i++){ if(a[i]>b[i])return true; if(a[i]<b[i])return false; }
+  for(let i=0;i<3;i++){ const av=a[i] ?? 0; const bv=b[i] ?? 0; if(av>bv)return true; if(av<bv)return false; }
   return false;
 }
 
