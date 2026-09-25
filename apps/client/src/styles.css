@@ -434,3 +434,30 @@ mix-blend-mode:screen;opacity:.65}
 @media (prefers-reduced-motion:reduce){
   .cleanCommandCenter:before{animation:none}
 }
+
+
+/* REAL EARTH RENDER FIX */
+.cleanCommandCenter{
+  z-index:20!important;
+  isolation:isolate!important;
+  background:
+    radial-gradient(ellipse 46% 44% at 50% 46%,rgba(74,48,205,.22),transparent 58%),
+    radial-gradient(ellipse 32% 58% at 8% 45%,rgba(132,22,205,.16),transparent 72%),
+    radial-gradient(ellipse 30% 54% at 92% 54%,rgba(230,28,66,.13),transparent 72%),
+    linear-gradient(180deg,#010107 0%,#02010a 52%,#010106 100%)!important;
+}
+.cleanCommandCenter:before{
+  z-index:1!important;
+}
+.cleanCommandCenter:after{
+  z-index:2!important;
+}
+.cleanCommandCenter .heroCore{
+  z-index:3!important;
+}
+.cleanCommandCenter .realEarth{
+  z-index:4!important;
+}
+.cleanCommandCenter .realEarth canvas{
+  background:#010107!important;
+}
