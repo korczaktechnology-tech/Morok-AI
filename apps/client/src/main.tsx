@@ -604,7 +604,7 @@ function EarthGlobe(){
       // gets reassigned to a starting orientation.
       tracerPhase=tracerPhase.map((phase,i)=>phase+dt*(tracerData[i]?.speed ?? 0));
       tracers.forEach((tracer,i)=>{
-        const phase=tracerPhase[i];
+        const phase:number = tracerPhase[i] ?? 0;
         const radius:number = i===0 ? 1.27 : i===1 ? 1.39 : i===2 ? 1.52 : 1.68;
         tracer.position.set(
           Math.cos(phase)*radius,
