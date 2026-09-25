@@ -374,11 +374,12 @@ function App() {
 function EarthGlobe(){
   const canvasRef=useRef<HTMLCanvasElement>(null);
   const rotation=useRef({x:-0.08,y:-0.55});
+  const lastFrame=useRef<number | null>(null);
   const dragging=useRef(false); const last=useRef({x:0,y:0}); const velocity=useRef({x:0,y:0});
   useEffect(()=>{const canvas=canvasRef.current;if(!canvas)return;const ctx=canvas.getContext("2d");if(!ctx)return;let raf=0;const dpr=Math.min(devicePixelRatio||1,2);
     const land:Array<[number,number]>= [[-165,55],[-130,50],[-105,42],[-90,30],[-80,20],[-75,5],[-65,0],[-55,-20],[-50,-40],[-40,-20],[-50,0],[-70,15],[-90,32],[-120,48],[-165,55],[-80,12],[-70,4],[-62,-8],[-55,-18],[-50,-30],[-58,-35],[-68,-20],[-75,-5],[-80,12],[-10,35],[5,45],[25,50],[45,35],[50,20],[35,8],[20,10],[10,-5],[0,5],[-10,20],[-10,35],[35,-12],[55,-20],[70,-5],[75,12],[60,25],[45,12],[35,-12]];
-    const draw=()=>{const r=canvas.getBoundingClientRect(),w=r.width,h=r.height;if(canvas.width!==w*dpr||canvas.height!==h*dpr){canvas.width=w*dpr;canvas.height=h*dpr}ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);const R=Math.min(w,h)*.39,cx=w/2,cy=h/2;
-      if(!dragging.current){rotation.current.y+=0.0018+velocity.current.x*0.00035;rotation.current.x+=velocity.current.y*0.00018;}
+    const draw=(now:number)=>{const r=canvas.getBoundingClientRect(),w=r.width,h=r.height;const dt=lastFrame.current===null?16.67:Math.min(40,now-lastFrame.current);lastFrame.current=now;if(canvas.width!==w*dpr||canvas.height!==h*dpr){canvas.width=w*dpr;canvas.height=h*dpr}ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);const R=Math.min(w,h)*.39,cx=w/2,cy=h/2;
+      if(!dragging.current){rotation.current.y+=(0.0018+velocity.current.x*0.00035)*(dt/16.67);rotation.current.x+=velocity.current.y*0.00018*(dt/16.67);}
       velocity.current.x*=0.985;velocity.current.y*=0.985;
       const g=ctx.createRadialGradient(cx-R*.38,cy-R*.42,R*.02,cx,cy,R*1.12);g.addColorStop(0,"#b9dcff");g.addColorStop(.12,"#4d8fff");g.addColorStop(.42,"#172fae");g.addColorStop(.78,"#060d42");g.addColorStop(1,"#01030d");ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
       ctx.save();ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);ctx.clip();
@@ -388,7 +389,7 @@ function EarthGlobe(){
       for(let k=0;k<3;k++){ctx.beginPath();land.slice(k===0?0:k===1?15:24,k===0?15:k===1?24:land.length).forEach(([lo,la],i)=>{const q=p(lo,la);i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y)});ctx.closePath();ctx.fillStyle="rgba(75,139,255,.68)";ctx.shadowColor="#438cff";ctx.shadowBlur=7;ctx.fill();ctx.shadowBlur=0}
       for(let i=0;i<32;i++){const q=p(-180+i*11.25,Math.sin(i*1.9)*48);if(q.z>.05){ctx.beginPath();ctx.arc(q.x,q.y,1.5,0,Math.PI*2);ctx.fillStyle=i%7===0?"#ff4168":"#80b0ff";ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=8;ctx.fill();ctx.shadowBlur=0}}
       const light=ctx.createLinearGradient(cx-R,cy-R,cx+R,cy+R);light.addColorStop(0,"rgba(255,255,255,.22)");light.addColorStop(.28,"transparent");light.addColorStop(.7,"rgba(0,0,0,.2)");light.addColorStop(1,"rgba(0,0,0,.78)");ctx.fillStyle=light;ctx.fillRect(cx-R,cy-R,R*2,R*2);ctx.restore();
-      ctx.beginPath();ctx.arc(cx,cy,R+2,0,Math.PI*2);ctx.strokeStyle="rgba(87,137,255,.85)";ctx.shadowColor="#386cff";ctx.shadowBlur=20;ctx.stroke();ctx.shadowBlur=0;raf=requestAnimationFrame(draw)};draw();return()=>cancelAnimationFrame(raf)},[]);
+      ctx.beginPath();ctx.arc(cx,cy,R+2,0,Math.PI*2);ctx.strokeStyle="rgba(87,137,255,.85)";ctx.shadowColor="#386cff";ctx.shadowBlur=20;ctx.stroke();ctx.shadowBlur=0;raf=requestAnimationFrame(draw)};raf=requestAnimationFrame(draw);return()=>cancelAnimationFrame(raf)},[]);
   const down=(e:React.PointerEvent)=>{dragging.current=true;last.current={x:e.clientX,y:e.clientY};(e.currentTarget as HTMLCanvasElement).setPointerCapture(e.pointerId)};
   const move=(e:React.PointerEvent)=>{if(!dragging.current)return;const dx=e.clientX-last.current.x,dy=e.clientY-last.current.y;last.current={x:e.clientX,y:e.clientY};rotation.current.y+=dx*.008;rotation.current.x+=dy*.006;rotation.current.x=Math.max(-Math.PI/2,Math.min(Math.PI/2,rotation.current.x));velocity.current={x:dx,y:dy}};
   const up=()=>{dragging.current=false};
