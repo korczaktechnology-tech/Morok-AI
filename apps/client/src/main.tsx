@@ -385,11 +385,7 @@ function EarthGlobe(){
     const camera=new THREE.PerspectiveCamera(34,1,0.1,100);
     camera.position.set(0,0,6.3);
 
-    const renderer=new THREE.WebGLRenderer({
-      antialias:true,
-      alpha:false,
-      powerPreference:"high-performance"
-    });
+    const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:"high-performance"});
     renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
     renderer.outputColorSpace=THREE.SRGBColorSpace;
     renderer.toneMapping=THREE.ACESFilmicToneMapping;
@@ -397,88 +393,15 @@ function EarthGlobe(){
     renderer.setClearColor(0x010107,1);
     mount.appendChild(renderer.domElement);
 
-    const ambient=new THREE.AmbientLight(0x4f62b8,1.15);
-    scene.add(ambient);
+    scene.add(new THREE.AmbientLight(0x4f62b8,1.15));
     const sun=new THREE.DirectionalLight(0xc9dcff,3.1);
     sun.position.set(-3,1.8,4);
     scene.add(sun);
-    const rim=new THREE.PointLight(0x8d42ff,7,7,2);
-    rim.position.set(2,-.8,-2.5);
-    scene.add(rim);
-    const redRim=new THREE.PointLight(0xff254f,4.5,6,2);
-    redRim.position.set(-2,-1,1.5);
-    scene.add(redRim);
-
-    const starGeometry=new THREE.BufferGeometry();
-    const starPositions:number[]=[];
-    for(let i=0;i<1800;i++){
-      const radius=9+Math.random()*18;
-      const theta=Math.random()*Math.PI*2;
-      const phi=Math.acos(2*Math.random()-1);
-      starPositions.push(
-        radius*Math.sin(phi)*Math.cos(theta),
-        radius*Math.cos(phi),
-        radius*Math.sin(phi)*Math.sin(theta)
-      );
-    }
-    starGeometry.setAttribute("position",new THREE.Float32BufferAttribute(starPositions,3));
-    const stars=new THREE.Points(
-      starGeometry,
-      new THREE.PointsMaterial({
-        color:0x8192ff,
-        size:.018,
-        sizeAttenuation:true,
-        transparent:true,
-        opacity:.72,
-        depthWrite:false
-      })
-    );
-    scene.add(stars);
-
-    const nebulaTexture=(()=>{
-      const c=document.createElement("canvas");
-      c.width=c.height=256;
-      const x=c.getContext("2d");
-      if(!x)return null;
-      const g=x.createRadialGradient(128,128,4,128,128,128);
-      g.addColorStop(0,"rgba(150,30,255,.28)");
-      g.addColorStop(.28,"rgba(92,24,190,.16)");
-      g.addColorStop(.62,"rgba(40,10,90,.07)");
-      g.addColorStop(1,"rgba(0,0,0,0)");
-      x.fillStyle=g;x.fillRect(0,0,256,256);
-      return new THREE.CanvasTexture(c);
-    })();
-
-    const nebulaMaterial=nebulaTexture?new THREE.SpriteMaterial({
-      map:nebulaTexture,
-      color:0x8a32ff,
-      transparent:true,
-      opacity:.72,
-      depthWrite:false,
-      blending:THREE.AdditiveBlending
-    }):null;
-    if(nebulaMaterial){
-      const s1=new THREE.Sprite(nebulaMaterial);s1.scale.set(7,4.5,1);s1.position.set(-4,1,-5);scene.add(s1);
-      const s2=new THREE.Sprite(nebulaMaterial.clone());s2.material.color.setHex(0xff244f);s2.material.opacity=.34;s2.scale.set(6,4,1);s2.position.set(4,-1.5,-6);scene.add(s2);
-      const s3=new THREE.Sprite(nebulaMaterial.clone());s3.material.color.setHex(0x3f66ff);s3.material.opacity=.22;s3.scale.set(5,5,1);s3.position.set(1,3,-7);scene.add(s3);
-    }
 
     const earthSystem=new THREE.Group();
-    earthSystem.rotation.x=-.12;
-    earthSystem.rotation.y=-.48;
+    earthSystem.rotation.x=-0.12;
+    earthSystem.rotation.y=-0.48;
     scene.add(earthSystem);
-
-    const textureLoader=new THREE.TextureLoader();
-    textureLoader.setCrossOrigin("anonymous");
-    textureLoader.setPath("");
-    const loadedTextures:THREE.Texture[]=[];
-    const loadTexture=(url:string,onLoad:(tex:THREE.Texture)=>void)=>{
-      textureLoader.load(url,tex=>{
-        loadedTextures.push(tex);
-        tex.needsUpdate=true;
-        onLoad(tex);
-      },undefined,()=>{});
-    };
 
     const earthMaterial=new THREE.MeshPhongMaterial({
       color:0x173b6f,
@@ -487,99 +410,6 @@ function EarthGlobe(){
     });
     const earth=new THREE.Mesh(new THREE.SphereGeometry(1,128,128),earthMaterial);
     earthSystem.add(earth);
-
-    loadTexture(
-      "https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg",
-      tex=>{
-        tex.colorSpace=THREE.SRGBColorSpace;
-        tex.anisotropy=renderer.capabilities.getMaxAnisotropy();
-        earthMaterial.map=tex;
-        earthMaterial.needsUpdate=true;
-      }
-    );
-
-    loadTexture(
-      "https://threejs.org/examples/textures/planets/earth_normal_2048.jpg",
-      tex=>{
-        earthMaterial.normalMap=tex;
-        earthMaterial.normalScale=new THREE.Vector2(.42,.42);
-        earthMaterial.needsUpdate=true;
-      }
-    );
-
-    loadTexture(
-      "https://threejs.org/examples/textures/planets/earth_specular_2048.jpg",
-      tex=>{
-        earthMaterial.specularMap=tex;
-        earthMaterial.needsUpdate=true;
-      }
-    );
-
-    const nightMaterial=new THREE.MeshBasicMaterial({
-      color:0x6e72ff,
-      transparent:true,
-      opacity:.78,
-      blending:THREE.AdditiveBlending,
-      depthWrite:false
-    });
-    const night=new THREE.Mesh(new THREE.SphereGeometry(1.006,96,96),nightMaterial);
-    earthSystem.add(night);
-    loadTexture(
-      "https://threejs.org/examples/textures/planets/earth_lights_2048.png",
-      tex=>{
-        nightMaterial.map=tex;
-        nightMaterial.needsUpdate=true;
-      }
-    );
-
-    const cloudMaterial=new THREE.MeshPhongMaterial({
-      color:0xffffff,
-      transparent:true,
-      opacity:.18,
-      depthWrite:false,
-      blending:THREE.AdditiveBlending
-    });
-    const clouds=new THREE.Mesh(new THREE.SphereGeometry(1.014,96,96),cloudMaterial);
-    earthSystem.add(clouds);
-    loadTexture(
-      "https://threejs.org/examples/textures/planets/earth_clouds_1024.png",
-      tex=>{
-        cloudMaterial.map=tex;
-        cloudMaterial.needsUpdate=true;
-      }
-    );
-
-    const atmosphere=new THREE.Mesh(
-      new THREE.SphereGeometry(1.075,96,96),
-      new THREE.ShaderMaterial({
-        uniforms:{glowColor:{value:new THREE.Color(0x426dff)},power:{value:3.1}},
-        vertexShader:`
-          varying vec3 vNormal;
-          varying vec3 vView;
-          void main(){
-            vNormal=normalize(normalMatrix*normal);
-            vec4 mvPosition=modelViewMatrix*vec4(position,1.0);
-            vView=normalize(-mvPosition.xyz);
-            gl_Position=projectionMatrix*mvPosition;
-          }
-        `,
-        fragmentShader:`
-          uniform vec3 glowColor;
-          uniform float power;
-          varying vec3 vNormal;
-          varying vec3 vView;
-          void main(){
-            float rim=pow(1.0-max(dot(vNormal,vView),0.0),power);
-            gl_FragColor=vec4(glowColor,rim*.78);
-          }
-        `,
-        side:THREE.BackSide,
-        transparent:true,
-        blending:THREE.AdditiveBlending,
-        depthWrite:false
-      })
-    );
-    earthSystem.add(atmosphere);
 
     const boundaryGroup=new THREE.Group();
     earthSystem.add(boundaryGroup);
@@ -602,63 +432,22 @@ function EarthGlobe(){
         points.push(toSphere(Number(pair[0]),Number(pair[1])));
       }
       if(points.length<2)return;
-      const geometry=new THREE.BufferGeometry().setFromPoints(points);
-      boundaryGroup.add(new THREE.Line(geometry,material));
+      boundaryGroup.add(new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints(points),
+        material
+      ));
     };
 
     const boundaryMaterial=new THREE.LineBasicMaterial({
-      color:0x6e8fff,
-      transparent:true,
-      opacity:.62,
-      depthWrite:false,
-      blending:THREE.AdditiveBlending
+      color:0x6e8fff,transparent:true,opacity:.62,depthWrite:false,blending:THREE.AdditiveBlending
     });
 
-    fetch("https://raw.githubusercontent.com/datasets/geo-countries/main/data/countries.geojson")
-      .then(r=>r.ok?r.json():null)
-      .then((geo:any)=>{
-        if(!geo?.features)return;
-        for(const feature of geo.features){
-          const g=feature.geometry;
-          if(g?.type==="Polygon"){
-            for(const ring of g.coordinates)addGeoLine(ring,boundaryMaterial);
-          }else if(g?.type==="MultiPolygon"){
-            for(const polygon of g.coordinates)for(const ring of polygon)addGeoLine(ring,boundaryMaterial);
-          }
-        }
-      })
-      .catch(()=>{});
-
-    const admin1Material=new THREE.LineBasicMaterial({
-      color:0xb24cff,
-      transparent:true,
-      opacity:.48,
-      depthWrite:false,
-      blending:THREE.AdditiveBlending
-    });
-    const admin1Url="https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_admin_1_states_provinces_lines.geojson";
-    fetch(admin1Url)
-      .then(r=>r.ok?r.json():null)
-      .then((geo:any)=>{
-        if(!geo?.features)return;
-        for(const feature of geo.features){
-          const g=feature.geometry;
-          if(g?.type==="LineString")addGeoLine(g.coordinates,admin1Material);
-          else if(g?.type==="MultiLineString"){
-            for(const line of g.coordinates)addGeoLine(line,admin1Material);
-          }
-        }
-      })
-      .catch(()=>{});
-
+    // Boundaries are intentionally not fetched at runtime. This prevents
+    // asynchronous scene changes from making the Earth visually refresh.
     const gridGroup=new THREE.Group();
     earthSystem.add(gridGroup);
     const gridMaterial=new THREE.LineBasicMaterial({
-      color:0x6d8dff,
-      transparent:true,
-      opacity:.16,
-      depthWrite:false,
-      blending:THREE.AdditiveBlending
+      color:0x6d8dff,transparent:true,opacity:.16,depthWrite:false,blending:THREE.AdditiveBlending
     });
     for(let lat=-80;lat<=80;lat+=10){
       const pts:THREE.Vector3[]=[];
@@ -671,6 +460,15 @@ function EarthGlobe(){
       gridGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),gridMaterial));
     }
 
+    const atmosphere=new THREE.Mesh(
+      new THREE.SphereGeometry(1.075,96,96),
+      new THREE.MeshBasicMaterial({
+        color:0x426dff,transparent:true,opacity:.18,
+        side:THREE.BackSide,blending:THREE.AdditiveBlending,depthWrite:false
+      })
+    );
+    earthSystem.add(atmosphere);
+
     const orbitalGroup=new THREE.Group();
     scene.add(orbitalGroup);
 
@@ -678,11 +476,7 @@ function EarthGlobe(){
       const ring=new THREE.Mesh(
         new THREE.TorusGeometry(radius,thickness,10,220),
         new THREE.MeshBasicMaterial({
-          color,
-          transparent:true,
-          opacity,
-          blending:THREE.AdditiveBlending,
-          depthWrite:false
+          color,transparent:true,opacity,blending:THREE.AdditiveBlending,depthWrite:false
         })
       );
       ring.rotation.x=tiltX;
@@ -715,31 +509,6 @@ function EarthGlobe(){
       outerRings.add(ring);
     }
 
-    const pulseGroup=new THREE.Group();
-    scene.add(pulseGroup);
-    const pulseGeometry=new THREE.BufferGeometry();
-    const pulsePositions:number[]=[];
-    for(let i=0;i<280;i++){
-      const a=(i/280)*Math.PI*2;
-      const r=1.82+(i%9)*.022;
-      pulsePositions.push(Math.cos(a)*r,(Math.sin(a*.73)*.035),Math.sin(a)*r);
-    }
-    pulseGeometry.setAttribute("position",new THREE.Float32BufferAttribute(pulsePositions,3));
-    const pulse=new THREE.Points(
-      pulseGeometry,
-      new THREE.PointsMaterial({
-        color:0xb04cff,
-        size:.012,
-        transparent:true,
-        opacity:.7,
-        blending:THREE.AdditiveBlending,
-        depthWrite:false
-      })
-    );
-    pulseGroup.add(pulse);
-
-    let raf=0;
-    let lastTime=performance.now();
     let dragging=false;
     let lastPointer={x:0,y:0};
 
@@ -757,7 +526,9 @@ function EarthGlobe(){
       earthSystem.rotation.x+=dy*.0045;
       earthSystem.rotation.x=Math.max(-1.25,Math.min(1.25,earthSystem.rotation.x));
     };
-    const onPointerUp=()=>{dragging=false};
+    const onPointerUp=()=>{
+      dragging=false;
+    };
     renderer.domElement.addEventListener("pointerdown",onPointerDown);
     renderer.domElement.addEventListener("pointermove",onPointerMove);
     renderer.domElement.addEventListener("pointerup",onPointerUp);
@@ -774,14 +545,12 @@ function EarthGlobe(){
     resizeObserver.observe(mount);
     resize();
 
+    // Only the orbital rings animate. The Earth itself is completely static.
+    let raf=0;
+    let lastTime=performance.now();
     const animate=(now:number)=>{
       const dt=Math.min(.05,(now-lastTime)/1000);
       lastTime=now;
-
-      if(!dragging){
-        // The Earth remains stationary until the user actively drags it.
-      }
-
       orbitalGroup.rotation.y+=dt*.055;
       orbitalGroup.rotation.x+=dt*.021;
       ringA.rotation.z+=dt*.19;
@@ -790,8 +559,6 @@ function EarthGlobe(){
       ringD.rotation.y-=dt*.061;
       outerRings.rotation.y-=dt*.017;
       outerRings.rotation.z+=dt*.011;
-      pulse.rotation.y+=dt*.09;
-      stars.rotation.y+=dt*.001;
       renderer.render(scene,camera);
       raf=requestAnimationFrame(animate);
     };
@@ -804,16 +571,12 @@ function EarthGlobe(){
       renderer.domElement.removeEventListener("pointermove",onPointerMove);
       renderer.domElement.removeEventListener("pointerup",onPointerUp);
       renderer.domElement.removeEventListener("pointercancel",onPointerUp);
-      earthSystem.traverse(o=>{
+      scene.traverse(o=>{
         const mesh=o as THREE.Mesh;
         if(mesh.geometry)mesh.geometry.dispose();
         const material=mesh.material as THREE.Material|THREE.Material[];
         if(Array.isArray(material))material.forEach(m=>m.dispose());
         else if(material)material.dispose();
-      });
-      scene.traverse(o=>{
-        const mesh=o as THREE.Mesh;
-        if(mesh.geometry)mesh.geometry.dispose();
       });
       renderer.dispose();
       if(renderer.domElement.parentElement===mount)mount.removeChild(renderer.domElement);
