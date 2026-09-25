@@ -461,3 +461,104 @@ mix-blend-mode:screen;opacity:.65}
 .cleanCommandCenter .realEarth canvas{
   background:#010107!important;
 }
+
+
+/* MOROK // CENTERED EARTH + CLEAN SPACE BACKGROUND */
+.appShell{
+  position:relative!important;
+  width:100vw!important;
+  min-width:100vw!important;
+  height:100vh!important;
+  min-height:100vh!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  background:#010107!important;
+}
+.mainStage{
+  position:relative!important;
+  width:100vw!important;
+  height:100vh!important;
+  min-height:100vh!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+}
+.cleanCommandCenter{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  display:block!important;
+  background:
+    radial-gradient(ellipse 55% 55% at 50% 50%,rgba(67,39,190,.20),transparent 58%),
+    radial-gradient(ellipse 42% 65% at 5% 48%,rgba(125,20,190,.14),transparent 72%),
+    radial-gradient(ellipse 38% 60% at 95% 52%,rgba(225,25,65,.12),transparent 72%),
+    radial-gradient(ellipse 30% 38% at 70% 15%,rgba(73,43,180,.09),transparent 72%),
+    #010107!important;
+}
+.cleanCommandCenter:before{
+  content:""!important;
+  position:absolute!important;
+  inset:-20%!important;
+  z-index:0!important;
+  pointer-events:none!important;
+  background:
+    radial-gradient(ellipse 28% 13% at 17% 28%,rgba(125,35,255,.12),transparent 72%),
+    radial-gradient(ellipse 24% 12% at 82% 72%,rgba(255,30,70,.10),transparent 72%),
+    radial-gradient(ellipse 20% 10% at 61% 12%,rgba(56,74,255,.09),transparent 72%)!important;
+  filter:blur(38px)!important;
+}
+.cleanCommandCenter:after{
+  display:none!important;
+}
+.cleanCommandCenter .heroCore{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  margin:0!important;
+  padding:0!important;
+  display:block!important;
+  overflow:hidden!important;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  transform:none!important;
+}
+.cleanCommandCenter .realEarth{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  margin:0!important;
+  padding:0!important;
+  max-width:none!important;
+  max-height:none!important;
+  transform:none!important;
+  z-index:5!important;
+}
+.cleanCommandCenter .realEarth canvas{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  display:block!important;
+}
+.cleanCommandCenter .orbit,
+.cleanCommandCenter .coreRings{
+  display:none!important;
+}
+
+/* Explicitly remove the legacy CSS grid / HUD grid. */
+.appShell:before,
+.appShell:after,
+.mainStage:before,
+.mainStage:after,
+.cleanCommandCenter:after{
+  display:none!important;
+  background:none!important;
+}
