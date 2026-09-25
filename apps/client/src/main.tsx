@@ -490,6 +490,24 @@ function EarthGlobe(){
     const ringC=makeRing(1.52,.002,0x3e74ff,.42,.92,.1);
     const ringD=makeRing(1.68,.0015,0xb23dff,.28,-.2,.78);
 
+    // Each orbital ring also has an asymmetrical moving tracer. This makes
+    // the motion visually continuous instead of looking like a closed shape
+    // that reaches 360° and snaps back to its starting appearance.
+    const tracerData=[
+      {ring:ringA,color:0xffffff,speed:.73,offset:0},
+      {ring:ringB,color:0xff5f78,speed:-.51,offset:2.1},
+      {ring:ringC,color:0x7897ff,speed:.37,offset:4.0},
+      {ring:ringD,color:0xd77aff,speed:-.29,offset:1.25}
+    ];
+    const tracers=tracerData.map(({ring,color})=>{
+      const g=new THREE.SphereGeometry(.022,10,10);
+      const m=new THREE.MeshBasicMaterial({color,transparent:true,opacity:.95,blending:THREE.AdditiveBlending});
+      const t=new THREE.Mesh(g,m);
+      ring.add(t);
+      return t;
+    });
+    let tracerPhase=[0,2.1,4.0,1.25];
+
     const outerRings=new THREE.Group();
     scene.add(outerRings);
     for(let i=0;i<7;i++){
@@ -580,6 +598,21 @@ function EarthGlobe(){
       qz.setFromAxisAngle(new THREE.Vector3(0,0,1),dt*.011);
       outerRings.quaternion.premultiply(qy);
       outerRings.quaternion.multiply(qz);
+
+      // Advance tracer positions continuously on each orbit. The phase is
+      // deliberately not used as a rotation angle, so the ring itself never
+      // gets reassigned to a starting orientation.
+      tracerPhase=tracerPhase.map((phase,i)=>phase+dt*tracerData[i].speed);
+      tracers.forEach((tracer,i)=>{
+        const phase=tracerPhase[i];
+        const radius=[1.27,1.39,1.52,1.68][i];
+        tracer.position.set(
+          Math.cos(phase)*radius,
+          Math.sin(phase)*radius,
+          0
+        );
+      });
+
       renderer.render(scene,camera);
       raf=requestAnimationFrame(animate);
     };
