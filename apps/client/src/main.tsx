@@ -602,10 +602,10 @@ function EarthGlobe(){
       // Advance tracer positions continuously on each orbit. The phase is
       // deliberately not used as a rotation angle, so the ring itself never
       // gets reassigned to a starting orientation.
-      tracerPhase=tracerPhase.map((phase,i)=>phase+dt*tracerData[i].speed);
+      tracerPhase=tracerPhase.map((phase,i)=>phase+dt*(tracerData[i]?.speed ?? 0));
       tracers.forEach((tracer,i)=>{
         const phase=tracerPhase[i];
-        const radius=[1.27,1.39,1.52,1.68][i];
+        const radius=([1.27,1.39,1.52,1.68][i] ?? 1.27);
         tracer.position.set(
           Math.cos(phase)*radius,
           Math.sin(phase)*radius,
