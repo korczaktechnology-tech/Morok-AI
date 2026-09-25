@@ -113,20 +113,8 @@ function EarthGlobe(){
       specular:new THREE.Color(0x6f7cff)
     });
     const earth=new THREE.Mesh(new THREE.SphereGeometry(1,64,64),earthMaterial);
+    earth.scale.setScalar(.75);
     earthSystem.add(earth);
-
-    const atmosphere=new THREE.Mesh(
-      new THREE.SphereGeometry(1.075,40,40),
-      new THREE.MeshBasicMaterial({
-        color:0x426dff,
-        transparent:true,
-        opacity:.18,
-        side:THREE.BackSide,
-        blending:THREE.AdditiveBlending,
-        depthWrite:false
-      })
-    );
-    earthSystem.add(atmosphere);
 
     let dragging=false;
     let lastPointer={x:0,y:0};
@@ -225,6 +213,7 @@ function OrbitalRings(){
       group:THREE.Group;
       markerA:THREE.Mesh;
       markerB:THREE.Mesh;
+      markerC:THREE.Mesh;
       radius:number;
       axis:THREE.Vector3;
       speed:number;
@@ -253,10 +242,11 @@ function OrbitalRings(){
       });
       const markerA=new THREE.Mesh(new THREE.SphereGeometry(.018,8,8),markerMaterial);
       const markerB=new THREE.Mesh(new THREE.SphereGeometry(.010,8,8),markerMaterial);
-      group.add(markerA,markerB);
+      const markerC=new THREE.Mesh(new THREE.SphereGeometry(.008,7,7),markerMaterial);
+      group.add(markerA,markerB,markerC);
       orbitalGroup.add(group);
 
-      ringStates.push({group,markerA,markerB,radius,axis,speed,phase});
+      ringStates.push({group,markerA,markerB,markerC,radius,axis,speed,phase});
     };
 
     makeRing(1.27,.0045,0x7448ff,.72,new THREE.Vector3(.3,.8,.2).normalize(),.191,.35,1.34);
@@ -292,7 +282,15 @@ function OrbitalRings(){
           blending:THREE.AdditiveBlending,depthWrite:false
         })
       );
-      group.add(marker);
+      const marker2=new THREE.Mesh(
+        new THREE.SphereGeometry(.0055,6,6),
+        new THREE.MeshBasicMaterial({
+          color:i%2?0x7d68ff:0xff5878,
+          transparent:true,opacity:.62,
+          blending:THREE.AdditiveBlending,depthWrite:false
+        })
+      );
+      group.add(marker,marker2);
       outerRings.add(group);
       outerStates.push({group,radius:r,phase:i*.73,speed:(i%2?-.021:.017)*(1+i*.11)});
     }
@@ -339,6 +337,11 @@ function OrbitalRings(){
           Math.sin(markerPhase*1.37+1.4)*state.radius*.48,
           Math.cos(markerPhase*.91)*.11
         );
+        state.markerC.position.set(
+          Math.cos(markerPhase*.83+3.2)*state.radius*.78,
+          Math.sin(markerPhase*.83+3.2)*state.radius*.78,
+          Math.sin(markerPhase*1.11)*.09
+        );
       });
 
       outerStates.forEach((state,index)=>{
@@ -352,11 +355,17 @@ function OrbitalRings(){
         ));
         state.group.scale.set(wobble,1,1);
         const marker=state.group.children[1] as THREE.Mesh;
+        const marker2=state.group.children[2] as THREE.Mesh;
         const markerPhase=elapsed*(.17+index*.023)+state.phase;
         marker.position.set(
           Math.cos(markerPhase)*state.radius,
           Math.sin(markerPhase)*state.radius,
           Math.sin(markerPhase*.67)*.05
+        );
+        marker2.position.set(
+          Math.cos(markerPhase*1.31+2.2)*state.radius,
+          Math.sin(markerPhase*1.31+2.2)*state.radius,
+          Math.cos(markerPhase*.81)*.07
         );
       });
 
