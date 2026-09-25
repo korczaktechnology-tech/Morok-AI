@@ -50,6 +50,18 @@ jobs:
         working-directory: apps/client
         run: npx cap add android
 
+      - name: Configure Morok app icon
+        working-directory: apps/client
+        run: |
+          if [ -f public/MorokLogo.png ]; then
+            mkdir -p android/app/src/main/res/drawable-nodpi
+            cp public/MorokLogo.png android/app/src/main/res/drawable-nodpi/morok_logo.png
+            sed -i 's|android:icon="@mipmap/ic_launcher"|android:icon="@drawable/morok_logo"|' android/app/src/main/AndroidManifest.xml
+            sed -i 's|android:roundIcon="@mipmap/ic_launcher_round"|android:roundIcon="@drawable/morok_logo"|' android/app/src/main/AndroidManifest.xml
+          else
+            echo "MorokLogo.png not found; keeping Capacitor default icon."
+          fi
+
       - name: Sync Capacitor
         working-directory: apps/client
         run: npx cap sync android
