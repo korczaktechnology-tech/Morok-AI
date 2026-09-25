@@ -385,8 +385,12 @@ function EarthGlobe(){
     const camera=new THREE.PerspectiveCamera(34,1,0.1,100);
     camera.position.set(0,0,6.3);
 
-    const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:"high-performance"});
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+    const renderer=new THREE.WebGLRenderer({
+      antialias:true,
+      alpha:false,
+      powerPreference:"high-performance"
+    });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
     renderer.outputColorSpace=THREE.SRGBColorSpace;
     renderer.toneMapping=THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure=1.15;
@@ -408,11 +412,8 @@ function EarthGlobe(){
       shininess:18,
       specular:new THREE.Color(0x6f7cff)
     });
-    const earth=new THREE.Mesh(new THREE.SphereGeometry(1,128,128),earthMaterial);
+    const earth=new THREE.Mesh(new THREE.SphereGeometry(1,96,96),earthMaterial);
     earthSystem.add(earth);
-
-    const boundaryGroup=new THREE.Group();
-    earthSystem.add(boundaryGroup);
 
     const toSphere=(lon:number,lat:number,radius=1.012)=>{
       const lo=(lon+180)*Math.PI/180;
@@ -424,115 +425,129 @@ function EarthGlobe(){
       );
     };
 
-    const addGeoLine=(coords:any[],material:THREE.LineBasicMaterial)=>{
-      if(!Array.isArray(coords)||coords.length<2)return;
-      const points:THREE.Vector3[]=[];
-      for(const pair of coords){
-        if(!Array.isArray(pair)||pair.length<2)continue;
-        points.push(toSphere(Number(pair[0]),Number(pair[1])));
-      }
-      if(points.length<2)return;
-      boundaryGroup.add(new THREE.Line(
-        new THREE.BufferGeometry().setFromPoints(points),
-        material
-      ));
-    };
-
-    const boundaryMaterial=new THREE.LineBasicMaterial({
-      color:0x6e8fff,transparent:true,opacity:.62,depthWrite:false,blending:THREE.AdditiveBlending
-    });
-
-    // Boundaries are intentionally not fetched at runtime. This prevents
-    // asynchronous scene changes from making the Earth visually refresh.
     const gridGroup=new THREE.Group();
     earthSystem.add(gridGroup);
     const gridMaterial=new THREE.LineBasicMaterial({
-      color:0x6d8dff,transparent:true,opacity:.16,depthWrite:false,blending:THREE.AdditiveBlending
+      color:0x6d8dff,
+      transparent:true,
+      opacity:.16,
+      depthWrite:false,
+      blending:THREE.AdditiveBlending
     });
     for(let lat=-80;lat<=80;lat+=10){
       const pts:THREE.Vector3[]=[];
-      for(let lon=-180;lon<=180;lon+=3)pts.push(toSphere(lon,lat,1.008));
+      for(let lon=-180;lon<=180;lon+=4)pts.push(toSphere(lon,lat,1.008));
       gridGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),gridMaterial));
     }
     for(let lon=-180;lon<180;lon+=10){
       const pts:THREE.Vector3[]=[];
-      for(let lat=-90;lat<=90;lat+=3)pts.push(toSphere(lon,lat,1.008));
+      for(let lat=-90;lat<=90;lat+=4)pts.push(toSphere(lon,lat,1.008));
       gridGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),gridMaterial));
     }
 
     const atmosphere=new THREE.Mesh(
-      new THREE.SphereGeometry(1.075,96,96),
+      new THREE.SphereGeometry(1.075,64,64),
       new THREE.MeshBasicMaterial({
-        color:0x426dff,transparent:true,opacity:.18,
-        side:THREE.BackSide,blending:THREE.AdditiveBlending,depthWrite:false
+        color:0x426dff,
+        transparent:true,
+        opacity:.18,
+        side:THREE.BackSide,
+        blending:THREE.AdditiveBlending,
+        depthWrite:false
       })
     );
     earthSystem.add(atmosphere);
 
+    /*
+     * IMPORTANT:
+     * Do not animate the rings by repeatedly adding to Euler angles or by
+     * accumulating quaternions. Closed toruses are symmetrical, so those
+     * approaches eventually create a visually convincing "return to start".
+     *
+     * Instead, every frame derives the complete pose from elapsed time.
+     * Several independent irrational/non-commensurate frequencies are used
+     * for orientation, precession, scale and asymmetric markers. The result
+     * is deterministic, smooth and does not contain a reset point.
+     */
     const orbitalGroup=new THREE.Group();
     scene.add(orbitalGroup);
 
-    // The orbital elements are groups rather than perfectly symmetrical
-    // toruses. Each one has fixed asymmetrical markers, so a full 360° turn
-    // can never look like a visual reset.
-    const makeRing=(radius:number,thickness:number,color:number,opacity:number,tiltX:number,tiltZ:number)=>{
+    type RingState={
+      group:THREE.Group;
+      markerA:THREE.Mesh;
+      markerB:THREE.Mesh;
+      radius:number;
+      baseScaleX:number;
+      baseScaleY:number;
+      tiltX:number;
+      tiltZ:number;
+      axis:THREE.Vector3;
+      speed:number;
+      phase:number;
+    };
+
+    const ringStates:RingState[]=[];
+
+    const makeRing=(
+      radius:number,
+      thickness:number,
+      color:number,
+      opacity:number,
+      tiltX:number,
+      tiltZ:number,
+      axis:THREE.Vector3,
+      speed:number,
+      phase:number,
+      scaleX:number
+    ):RingState=>{
       const group=new THREE.Group();
 
       const ring=new THREE.Mesh(
-        new THREE.TorusGeometry(radius,thickness,10,220),
+        new THREE.TorusGeometry(radius,thickness,8,160),
         new THREE.MeshBasicMaterial({
-          color,transparent:true,opacity,blending:THREE.AdditiveBlending,depthWrite:false
+          color,
+          transparent:true,
+          opacity,
+          blending:THREE.AdditiveBlending,
+          depthWrite:false
         })
       );
-      ring.rotation.x=tiltX;
-      ring.rotation.z=tiltZ;
+      ring.scale.x=scaleX;
       group.add(ring);
 
       const markerMaterial=new THREE.MeshBasicMaterial({
-        color,transparent:true,opacity:Math.min(1,opacity+.2),
-        blending:THREE.AdditiveBlending,depthWrite:false
+        color,
+        transparent:true,
+        opacity:Math.min(1,opacity+.25),
+        blending:THREE.AdditiveBlending,
+        depthWrite:false
       });
       const markerA=new THREE.Mesh(new THREE.SphereGeometry(.018,8,8),markerMaterial);
-      markerA.position.set(radius,0,0);
-      group.add(markerA);
-
       const markerB=new THREE.Mesh(new THREE.SphereGeometry(.010,8,8),markerMaterial);
-      markerB.position.set(-radius*.37,radius*.92,0);
-      group.add(markerB);
+      group.add(markerA,markerB);
 
       group.rotation.x=tiltX;
       group.rotation.z=tiltZ;
       orbitalGroup.add(group);
-      return group;
+
+      const state={group,markerA,markerB,radius,baseScaleX:scaleX,baseScaleY:1,tiltX,tiltZ,axis,speed,phase};
+      ringStates.push(state);
+      return state;
     };
 
-    const ringA=makeRing(1.27,.0045,0x7448ff,.72,.34,-.22);
-    const ringB=makeRing(1.39,.0025,0xff2d56,.52,-.5,.3);
-    const ringC=makeRing(1.52,.002,0x3e74ff,.42,.92,.1);
-    const ringD=makeRing(1.68,.0015,0xb23dff,.28,-.2,.78);
-
-    const tracerData=[
-      {ring:ringA,color:0xffffff,speed:.73,offset:0},
-      {ring:ringB,color:0xff5f78,speed:-.51,offset:2.1},
-      {ring:ringC,color:0x7897ff,speed:.37,offset:4.0},
-      {ring:ringD,color:0xd77aff,speed:-.29,offset:1.25}
-    ];
-    const tracers=tracerData.map(({ring,color})=>{
-      const g=new THREE.SphereGeometry(.022,10,10);
-      const m=new THREE.MeshBasicMaterial({color,transparent:true,opacity:.95,blending:THREE.AdditiveBlending});
-      const t=new THREE.Mesh(g,m);
-      ring.add(t);
-      return t;
-    });
-    let tracerPhase=[0,2.1,4.0,1.25];
+    makeRing(1.27,.0045,0x7448ff,.72,.34,-.22,new THREE.Vector3(.3,.8,.2).normalize(),.191,.35,1.34);
+    makeRing(1.39,.0025,0xff2d56,.52,-.5,.3,new THREE.Vector3(-.6,.2,.7).normalize(),-.137,2.1,.78);
+    makeRing(1.52,.002,0x3e74ff,.42,.92,.1,new THREE.Vector3(.7,-.4,.3).normalize(),.083,4.0,1.22);
+    makeRing(1.68,.0015,0xb23dff,.28,-.2,.78,new THREE.Vector3(.2,.6,-.7).normalize(),-.059,1.25,.86);
 
     const outerRings=new THREE.Group();
     scene.add(outerRings);
+    const outerStates:{group:THREE.Group;radius:number;phase:number;speed:number}[]=[];
     for(let i=0;i<7;i++){
       const r=1.83+i*.075;
       const group=new THREE.Group();
       const ring=new THREE.Mesh(
-        new THREE.TorusGeometry(r,.0012+(i%3)*.0007,6,220),
+        new THREE.TorusGeometry(r,.0012+(i%3)*.0007,6,160),
         new THREE.MeshBasicMaterial({
           color:i%2?0x6f55ff:0xff315f,
           transparent:true,
@@ -542,8 +557,10 @@ function EarthGlobe(){
         })
       );
       ring.rotation.x=Math.PI/2;
+      ring.scale.x=i%2?1.08:.94;
       ring.rotation.z=i*.31;
       group.add(ring);
+
       const marker=new THREE.Mesh(
         new THREE.SphereGeometry(.009,7,7),
         new THREE.MeshBasicMaterial({
@@ -554,13 +571,11 @@ function EarthGlobe(){
           depthWrite:false
         })
       );
-      marker.position.set(r,0,0);
       group.add(marker);
       outerRings.add(group);
+      outerStates.push({group,radius:r,phase:i*.73,speed:(i%2?-.021:.017)*(1+i*.11)});
     }
 
-    let dragging=false;
-    let lastPointer={x:0,y:0};
     let dragging=false;
     let lastPointer={x:0,y:0};
 
@@ -578,13 +593,17 @@ function EarthGlobe(){
       earthSystem.rotation.x+=dy*.0045;
       earthSystem.rotation.x=Math.max(-1.25,Math.min(1.25,earthSystem.rotation.x));
     };
-    const onPointerUp=()=>{
+    const onPointerUp=(e:PointerEvent)=>{
       dragging=false;
+      if(renderer.domElement.hasPointerCapture(e.pointerId)){
+        renderer.domElement.releasePointerCapture(e.pointerId);
+      }
     };
     renderer.domElement.addEventListener("pointerdown",onPointerDown);
     renderer.domElement.addEventListener("pointermove",onPointerMove);
     renderer.domElement.addEventListener("pointerup",onPointerUp);
     renderer.domElement.addEventListener("pointercancel",onPointerUp);
+    renderer.domElement.addEventListener("pointerleave",onPointerUp);
 
     const resize=()=>{
       const w=Math.max(1,mount.clientWidth);
@@ -597,57 +616,82 @@ function EarthGlobe(){
     resizeObserver.observe(mount);
     resize();
 
-    // Only the orbital rings animate. The Earth itself is completely static.
     let raf=0;
     let lastTime=performance.now();
+
     const animate=(now:number)=>{
-      const dt=Math.min(.05,(now-lastTime)/1000);
+      const rawDt=(now-lastTime)/1000;
       lastTime=now;
-      // Drive the rings with incremental quaternions instead of bounded
-      // Euler angles. Their orientation is accumulated continuously, with
-      // different axes/speeds and slow precession so the orbital motion does
-      // not visibly snap back into a repeated starting pose.
-      // Every ring receives several independent, non-commensurate
-      // rotations plus a slow 3D precession. Because the visible rings have
-      // asymmetric markers and the motion uses different axes, there is no
-      // single 360° state that can snap the whole system back to its start.
-      const qx=new THREE.Quaternion();
-      const qy=new THREE.Quaternion();
-      const qz=new THREE.Quaternion();
+      const dt=Math.min(.033,Math.max(0,rawDt));
+      const elapsed=now*.001;
 
-      qy.setFromAxisAngle(new THREE.Vector3(0,1,0),dt*.055);
-      qx.setFromAxisAngle(new THREE.Vector3(1,0,0),dt*.021);
-      orbitalGroup.quaternion.premultiply(qy);
-      orbitalGroup.quaternion.multiply(qx);
+      /*
+       * One continuous time source. There is no modulo, no reset, no
+       * angle wrapping and no state assignment back to an initial pose.
+       */
+      const q=new THREE.Quaternion();
+      const axis=new THREE.Vector3();
 
-      const ringSpeeds=[.191,-.137,.083,-.059];
-      const ringAxes=[
-        new THREE.Vector3(.3,.8,.2).normalize(),
-        new THREE.Vector3(-.6,.2,.7).normalize(),
-        new THREE.Vector3(.7,-.4,.3).normalize(),
-        new THREE.Vector3(.2,.6,-.7).normalize()
-      ];
-      [ringA,ringB,ringC,ringD].forEach((ring,i)=>{
-        const q=new THREE.Quaternion();
-        q.setFromAxisAngle(ringAxes[i],dt*ringSpeeds[i]);
-        ring.quaternion.multiply(q);
+      const orbitalYaw=elapsed*.055;
+      const orbitalPitch=elapsed*.021;
+      const orbitalRoll=elapsed*.0137;
+      q.setFromEuler(new THREE.Euler(orbitalPitch,orbitalYaw,orbitalRoll,"XYZ"));
+      orbitalGroup.quaternion.copy(q);
+
+      ringStates.forEach((state,index)=>{
+        axis.copy(state.axis);
+        const angle=elapsed*state.speed+Math.sin(elapsed*(.0071+index*.0013)+state.phase)*.17;
+        q.setFromAxisAngle(axis,angle);
+        state.group.quaternion.copy(q);
+
+        const wobbleX=1+Math.sin(elapsed*(.023+index*.0047)+state.phase)*.055;
+        const wobbleY=1+Math.cos(elapsed*(.017+index*.0031)+state.phase*1.7)*.035;
+        state.group.scale.set(wobbleX,wobbleY,1);
+
+        const markerPhase=elapsed*(.31+index*.071)+state.phase;
+        const markerRadius=state.radius;
+        state.markerA.position.set(
+          Math.cos(markerPhase)*markerRadius,
+          Math.sin(markerPhase)*markerRadius,
+          Math.sin(markerPhase*.73)*.08
+        );
+        state.markerB.position.set(
+          Math.cos(markerPhase*1.37+1.4)*markerRadius*.48,
+          Math.sin(markerPhase*1.37+1.4)*markerRadius*.48,
+          Math.cos(markerPhase*.91)*.11
+        );
       });
 
-      qy.setFromAxisAngle(new THREE.Vector3(0,1,0),-dt*.017);
-      qz.setFromAxisAngle(new THREE.Vector3(0,0,1),dt*.011);
-      outerRings.quaternion.premultiply(qy);
-      outerRings.quaternion.multiply(qz);
-
-      tracerPhase=tracerPhase.map((phase,i)=>phase+dt*(tracerData[i]?.speed ?? 0));
-      tracers.forEach((tracer,i)=>{
-        const phase:number=tracerPhase[i] ?? 0;
-        const radius:number=i===0?1.27:i===1?1.39:i===2?1.52:1.68;
-        tracer.position.set(Math.cos(phase)*radius,Math.sin(phase)*radius,0);
+      outerStates.forEach((state,index)=>{
+        const angle=elapsed*state.speed+Math.sin(elapsed*(.009+index*.0011)+state.phase)*.11;
+        const wobble=1+Math.sin(elapsed*(.019+index*.0023)+state.phase)*.035;
+        state.group.quaternion.setFromEuler(
+          new THREE.Euler(
+            Math.PI/2+Math.sin(elapsed*.013+index)*.08,
+            angle,
+            index*.31+Math.cos(elapsed*.011+index*.7)*.12,
+            "XYZ"
+          )
+        );
+        state.group.scale.set(wobble,1,1);
+        const marker=state.group.children[1] as THREE.Mesh;
+        const markerPhase=elapsed*(.17+index*.023)+state.phase;
+        marker.position.set(
+          Math.cos(markerPhase)*state.radius,
+          Math.sin(markerPhase)*state.radius,
+          Math.sin(markerPhase*.67)*.05
+        );
       });
+
+      // Keep the loop alive even if the tab was backgrounded for a long time.
+      // The capped delta prevents a visibility pause from becoming a giant
+      // simulation jump; animation itself is timestamp-derived.
+      void dt;
 
       renderer.render(scene,camera);
       raf=requestAnimationFrame(animate);
     };
+
     raf=requestAnimationFrame(animate);
 
     return()=>{
@@ -657,6 +701,7 @@ function EarthGlobe(){
       renderer.domElement.removeEventListener("pointermove",onPointerMove);
       renderer.domElement.removeEventListener("pointerup",onPointerUp);
       renderer.domElement.removeEventListener("pointercancel",onPointerUp);
+      renderer.domElement.removeEventListener("pointerleave",onPointerUp);
       scene.traverse(o=>{
         const mesh=o as THREE.Mesh;
         if(mesh.geometry)mesh.geometry.dispose();
