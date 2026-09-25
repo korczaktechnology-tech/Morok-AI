@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
 
@@ -384,7 +383,7 @@ function EarthGlobe(){
     scene.background=new THREE.Color(0x010107);
 
     const camera=new THREE.PerspectiveCamera(34,1,0.1,100);
-    camera.position.set(0,0,3.15);
+    camera.position.set(0,0,6.3);
 
     const renderer=new THREE.WebGLRenderer({
       antialias:true,
@@ -397,17 +396,6 @@ function EarthGlobe(){
     renderer.toneMappingExposure=1.15;
     renderer.setClearColor(0x010107,1);
     mount.appendChild(renderer.domElement);
-
-    const controls=new OrbitControls(camera,renderer.domElement);
-    controls.enableDamping=true;
-    controls.dampingFactor=.055;
-    controls.enablePan=false;
-    controls.enableZoom=false;
-    controls.enableRotate=true;
-    controls.rotateSpeed=.42;
-    controls.minDistance=2.35;
-    controls.maxDistance=4.8;
-    controls.autoRotate=false;
 
     const ambient=new THREE.AmbientLight(0x4f62b8,1.15);
     scene.add(ambient);
@@ -819,8 +807,6 @@ function EarthGlobe(){
       outerRings.rotation.z+=dt*.006;
       pulse.rotation.y+=dt*.14;
       stars.rotation.y+=dt*.002;
-      controls.update();
-
       renderer.render(scene,camera);
       raf=requestAnimationFrame(animate);
     };
@@ -829,12 +815,10 @@ function EarthGlobe(){
     return()=>{
       cancelAnimationFrame(raf);
       resizeObserver.disconnect();
-      controls.dispose();
       renderer.domElement.removeEventListener("pointerdown",onPointerDown);
       renderer.domElement.removeEventListener("pointermove",onPointerMove);
       renderer.domElement.removeEventListener("pointerup",onPointerUp);
       renderer.domElement.removeEventListener("pointercancel",onPointerUp);
-      renderer.domElement.removeEventListener("wheel",onWheel);
       earthSystem.traverse(o=>{
         const mesh=o as THREE.Mesh;
         if(mesh.geometry)mesh.geometry.dispose();
