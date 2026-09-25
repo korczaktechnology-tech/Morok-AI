@@ -847,4 +847,4 @@ function Settings(p:{speaking:boolean;setSpeaking:(v:boolean)=>void;secretCount:
 }
 
 
-createRoot(document.getElementById("root")!).render(<React.StrictMode><App /></React.StrictMode>);
+createRoot(document.getElementById("root")!).render(<App />);
