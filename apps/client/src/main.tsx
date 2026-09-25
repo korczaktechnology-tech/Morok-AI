@@ -388,7 +388,7 @@ function EarthGlobe(){
 
     const renderer=new THREE.WebGLRenderer({
       antialias:true,
-      alpha:true,
+      alpha:false,
       powerPreference:"high-performance"
     });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
@@ -492,7 +492,7 @@ function EarthGlobe(){
     earthSystem.add(earth);
 
     textureLoader.load(
-      "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_atmos_4096.jpg",
+      "https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg",
       tex=>{
         tex.colorSpace=THREE.SRGBColorSpace;
         tex.anisotropy=renderer.capabilities.getMaxAnisotropy();
@@ -502,7 +502,7 @@ function EarthGlobe(){
     );
 
     textureLoader.load(
-      "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_normal_2048.jpg",
+      "https://threejs.org/examples/textures/planets/earth_normal_2048.jpg",
       tex=>{
         earthMaterial.normalMap=tex;
         earthMaterial.normalScale=new THREE.Vector2(.42,.42);
@@ -511,7 +511,7 @@ function EarthGlobe(){
     );
 
     textureLoader.load(
-      "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_specular_2048.jpg",
+      "https://threejs.org/examples/textures/planets/earth_specular_2048.jpg",
       tex=>{
         earthMaterial.specularMap=tex;
         earthMaterial.needsUpdate=true;
@@ -528,7 +528,7 @@ function EarthGlobe(){
     const night=new THREE.Mesh(new THREE.SphereGeometry(1.006,96,96),nightMaterial);
     earthSystem.add(night);
     textureLoader.load(
-      "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_lights_2048.png",
+      "https://threejs.org/examples/textures/planets/earth_lights_2048.png",
       tex=>{
         nightMaterial.map=tex;
         nightMaterial.needsUpdate=true;
@@ -545,7 +545,7 @@ function EarthGlobe(){
     const clouds=new THREE.Mesh(new THREE.SphereGeometry(1.014,96,96),cloudMaterial);
     earthSystem.add(clouds);
     textureLoader.load(
-      "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_clouds_2048.png",
+      "https://threejs.org/examples/textures/planets/earth_clouds_1024.png",
       tex=>{
         cloudMaterial.map=tex;
         cloudMaterial.needsUpdate=true;
