@@ -480,7 +480,7 @@ function EarthGlobe(){
     };
 
     const earthMaterial=new THREE.MeshPhongMaterial({
-      color:0xffffff,
+      color:0x173b6f,
       shininess:18,
       specular:new THREE.Color(0x6f7cff)
     });
