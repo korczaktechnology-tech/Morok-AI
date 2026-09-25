@@ -472,7 +472,12 @@ function EarthGlobe(){
     const orbitalGroup=new THREE.Group();
     scene.add(orbitalGroup);
 
+    // The orbital elements are groups rather than perfectly symmetrical
+    // toruses. Each one has fixed asymmetrical markers, so a full 360° turn
+    // can never look like a visual reset.
     const makeRing=(radius:number,thickness:number,color:number,opacity:number,tiltX:number,tiltZ:number)=>{
+      const group=new THREE.Group();
+
       const ring=new THREE.Mesh(
         new THREE.TorusGeometry(radius,thickness,10,220),
         new THREE.MeshBasicMaterial({
@@ -481,8 +486,24 @@ function EarthGlobe(){
       );
       ring.rotation.x=tiltX;
       ring.rotation.z=tiltZ;
-      orbitalGroup.add(ring);
-      return ring;
+      group.add(ring);
+
+      const markerMaterial=new THREE.MeshBasicMaterial({
+        color,transparent:true,opacity:Math.min(1,opacity+.2),
+        blending:THREE.AdditiveBlending,depthWrite:false
+      });
+      const markerA=new THREE.Mesh(new THREE.SphereGeometry(.018,8,8),markerMaterial);
+      markerA.position.set(radius,0,0);
+      group.add(markerA);
+
+      const markerB=new THREE.Mesh(new THREE.SphereGeometry(.010,8,8),markerMaterial);
+      markerB.position.set(-radius*.37,radius*.92,0);
+      group.add(markerB);
+
+      group.rotation.x=tiltX;
+      group.rotation.z=tiltZ;
+      orbitalGroup.add(group);
+      return group;
     };
 
     const ringA=makeRing(1.27,.0045,0x7448ff,.72,.34,-.22);
@@ -490,9 +511,6 @@ function EarthGlobe(){
     const ringC=makeRing(1.52,.002,0x3e74ff,.42,.92,.1);
     const ringD=makeRing(1.68,.0015,0xb23dff,.28,-.2,.78);
 
-    // Each orbital ring also has an asymmetrical moving tracer. This makes
-    // the motion visually continuous instead of looking like a closed shape
-    // that reaches 360° and snaps back to its starting appearance.
     const tracerData=[
       {ring:ringA,color:0xffffff,speed:.73,offset:0},
       {ring:ringB,color:0xff5f78,speed:-.51,offset:2.1},
@@ -512,6 +530,7 @@ function EarthGlobe(){
     scene.add(outerRings);
     for(let i=0;i<7;i++){
       const r=1.83+i*.075;
+      const group=new THREE.Group();
       const ring=new THREE.Mesh(
         new THREE.TorusGeometry(r,.0012+(i%3)*.0007,6,220),
         new THREE.MeshBasicMaterial({
@@ -524,9 +543,24 @@ function EarthGlobe(){
       );
       ring.rotation.x=Math.PI/2;
       ring.rotation.z=i*.31;
-      outerRings.add(ring);
+      group.add(ring);
+      const marker=new THREE.Mesh(
+        new THREE.SphereGeometry(.009,7,7),
+        new THREE.MeshBasicMaterial({
+          color:i%2?0x9d8cff:0xff6f86,
+          transparent:true,
+          opacity:.7,
+          blending:THREE.AdditiveBlending,
+          depthWrite:false
+        })
+      );
+      marker.position.set(r,0,0);
+      group.add(marker);
+      outerRings.add(group);
     }
 
+    let dragging=false;
+    let lastPointer={x:0,y:0};
     let dragging=false;
     let lastPointer={x:0,y:0};
 
@@ -573,6 +607,10 @@ function EarthGlobe(){
       // Euler angles. Their orientation is accumulated continuously, with
       // different axes/speeds and slow precession so the orbital motion does
       // not visibly snap back into a repeated starting pose.
+      // Every ring receives several independent, non-commensurate
+      // rotations plus a slow 3D precession. Because the visible rings have
+      // asymmetric markers and the motion uses different axes, there is no
+      // single 360° state that can snap the whole system back to its start.
       const qx=new THREE.Quaternion();
       const qy=new THREE.Quaternion();
       const qz=new THREE.Quaternion();
@@ -582,35 +620,29 @@ function EarthGlobe(){
       orbitalGroup.quaternion.premultiply(qy);
       orbitalGroup.quaternion.multiply(qx);
 
-      qz.setFromAxisAngle(new THREE.Vector3(0,0,1),dt*.19);
-      ringA.quaternion.multiply(qz);
-
-      qz.setFromAxisAngle(new THREE.Vector3(0,0,1),-dt*.13);
-      ringB.quaternion.multiply(qz);
-
-      qx.setFromAxisAngle(new THREE.Vector3(1,0,0),dt*.085);
-      ringC.quaternion.multiply(qx);
-
-      qy.setFromAxisAngle(new THREE.Vector3(0,1,0),-dt*.061);
-      ringD.quaternion.multiply(qy);
+      const ringSpeeds=[.191,-.137,.083,-.059];
+      const ringAxes=[
+        new THREE.Vector3(.3,.8,.2).normalize(),
+        new THREE.Vector3(-.6,.2,.7).normalize(),
+        new THREE.Vector3(.7,-.4,.3).normalize(),
+        new THREE.Vector3(.2,.6,-.7).normalize()
+      ];
+      [ringA,ringB,ringC,ringD].forEach((ring,i)=>{
+        const q=new THREE.Quaternion();
+        q.setFromAxisAngle(ringAxes[i],dt*ringSpeeds[i]);
+        ring.quaternion.multiply(q);
+      });
 
       qy.setFromAxisAngle(new THREE.Vector3(0,1,0),-dt*.017);
       qz.setFromAxisAngle(new THREE.Vector3(0,0,1),dt*.011);
       outerRings.quaternion.premultiply(qy);
       outerRings.quaternion.multiply(qz);
 
-      // Advance tracer positions continuously on each orbit. The phase is
-      // deliberately not used as a rotation angle, so the ring itself never
-      // gets reassigned to a starting orientation.
       tracerPhase=tracerPhase.map((phase,i)=>phase+dt*(tracerData[i]?.speed ?? 0));
       tracers.forEach((tracer,i)=>{
-        const phase:number = tracerPhase[i] ?? 0;
-        const radius:number = i===0 ? 1.27 : i===1 ? 1.39 : i===2 ? 1.52 : 1.68;
-        tracer.position.set(
-          Math.cos(phase)*radius,
-          Math.sin(phase)*radius,
-          0
-        );
+        const phase:number=tracerPhase[i] ?? 0;
+        const radius:number=i===0?1.27:i===1?1.39:i===2?1.52:1.68;
+        tracer.position.set(Math.cos(phase)*radius,Math.sin(phase)*radius,0);
       });
 
       renderer.render(scene,camera);
