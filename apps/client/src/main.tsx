@@ -103,13 +103,99 @@ function EarthGlobe(){
     earthTexture.colorSpace=THREE.SRGBColorSpace;
     earthTexture.anisotropy=renderer.capabilities.getMaxAnisotropy();
 
-    const earthMaterial=new THREE.MeshBasicMaterial({
-      map:earthTexture,
-      color:0xffffff
+    // Holographic Earth: the real Earth texture is retained as the geographic
+    // source, but its natural colors are converted into a synthetic HUD palette.
+    const earthMaterial=new THREE.ShaderMaterial({
+      uniforms:{
+        uMap:{value:earthTexture},
+        uTime:{value:0}
+      },
+      vertexShader:`
+        varying vec2 vUv;
+        varying vec3 vNormal;
+        varying vec3 vWorldNormal;
+        void main(){
+          vUv=uv;
+          vNormal=normalize(normalMatrix*normal);
+          vec4 worldPosition=modelMatrix*vec4(position,1.0);
+          vWorldNormal=normalize(mat3(modelMatrix)*normal);
+          gl_Position=projectionMatrix*viewMatrix*worldPosition;
+        }
+      `,
+      fragmentShader:`
+        uniform sampler2D uMap;
+        uniform float uTime;
+        varying vec2 vUv;
+        varying vec3 vNormal;
+        varying vec3 vWorldNormal;
+
+        void main(){
+          vec3 src=texture2D(uMap,vUv).rgb;
+
+          // Separate the geographic land signal from the blue ocean signal.
+          float landSignal=src.r+src.g-src.b*1.18;
+          float land=smoothstep(0.02,0.22,landSignal);
+          float luminance=dot(src,vec3(0.299,0.587,0.114));
+
+          // Continent silhouettes stay recognizable, while all natural colors disappear.
+          float coast=smoothstep(0.005,0.07,fwidth(landSignal));
+          float terrainBands=0.72+0.28*sin(luminance*18.0+land*2.0);
+
+          vec3 purple=vec3(0.38,0.08,1.0);
+          vec3 blue=vec3(0.02,0.38,1.0);
+          vec3 cyan=vec3(0.02,0.92,1.0);
+          vec3 hologramColor=mix(purple,blue,vUv.x);
+          hologramColor=mix(hologramColor,cyan,land*0.72);
+
+          float rim=pow(1.0-max(dot(normalize(vNormal),vec3(0.0,0.0,1.0)),0.0),2.6);
+          float scan=0.90+0.10*sin(vUv.y*150.0-uTime*0.75);
+
+          float alpha=(0.16+land*0.68+luminance*0.10+coast*0.26)*scan;
+          alpha*=0.82+0.18*terrainBands;
+          alpha+=rim*0.18;
+
+          gl_FragColor=vec4(hologramColor,clamp(alpha,0.0,0.94));
+        }
+      `,
+      transparent:true,
+      depthWrite:true,
+      side:THREE.FrontSide,
+      blending:THREE.AdditiveBlending
     });
+
     const earth=new THREE.Mesh(new THREE.SphereGeometry(1,64,64),earthMaterial);
     earth.scale.setScalar(.5625);
     earthSystem.add(earth);
+
+    // Thin holographic shell: creates the projected-light silhouette without
+    // turning the globe into a photographic/realistic sphere.
+    const shellMaterial=new THREE.ShaderMaterial({
+      uniforms:{uTime:{value:0}},
+      vertexShader:`
+        varying vec3 vNormal;
+        void main(){
+          vNormal=normalize(normalMatrix*normal);
+          gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);
+        }
+      `,
+      fragmentShader:`
+        uniform float uTime;
+        varying vec3 vNormal;
+        void main(){
+          float rim=pow(1.0-max(dot(normalize(vNormal),vec3(0.0,0.0,1.0)),0.0),3.2);
+          float pulse=0.72+0.28*sin(uTime*0.9);
+          vec3 c=mix(vec3(0.25,0.02,1.0),vec3(0.0,0.72,1.0),rim);
+          gl_FragColor=vec4(c,rim*0.34*pulse);
+        }
+      `,
+      transparent:true,
+      depthWrite:false,
+      blending:THREE.AdditiveBlending,
+      side:THREE.BackSide
+    });
+    const shell=new THREE.Mesh(new THREE.SphereGeometry(1.018,48,48),shellMaterial);
+    shell.scale.setScalar(.5625);
+    earthSystem.add(shell);
 
     let dragging=false;
     let lastPointer={x:0,y:0};
@@ -151,7 +237,11 @@ function EarthGlobe(){
     resize();
 
     let raf=0;
+    const clock=new THREE.Clock();
     const animate=()=>{
+      const t=clock.getElapsedTime();
+      (earthMaterial.uniforms.uTime as {value:number}).value=t;
+      (shellMaterial.uniforms.uTime as {value:number}).value=t;
       renderer.render(scene,camera);
       raf=requestAnimationFrame(animate);
     };
