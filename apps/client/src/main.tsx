@@ -87,6 +87,8 @@ function EarthGlobe(){
     });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.25));
     renderer.outputColorSpace=THREE.SRGBColorSpace;
+    renderer.toneMapping=THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure=0.72;
     renderer.setClearColor(0x000000,0);
     mount.appendChild(renderer.domElement);
 
@@ -163,17 +165,20 @@ function EarthGlobe(){
           color=mix(color,cyan,coast*0.78+fresnel*0.52);
 
           // Almost no opaque surface: the geographic information itself glows.
-          float geographic=land*(0.035+fragments*0.20)+coast*0.48+scan*0.08;
-          float oceanProjection=0.008*fragments;
-          float alpha=(geographic+oceanProjection+fresnel*0.10)*scanFine*glitch;
-          alpha=clamp(alpha,0.0,0.34);
+          // Hologram body: extremely transparent. The map is read as projected
+          // light/data rather than a solid blue Earth.
+          float geographic=land*(0.010+fragments*0.045)+coast*0.18+scan*0.028;
+          float oceanProjection=0.0025*fragments;
+          float alpha=(geographic+oceanProjection+fresnel*0.025)*scanFine*glitch;
+          alpha=clamp(alpha,0.0,0.095);
 
-          gl_FragColor=vec4(color,alpha);
+          // Keep the geographic projection luminous without clipping highlights.
+          gl_FragColor=vec4(color*0.62,alpha);
         }
       `,
       transparent:true,
       depthWrite:false,
-      blending:THREE.AdditiveBlending,
+      blending:THREE.NormalBlending,
       side:THREE.FrontSide
     });
 
@@ -210,7 +215,7 @@ function EarthGlobe(){
       uniforms:{
         uMap:{value:earthTexture},
         uTime:{value:0},
-        uPointSize:{value:0.72}
+        uPointSize:{value:0.48}
       },
       vertexShader:`
         uniform float uPointSize;
@@ -239,9 +244,9 @@ function EarthGlobe(){
           float land=landMask(texture2D(uMap,vUv).rgb);
           float twinkle=0.65+0.35*sin(uTime*5.0+vUv.x*91.0+vUv.y*47.0);
           vec3 c=mix(vec3(0.35,0.04,1.0),vec3(0.0,0.95,1.0),vUv.x);
-          float alpha=land*dotShape*0.22*twinkle;
+          float alpha=land*dotShape*0.055*twinkle;
           if(alpha<0.025) discard;
-          gl_FragColor=vec4(c,alpha);
+          gl_FragColor=vec4(c*0.65,alpha);
         }
       `,
       transparent:true,
@@ -258,7 +263,7 @@ function EarthGlobe(){
       new THREE.MeshBasicMaterial({
         color:0x7b66ff,
         transparent:true,
-        opacity:0.025,
+        opacity:0.012,
         wireframe:true,
         blending:THREE.AdditiveBlending,
         depthWrite:false
@@ -267,11 +272,9 @@ function EarthGlobe(){
     lattice.scale.setScalar(.5625);
     earthSystem.add(lattice);
 
-    // No external glow/halo: the hologram is defined by the geographic projection itself.\n\n    // Real geographic vector data: country borders + first-level states/provinces.
-    // The data is converted to 3D spherical line geometry at runtime, so the map
-    // remains actual geographic vector data rather than a flat image texture.
+    // The hologram is generated entirely in WebGL from the real geographic texture.
+    // No baked/generated image is used for the globe.
     const mapDisposers:(()=>void)[]=[];
-    void addHolographicMapBoundaries(earthSystem,.5625,fn=>mapDisposers.push(fn));
 
     let dragging=false;
     let lastPointer={x:0,y:0};
@@ -317,7 +320,6 @@ function EarthGlobe(){
       const t=clock.getElapsedTime();
       (hologramMaterial.uniforms.uTime as {value:number}).value=t;
       (pointMaterial.uniforms.uTime as {value:number}).value=t;
-      (haloMaterial.uniforms.uTime as {value:number}).value=t;
       renderer.render(scene,camera);
       raf=requestAnimationFrame(animate);
     };
