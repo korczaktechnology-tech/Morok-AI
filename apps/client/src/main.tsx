@@ -296,6 +296,12 @@ function EarthGlobe(){
     halo.scale.setScalar(.5625);
     earthSystem.add(halo);
 
+    // Real geographic vector data: country borders + first-level states/provinces.
+    // The data is converted to 3D spherical line geometry at runtime, so the map
+    // remains actual geographic vector data rather than a flat image texture.
+    const mapDisposers:(()=>void)[]=[];
+    void addHolographicMapBoundaries(earthSystem,.5625,fn=>mapDisposers.push(fn));
+
     let dragging=false;
     let lastPointer={x:0,y:0};
     const onPointerDown=(e:PointerEvent)=>{
@@ -360,6 +366,7 @@ function EarthGlobe(){
         if(Array.isArray(material))material.forEach(m=>m.dispose());
         else if(material)material.dispose();
       });
+      mapDisposers.forEach(fn=>fn());
       earthTexture.dispose();
       renderer.dispose();
       if(renderer.domElement.parentElement===mount)mount.removeChild(renderer.domElement);
