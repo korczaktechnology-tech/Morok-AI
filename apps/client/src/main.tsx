@@ -103,31 +103,25 @@ function EarthGlobe(){
     earthTexture.colorSpace=THREE.SRGBColorSpace;
     earthTexture.anisotropy=renderer.capabilities.getMaxAnisotropy();
 
-    // The real Earth texture is geographic source data only.
-    // The visible result is rebuilt as a projected hologram: coast traces,
-    // point fragments, scan lines, a projection shell and a moving scan pulse.
+    // Holographic Earth: geographic data is kept, but all glow/light effects
+    // are intentionally removed. The map is rendered as a clean projected
+    // technical surface with restrained transparency and no luminous halo.
     const hologramMaterial=new THREE.ShaderMaterial({
       uniforms:{
         uMap:{value:earthTexture},
-        uTime:{value:0},
         uTexel:{value:new THREE.Vector2(1/2048,1/2048)}
       },
       vertexShader:`
         varying vec2 vUv;
-        varying vec3 vWorldNormal;
         void main(){
           vUv=uv;
-          vWorldNormal=normalize(mat3(modelMatrix)*normal);
           gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);
         }
-      `
-      ,
+      `,
       fragmentShader:`
         uniform sampler2D uMap;
-        uniform float uTime;
         uniform vec2 uTexel;
         varying vec2 vUv;
-        varying vec3 vWorldNormal;
 
         float landMask(vec3 c){
           float greenSignal=c.g-(c.b*0.82+c.r*0.12);
@@ -148,131 +142,29 @@ function EarthGlobe(){
           float land=landMask(src);
           float coast=coastMask(land);
 
-          float scanA=pow(max(0.0,sin(vUv.y*620.0-uTime*8.0)*0.5+0.5),18.0);
-          float scanB=pow(max(0.0,sin(vUv.y*130.0-uTime*1.8)*0.5+0.5),9.0);
-          float scan=0.72+0.28*scanA+0.10*scanB;
-          float breakup=0.82+0.18*sin(vUv.x*173.0+vUv.y*311.0+uTime*4.0);
-          float fragments=step(0.74,fract(vUv.x*95.0+uTime*0.015))*0.16;
-          float edgePulse=0.72+0.28*sin(uTime*3.5+vUv.y*70.0);
+          // Keep the projection clean: no bloom, no pulse, no scan glow,
+          // no fresnel rim and no additive light accumulation.
+          vec3 violet=vec3(0.58,0.18,0.92);
+          vec3 cyan=vec3(0.08,0.62,0.88);
+          vec3 signal=mix(violet,cyan,smoothstep(0.12,0.88,vUv.x));
 
-          vec3 viewDir=normalize(cameraPosition);
-          float fresnel=pow(1.0-max(dot(normalize(vWorldNormal),viewDir),0.0),2.8);
+          float mapAlpha=land*0.38;
+          float coastAlpha=coast*0.82;
+          float alpha=clamp(mapAlpha+coastAlpha,0.0,0.82);
 
-          vec3 violet=vec3(0.58,0.10,1.0);
-          vec3 cyan=vec3(0.0,0.78,1.0);
-          vec3 white=vec3(0.82,0.94,1.0);
-          vec3 signal=mix(violet,cyan,smoothstep(0.15,0.85,vUv.x));
-          signal=mix(signal,white,coast*0.72+fresnel*0.28);
-
-          float landLight=land*(0.20+0.18*fragments);
-          float coastLight=coast*(0.92+0.20*edgePulse);
-          float rimLight=fresnel*0.13;
-          float alpha=(landLight+coastLight+rimLight)*scan*breakup;
-
-          float scanGap=step(0.055,fract(vUv.y*34.0-uTime*0.10));
-          alpha*=scanGap;
-          alpha=clamp(alpha,0.0,0.72);
-
-          if(alpha<0.012) discard;
-          gl_FragColor=vec4(signal*(0.72+coast*0.55),alpha);
+          if(alpha<0.025) discard;
+          gl_FragColor=vec4(signal,alpha);
         }
-      `
-      ,
+      `,
       transparent:true,
       depthWrite:false,
-      blending:THREE.AdditiveBlending,
+      blending:THREE.NormalBlending,
       side:THREE.FrontSide
     });
 
     const earth=new THREE.Mesh(new THREE.SphereGeometry(1,96,64),hologramMaterial);
     earth.scale.setScalar(.5625);
     earthSystem.add(earth);
-
-    // A second representation uses the same real map to create luminous land points.
-    const pointPositions:number[]=[];
-    const pointUvs:number[]=[];
-    const lonSteps=260;
-    const latSteps=130;
-    for(let y=0;y<=latSteps;y++){
-      const v=y/latSteps;
-      const phi=v*Math.PI;
-      const sinPhi=Math.sin(phi);
-      const cosPhi=Math.cos(phi);
-      for(let x=0;x<lonSteps;x++){
-        const u=x/lonSteps;
-        const theta=u*Math.PI*2;
-        pointPositions.push(
-          sinPhi*Math.cos(theta),
-          cosPhi,
-          sinPhi*Math.sin(theta)
-        );
-        pointUvs.push(u,1.0-v);
-      }
-    }
-    const pointGeometry=new THREE.BufferGeometry();
-    pointGeometry.setAttribute("position",new THREE.Float32BufferAttribute(pointPositions,3));
-    pointGeometry.setAttribute("uv",new THREE.Float32BufferAttribute(pointUvs,2));
-
-    const pointMaterial=new THREE.ShaderMaterial({
-      uniforms:{
-        uMap:{value:earthTexture},
-        uTime:{value:0},
-        uPointSize:{value:0.48}
-      },
-      vertexShader:`
-        uniform float uPointSize;
-        varying vec2 vUv;
-        void main(){
-          vUv=uv;
-          vec4 mvPosition=modelViewMatrix*vec4(position,1.0);
-          gl_PointSize=uPointSize*(300.0/-mvPosition.z);
-          gl_Position=projectionMatrix*mvPosition;
-        }
-      `,
-      fragmentShader:`
-        uniform sampler2D uMap;
-        uniform float uTime;
-        varying vec2 vUv;
-
-        float landMask(vec3 c){
-          float vegetation=c.g-c.b*0.72;
-          float terrain=c.r+c.g-c.b*1.22;
-          return smoothstep(0.035,0.19,terrain+vegetation*0.18);
-        }
-
-        void main(){
-          vec2 p=gl_PointCoord-0.5;
-          float dotShape=1.0-smoothstep(0.12,0.5,length(p));
-          float land=landMask(texture2D(uMap,vUv).rgb);
-          float twinkle=0.65+0.35*sin(uTime*5.0+vUv.x*91.0+vUv.y*47.0);
-          vec3 c=mix(vec3(0.35,0.04,1.0),vec3(0.0,0.95,1.0),vUv.x);
-          float alpha=land*dotShape*0.055*twinkle;
-          if(alpha<0.025) discard;
-          gl_FragColor=vec4(c*0.65,alpha);
-        }
-      `,
-      transparent:true,
-      depthWrite:false,
-      blending:THREE.AdditiveBlending
-    });
-    const pointCloud=new THREE.Points(pointGeometry,pointMaterial);
-    pointCloud.scale.setScalar(.566);
-    earthSystem.add(pointCloud);
-
-    // Faint spherical scan lattice: it reads as projected geometry, not a globe texture.
-    const lattice=new THREE.Mesh(
-      new THREE.SphereGeometry(1.012,48,28),
-      new THREE.MeshBasicMaterial({
-        color:0x7b66ff,
-        transparent:true,
-        opacity:0.012,
-        wireframe:true,
-        blending:THREE.AdditiveBlending,
-        depthWrite:false
-      })
-    );
-    lattice.scale.setScalar(.5625);
-    earthSystem.add(lattice);
 
     // The hologram is generated entirely in WebGL from the real geographic texture.
     // No baked/generated image is used for the globe.
