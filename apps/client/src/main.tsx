@@ -424,7 +424,7 @@ function Dashboard() {
   );
 }
 
-function MobileDashboard(){
+function MobileDashboard({onOpenChat}:{onOpenChat:()=>void}){
   const activities=[
     ["11:41","Projeto KOS atualizado","blue"],
     ["11:32","Backup concluído","green"],
@@ -441,7 +441,7 @@ function MobileDashboard(){
     <header className="mobileTop">
       <div className="mobileStatus"><span>11:42</span><i>➤</i></div>
       <div className="mobileHeaderPanel">
-        <div className="mobileBrand"><div className="mobileLogo">M</div><div><b>MOROK</b><small>IA ASSISTENTE DO KOS</small><em><span/> ONLINE <strong>|</strong> v2.8.4</em></div></div>
+        <div className="mobileBrand"><div className="mobileLogo"><img src="/MorokSubIcon.png" alt="Morok" /></div><div><b>MOROK</b><small>IA ASSISTENTE DO KOS</small><em><span/> ONLINE <strong>|</strong> v2.8.4</em></div></div>
         <div className="mobileKos"><b>✦ KOS</b><small>KORCZAK<br/>OPERATIONAL<br/>SYSTEM</small></div>
         <div className="mobileDate"><span>14 SET 2025</span><b>11:42:17</b></div>
       </div>
@@ -454,7 +454,23 @@ function MobileDashboard(){
       </aside>
 
       <section className="mobileCore">
-        <div className="mobileCoreRings"><div className="mobileCoreGlyph">M</div><b>MOROK</b><span>ANALISANDO DADOS...</span><i>⌁⌁⌁</i></div>
+        <button className="mobileCoreRings" type="button" onClick={onOpenChat} aria-label="Abrir conversa com o Morok">
+          <span className="mobileCoreOrbit orbitA" />
+          <span className="mobileCoreOrbit orbitB" />
+          <span className="mobileCoreOrbit orbitC" />
+          <span className="mobileCoreOrbit orbitD" />
+          <span className="mobileCoreOrbit orbitE" />
+          <span className="mobileCoreCrosshair crosshairH" />
+          <span className="mobileCoreCrosshair crosshairV" />
+          <span className="mobileCoreNode nodeTop" />
+          <span className="mobileCoreNode nodeRight" />
+          <span className="mobileCoreNode nodeBottom" />
+          <span className="mobileCoreNode nodeLeft" />
+          <span className="mobileCoreGlyph"><img src="/MorokSubIcon.png" alt="Abrir conversa com o Morok" /></span>
+          <b>MOROK</b>
+          <span className="mobileCoreHint">TOQUE PARA CONVERSAR</span>
+          <i>⌁⌁⌁</i>
+        </button>
       </section>
 
       <aside className="mobileTelemetry">
@@ -606,6 +622,7 @@ function App() {
   const [brasiliaDate, setBrasiliaDate] = useState("00/00/0000");
   const [temperature, setTemperature] = useState<string | null>(null);
   const [weatherPlace, setWeatherPlace] = useState("LOCALIZAÇÃO NÃO DISPONÍVEL");
+  const [mobileChatOpen, setMobileChatOpen] = useState(false);
 
   const speech = useMemo(() => {
     const C = window.SpeechRecognition ?? window.webkitSpeechRecognition;
@@ -853,7 +870,7 @@ function App() {
     <main className="loginShell">
       <div className="loginGlow glowOne" /><div className="loginGlow glowTwo" />
       <section className="loginPanel">
-        <div className="brandMark"><span className="brandHex">M</span><div><strong>MOROK</strong><small>PERSONAL INTELLIGENCE SYSTEM</small></div></div>
+        <div className="brandMark"><span className="brandHex"><img src="/MorokSubIcon.png" alt="Morok" /></span><div><strong>MOROK</strong><small>PERSONAL INTELLIGENCE SYSTEM</small></div></div>
         <div className="loginOrb"><span /></div>
         <p className="eyebrow">SECURE CORE ACCESS / LINUX READY</p>
         <h1>Acesse o núcleo.</h1>
@@ -878,7 +895,8 @@ function App() {
       <UpdateChecker />
       <main className="appShell">
         <section className="mainStage">
-          <div className="desktopDashboard"><Dashboard /></div><div className="mobileDashboard"><MobileDashboard /></div>
+          <div className="desktopDashboard"><Dashboard /></div><div className="mobileDashboard"><MobileDashboard onOpenChat={()=>setMobileChatOpen(true)} /></div>
+          {mobileChatOpen && <div className="mobileChatOverlay"><div className="mobileChatShell"><button className="mobileChatClose" type="button" onClick={()=>setMobileChatOpen(false)} aria-label="Fechar conversa">×</button><Chat messages={messages} input={input} setInput={setInput} send={(v)=>void send(v)} loading={loading} startVoice={startVoice} listening={listening} speaking={speaking} setSpeaking={setSpeaking} /></div></div>}
         </section>
       </main>
     </>
