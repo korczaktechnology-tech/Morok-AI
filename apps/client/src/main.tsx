@@ -518,7 +518,7 @@ function normalizeVersion(value:string){
 }
 function compareVersions(a:string,b:string){
   const av=normalizeVersion(a),bv=normalizeVersion(b);
-  for(let i=0;i<3;i++){ if(av[i]>bv[i])return 1; if(av[i]<bv[i])return -1; }
+  for(let i=0;i<3;i++){ const ai=av[i] ?? 0; const bi=bv[i] ?? 0; if(ai>bi)return 1; if(ai<bi)return -1; }
   return 0;
 }
 
