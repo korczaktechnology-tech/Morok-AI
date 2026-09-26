@@ -441,7 +441,7 @@ function MobileDashboard({onOpenChat}:{onOpenChat:()=>void}){
     <header className="mobileTop">
       <div className="mobileStatus"><span>11:42</span><i>➤</i></div>
       <div className="mobileHeaderPanel">
-        <div className="mobileBrand"><div className="mobileLogo"><img src="/MorokSubIcon.svg" alt="Morok" /></div><div><b>MOROK</b><small>IA ASSISTENTE DO KOS</small><em><span/> ONLINE <strong>|</strong> v2.8.4</em></div></div>
+        <div className="mobileBrand"><div className="mobileLogo"><img src={MOROK_SUB_ICON} alt="Morok" /></div><div><b>MOROK</b><small>IA ASSISTENTE DO KOS</small><em><span/> ONLINE <strong>|</strong> v2.8.4</em></div></div>
         <div className="mobileKos"><b>✦ KOS</b><small>KORCZAK<br/>OPERATIONAL<br/>SYSTEM</small></div>
         <div className="mobileDate"><span>14 SET 2025</span><b>11:42:17</b></div>
       </div>
@@ -466,7 +466,7 @@ function MobileDashboard({onOpenChat}:{onOpenChat:()=>void}){
           <span className="mobileCoreNode nodeRight" />
           <span className="mobileCoreNode nodeBottom" />
           <span className="mobileCoreNode nodeLeft" />
-          <span className="mobileCoreGlyph"><img src="/MorokSubIcon.svg" alt="Abrir conversa com o Morok" /></span>
+          <span className="mobileCoreGlyph"><img src={MOROK_SUB_ICON} alt="Abrir conversa com o Morok" /></span>
           <b>MOROK</b>
           <span className="mobileCoreHint">TOQUE PARA CONVERSAR</span>
           <i>⌁⌁⌁</i>
@@ -870,7 +870,7 @@ function App() {
     <main className="loginShell">
       <div className="loginGlow glowOne" /><div className="loginGlow glowTwo" />
       <section className="loginPanel">
-        <div className="brandMark"><span className="brandHex"><img src="/MorokSubIcon.svg" alt="Morok" /></span><div><strong>MOROK</strong><small>PERSONAL INTELLIGENCE SYSTEM</small></div></div>
+        <div className="brandMark"><span className="brandHex"><img src={MOROK_SUB_ICON} alt="Morok" /></span><div><strong>MOROK</strong><small>PERSONAL INTELLIGENCE SYSTEM</small></div></div>
         <div className="loginOrb"><span /></div>
         <p className="eyebrow">SECURE CORE ACCESS / LINUX READY</p>
         <h1>Acesse o núcleo.</h1>
