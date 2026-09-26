@@ -4,7 +4,7 @@ import { createRoot } from "react-dom/client";
 import { Capacitor } from "@capacitor/core";
 import "./styles.css";
 
-const API = import.meta.env.VITE_API_URL ?? "https://morok-ai.onrender.com";
+const API = import.meta.env.VITE_API_URL ?? "https://morok-ai.onrender.com";\nconst MOROK_SUB_ICON = "/MorokSubIcon.svg";
 
 type Msg = { role: "user" | "assistant"; content: string };
 type Task = { id: string; title: string; status: string; dueAt?: string };
