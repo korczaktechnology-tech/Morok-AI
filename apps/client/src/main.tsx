@@ -130,31 +130,45 @@ function EarthGlobe(){
         varying vec3 vWorldNormal;
 
         void main(){
-          vec3 src=texture2D(uMap,vUv).rgb;
+          vec2 uv=vUv;
+          vec3 src=texture2D(uMap,uv).rgb;
 
-          // Separate the geographic land signal from the blue ocean signal.
+          // The texture is used only as geographic data. Natural Earth colors are discarded.
           float landSignal=src.r+src.g-src.b*1.18;
-          float land=smoothstep(0.02,0.22,landSignal);
+          float land=smoothstep(0.025,0.20,landSignal);
           float luminance=dot(src,vec3(0.299,0.587,0.114));
 
-          // Continent silhouettes stay recognizable, while all natural colors disappear.
-          float coast=smoothstep(0.005,0.07,fwidth(landSignal));
-          float terrainBands=0.72+0.28*sin(luminance*18.0+land*2.0);
+          // Hologram construction: translucent pixels, scan bands and broken projection noise.
+          float pixelGridX=step(0.52,fract(uv.x*180.0));
+          float pixelGridY=step(0.52,fract(uv.y*180.0));
+          float microDots=step(0.58,fract(uv.x*115.0+uv.y*73.0));
+          float scanBand=smoothstep(0.46,0.50,fract(uv.y*92.0-uTime*0.34));
+          float scanPulse=0.76+0.24*sin(uv.y*430.0-uTime*5.5);
 
-          vec3 purple=vec3(0.38,0.08,1.0);
-          vec3 blue=vec3(0.02,0.38,1.0);
-          vec3 cyan=vec3(0.02,0.92,1.0);
-          vec3 hologramColor=mix(purple,blue,vUv.x);
-          hologramColor=mix(hologramColor,cyan,land*0.72);
+          float edgeX=smoothstep(0.0,0.035,uv.x)*smoothstep(0.0,0.035,1.0-uv.x);
+          float edgeY=smoothstep(0.0,0.035,uv.y)*smoothstep(0.0,0.035,1.0-uv.y);
+          float projectionNoise=0.90+0.10*sin(uv.x*91.0+uv.y*137.0+uTime*1.7);
 
-          float rim=pow(1.0-max(dot(normalize(vNormal),vec3(0.0,0.0,1.0)),0.0),2.6);
-          float scan=0.90+0.10*sin(vUv.y*150.0-uTime*0.75);
+          // Land is primarily rendered as luminous fragments rather than a filled surface.
+          float geographicPixels=microDots*0.55+(pixelGridX*pixelGridY)*0.25+scanBand*0.34;
+          float landTrace=land*(0.20+geographicPixels)*projectionNoise;
 
-          float alpha=(0.16+land*0.68+luminance*0.10+coast*0.26)*scan;
-          alpha*=0.82+0.18*terrainBands;
-          alpha+=rim*0.18;
+          // Very faint ocean data keeps the spherical projection readable without looking solid.
+          float oceanData=(1.0-land)*luminance*0.045;
+          float rim=pow(1.0-max(dot(normalize(vNormal),vec3(0.0,0.0,1.0)),0.0),2.9);
+          float horizontalScan=0.84+0.16*sin(uv.y*520.0-uTime*7.0);
 
-          gl_FragColor=vec4(hologramColor,clamp(alpha,0.0,0.94));
+          vec3 purple=vec3(0.58,0.05,1.0);
+          vec3 blue=vec3(0.04,0.24,1.0);
+          vec3 cyan=vec3(0.00,0.95,1.0);
+          vec3 hologramColor=mix(purple,blue,uv.x);
+          hologramColor=mix(hologramColor,cyan,land*0.88);
+
+          float alpha=(landTrace+oceanData+rim*0.18)*horizontalScan*edgeX*edgeY;
+          alpha*=0.72+0.28*sin(uTime*1.8+uv.x*17.0);
+          alpha=clamp(alpha,0.0,0.78);
+
+          gl_FragColor=vec4(hologramColor,alpha);
         }
       `,
       transparent:true,
@@ -182,10 +196,12 @@ function EarthGlobe(){
         uniform float uTime;
         varying vec3 vNormal;
         void main(){
-          float rim=pow(1.0-max(dot(normalize(vNormal),vec3(0.0,0.0,1.0)),0.0),3.2);
-          float pulse=0.72+0.28*sin(uTime*0.9);
-          vec3 c=mix(vec3(0.25,0.02,1.0),vec3(0.0,0.72,1.0),rim);
-          gl_FragColor=vec4(c,rim*0.34*pulse);
+          float rim=pow(1.0-max(dot(normalize(vNormal),vec3(0.0,0.0,1.0)),0.0),2.7);
+          float scan=0.55+0.45*sin(vNormal.y*240.0-uTime*4.0);
+          float pulse=0.70+0.30*sin(uTime*1.15);
+          vec3 c=mix(vec3(0.38,0.04,1.0),vec3(0.0,0.95,1.0),rim);
+          float alpha=rim*0.42*pulse+scan*0.035;
+          gl_FragColor=vec4(c,alpha);
         }
       `,
       transparent:true,
@@ -196,6 +212,21 @@ function EarthGlobe(){
     const shell=new THREE.Mesh(new THREE.SphereGeometry(1.018,48,48),shellMaterial);
     shell.scale.setScalar(.5625);
     earthSystem.add(shell);
+
+    // Projected hologram lattice: extremely faint geometric scaffold around the map.
+    const lattice=new THREE.Mesh(
+      new THREE.SphereGeometry(1.024,32,20),
+      new THREE.MeshBasicMaterial({
+        color:0x5a7dff,
+        transparent:true,
+        opacity:0.055,
+        wireframe:true,
+        blending:THREE.AdditiveBlending,
+        depthWrite:false
+      })
+    );
+    lattice.scale.setScalar(.5625);
+    earthSystem.add(lattice);
 
     let dragging=false;
     let lastPointer={x:0,y:0};
