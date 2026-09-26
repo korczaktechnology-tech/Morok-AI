@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { createRoot } from "react-dom/client";
+import { Capacitor } from "@capacitor/core";
 import "./styles.css";
 
 const API = import.meta.env.VITE_API_URL ?? "https://morok-ai.onrender.com";
@@ -507,9 +508,14 @@ function compareVersions(a:string,b:string){
 
 function UpdateChecker(){
   const [update,setUpdate]=useState<{version:string;url:string;notes:string}|null>(null);
+
+  // O verificador de atualização pertence somente ao aplicativo nativo mobile.
+  // Desktop/web não deve consultar nem exibir a tela de atualização.
+  const isMobileApp = Capacitor.isNativePlatform() && (Capacitor.getPlatform() === "android" || Capacitor.getPlatform() === "ios");
   const [checking,setChecking]=useState(false);
 
   useEffect(()=>{
+    if(!isMobileApp)return;
     let active=true;
     const check=async()=>{
       if(checking)return;
@@ -555,7 +561,7 @@ function UpdateChecker(){
     };
   },[]);
 
-  if(!update)return null;
+  if(!isMobileApp || !update)return null;
   return <div className="morokUpdateOverlay" role="dialog" aria-modal="true" aria-label="Atualização disponível">
     <div className="morokUpdatePanel">
       <div className="morokUpdateCore"><span>M</span></div>
