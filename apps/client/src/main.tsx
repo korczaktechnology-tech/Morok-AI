@@ -87,8 +87,6 @@ function EarthGlobe(){
     });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.25));
     renderer.outputColorSpace=THREE.SRGBColorSpace;
-    renderer.toneMapping=THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure=1.15;
     renderer.setClearColor(0x000000,0);
     mount.appendChild(renderer.domElement);
 
@@ -103,87 +101,174 @@ function EarthGlobe(){
     earthTexture.colorSpace=THREE.SRGBColorSpace;
     earthTexture.anisotropy=renderer.capabilities.getMaxAnisotropy();
 
-    // Holographic Earth: the real Earth texture is retained as the geographic
-    // source, but its natural colors are converted into a synthetic HUD palette.
-    const earthMaterial=new THREE.ShaderMaterial({
+    // The real Earth texture is geographic source data only.
+    // The visible result is rebuilt as a projected hologram: coast traces,
+    // point fragments, scan lines, a projection shell and a moving scan pulse.
+    const hologramMaterial=new THREE.ShaderMaterial({
       uniforms:{
         uMap:{value:earthTexture},
-        uTime:{value:0}
+        uTime:{value:0},
+        uTexel:{value:new THREE.Vector2(1/2048,1/2048)}
       },
       vertexShader:`
         varying vec2 vUv;
         varying vec3 vNormal;
-        varying vec3 vWorldNormal;
         void main(){
           vUv=uv;
           vNormal=normalize(normalMatrix*normal);
-          vec4 worldPosition=modelMatrix*vec4(position,1.0);
-          vWorldNormal=normalize(mat3(modelMatrix)*normal);
-          gl_Position=projectionMatrix*viewMatrix*worldPosition;
+          gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);
+        }
+      `,
+      fragmentShader:`
+        uniform sampler2D uMap;
+        uniform float uTime;
+        uniform vec2 uTexel;
+        varying vec2 vUv;
+        varying vec3 vNormal;
+
+        float landMask(vec3 c){
+          float vegetation=c.g-c.b*0.72;
+          float terrain=c.r+c.g-c.b*1.22;
+          return smoothstep(0.035,0.19,terrain+vegetation*0.18);
+        }
+
+        void main(){
+          vec3 src=texture2D(uMap,vUv).rgb;
+          float land=landMask(src);
+
+          // Neighbor sampling extracts coastline transitions from the real map.
+          float l=landMask(texture2D(uMap,vUv+vec2(-uTexel.x*2.0,0.0)).rgb);
+          float r=landMask(texture2D(uMap,vUv+vec2( uTexel.x*2.0,0.0)).rgb);
+          float d=landMask(texture2D(uMap,vUv+vec2(0.0,-uTexel.y*2.0)).rgb);
+          float u=landMask(texture2D(uMap,vUv+vec2(0.0, uTexel.y*2.0)).rgb);
+          float coast=clamp(abs(land-l)+abs(land-r)+abs(land-d)+abs(land-u),0.0,1.0);
+
+          // Digital fragments break the projection into visible holographic pieces.
+          float gridX=step(0.70,fract(vUv.x*260.0));
+          float gridY=step(0.70,fract(vUv.y*190.0));
+          float micro=step(0.58,fract(vUv.x*137.0+vUv.y*91.0));
+          float fragments=(gridX*gridY)*0.34+micro*0.22;
+
+          // Moving scan bands + subtle signal instability.
+          float scan=smoothstep(0.47,0.50,fract(vUv.y*76.0-uTime*0.32));
+          float scanFine=0.72+0.28*sin(vUv.y*620.0-uTime*7.5);
+          float glitch=0.84+0.16*sin(vUv.x*117.0+vUv.y*233.0+uTime*3.1);
+
+          float fresnel=pow(1.0-max(dot(normalize(vNormal),vec3(0.0,0.0,1.0)),0.0),3.15);
+
+          vec3 purple=vec3(0.48,0.035,1.0);
+          vec3 blue=vec3(0.03,0.23,1.0);
+          vec3 cyan=vec3(0.0,0.88,1.0);
+          vec3 color=mix(purple,blue,smoothstep(0.08,0.58,vUv.x));
+          color=mix(color,cyan,coast*0.78+fresnel*0.52);
+
+          // Almost no opaque surface: the geographic information itself glows.
+          float geographic=land*(0.075+fragments*0.55)+coast*0.95+scan*0.28;
+          float oceanProjection=0.018*fragments;
+          float alpha=(geographic+oceanProjection+fresnel*0.34)*scanFine*glitch;
+          alpha=clamp(alpha,0.0,0.74);
+
+          gl_FragColor=vec4(color,alpha);
+        }
+      `,
+      transparent:true,
+      depthWrite:false,
+      blending:THREE.AdditiveBlending,
+      side:THREE.FrontSide
+    });
+
+    const earth=new THREE.Mesh(new THREE.SphereGeometry(1,96,64),hologramMaterial);
+    earth.scale.setScalar(.5625);
+    earthSystem.add(earth);
+
+    // A second representation uses the same real map to create luminous land points.
+    const pointPositions:number[]=[];
+    const pointUvs:number[]=[];
+    const lonSteps=260;
+    const latSteps=130;
+    for(let y=0;y<=latSteps;y++){
+      const v=y/latSteps;
+      const phi=v*Math.PI;
+      const sinPhi=Math.sin(phi);
+      const cosPhi=Math.cos(phi);
+      for(let x=0;x<lonSteps;x++){
+        const u=x/lonSteps;
+        const theta=u*Math.PI*2;
+        pointPositions.push(
+          sinPhi*Math.cos(theta),
+          cosPhi,
+          sinPhi*Math.sin(theta)
+        );
+        pointUvs.push(u,1.0-v);
+      }
+    }
+    const pointGeometry=new THREE.BufferGeometry();
+    pointGeometry.setAttribute("position",new THREE.Float32BufferAttribute(pointPositions,3));
+    pointGeometry.setAttribute("uv",new THREE.Float32BufferAttribute(pointUvs,2));
+
+    const pointMaterial=new THREE.ShaderMaterial({
+      uniforms:{
+        uMap:{value:earthTexture},
+        uTime:{value:0},
+        uPointSize:{value:1.65}
+      },
+      vertexShader:`
+        uniform float uPointSize;
+        varying vec2 vUv;
+        void main(){
+          vUv=uv;
+          vec4 mvPosition=modelViewMatrix*vec4(position,1.0);
+          gl_PointSize=uPointSize*(300.0/-mvPosition.z);
+          gl_Position=projectionMatrix*mvPosition;
         }
       `,
       fragmentShader:`
         uniform sampler2D uMap;
         uniform float uTime;
         varying vec2 vUv;
-        varying vec3 vNormal;
-        varying vec3 vWorldNormal;
+
+        float landMask(vec3 c){
+          float vegetation=c.g-c.b*0.72;
+          float terrain=c.r+c.g-c.b*1.22;
+          return smoothstep(0.035,0.19,terrain+vegetation*0.18);
+        }
 
         void main(){
-          vec2 uv=vUv;
-          vec3 src=texture2D(uMap,uv).rgb;
-
-          // The texture is used only as geographic data. Natural Earth colors are discarded.
-          float landSignal=src.r+src.g-src.b*1.18;
-          float land=smoothstep(0.025,0.20,landSignal);
-          float luminance=dot(src,vec3(0.299,0.587,0.114));
-
-          // Hologram construction: translucent pixels, scan bands and broken projection noise.
-          float pixelGridX=step(0.52,fract(uv.x*180.0));
-          float pixelGridY=step(0.52,fract(uv.y*180.0));
-          float microDots=step(0.58,fract(uv.x*115.0+uv.y*73.0));
-          float scanBand=smoothstep(0.46,0.50,fract(uv.y*92.0-uTime*0.34));
-          float scanPulse=0.76+0.24*sin(uv.y*430.0-uTime*5.5);
-
-          float edgeX=smoothstep(0.0,0.035,uv.x)*smoothstep(0.0,0.035,1.0-uv.x);
-          float edgeY=smoothstep(0.0,0.035,uv.y)*smoothstep(0.0,0.035,1.0-uv.y);
-          float projectionNoise=0.90+0.10*sin(uv.x*91.0+uv.y*137.0+uTime*1.7);
-
-          // Land is primarily rendered as luminous fragments rather than a filled surface.
-          float geographicPixels=microDots*0.55+(pixelGridX*pixelGridY)*0.25+scanBand*0.34;
-          float landTrace=land*(0.20+geographicPixels)*projectionNoise;
-
-          // Very faint ocean data keeps the spherical projection readable without looking solid.
-          float oceanData=(1.0-land)*luminance*0.045;
-          float rim=pow(1.0-max(dot(normalize(vNormal),vec3(0.0,0.0,1.0)),0.0),2.9);
-          float horizontalScan=0.84+0.16*sin(uv.y*520.0-uTime*7.0);
-
-          vec3 purple=vec3(0.58,0.05,1.0);
-          vec3 blue=vec3(0.04,0.24,1.0);
-          vec3 cyan=vec3(0.00,0.95,1.0);
-          vec3 hologramColor=mix(purple,blue,uv.x);
-          hologramColor=mix(hologramColor,cyan,land*0.88);
-
-          float alpha=(landTrace+oceanData+rim*0.18)*horizontalScan*edgeX*edgeY;
-          alpha*=0.72+0.28*sin(uTime*1.8+uv.x*17.0);
-          alpha=clamp(alpha,0.0,0.78);
-
-          gl_FragColor=vec4(hologramColor,alpha);
+          vec2 p=gl_PointCoord-0.5;
+          float dotShape=1.0-smoothstep(0.12,0.5,length(p));
+          float land=landMask(texture2D(uMap,vUv).rgb);
+          float twinkle=0.65+0.35*sin(uTime*5.0+vUv.x*91.0+vUv.y*47.0);
+          vec3 c=mix(vec3(0.35,0.04,1.0),vec3(0.0,0.95,1.0),vUv.x);
+          float alpha=land*dotShape*0.74*twinkle;
+          if(alpha<0.025) discard;
+          gl_FragColor=vec4(c,alpha);
         }
       `,
       transparent:true,
-      depthWrite:true,
-      side:THREE.FrontSide,
+      depthWrite:false,
       blending:THREE.AdditiveBlending
     });
+    const pointCloud=new THREE.Points(pointGeometry,pointMaterial);
+    pointCloud.scale.setScalar(.566);
+    earthSystem.add(pointCloud);
 
-    const earth=new THREE.Mesh(new THREE.SphereGeometry(1,64,64),earthMaterial);
-    earth.scale.setScalar(.5625);
-    earthSystem.add(earth);
+    // Faint spherical scan lattice: it reads as projected geometry, not a globe texture.
+    const lattice=new THREE.Mesh(
+      new THREE.SphereGeometry(1.012,48,28),
+      new THREE.MeshBasicMaterial({
+        color:0x7b66ff,
+        transparent:true,
+        opacity:0.075,
+        wireframe:true,
+        blending:THREE.AdditiveBlending,
+        depthWrite:false
+      })
+    );
+    lattice.scale.setScalar(.5625);
+    earthSystem.add(lattice);
 
-    // Thin holographic shell: creates the projected-light silhouette without
-    // turning the globe into a photographic/realistic sphere.
-    const shellMaterial=new THREE.ShaderMaterial({
+    // Outer projection field: no physical atmosphere, only holographic emission.
+    const haloMaterial=new THREE.ShaderMaterial({
       uniforms:{uTime:{value:0}},
       vertexShader:`
         varying vec3 vNormal;
@@ -196,12 +281,10 @@ function EarthGlobe(){
         uniform float uTime;
         varying vec3 vNormal;
         void main(){
-          float rim=pow(1.0-max(dot(normalize(vNormal),vec3(0.0,0.0,1.0)),0.0),2.7);
-          float scan=0.55+0.45*sin(vNormal.y*240.0-uTime*4.0);
-          float pulse=0.70+0.30*sin(uTime*1.15);
-          vec3 c=mix(vec3(0.38,0.04,1.0),vec3(0.0,0.95,1.0),rim);
-          float alpha=rim*0.42*pulse+scan*0.035;
-          gl_FragColor=vec4(c,alpha);
+          float rim=pow(1.0-max(dot(normalize(vNormal),vec3(0.0,0.0,1.0)),0.0),4.2);
+          float pulse=0.82+0.18*sin(uTime*1.35);
+          vec3 c=mix(vec3(0.42,0.02,1.0),vec3(0.0,0.9,1.0),rim);
+          gl_FragColor=vec4(c,rim*0.28*pulse);
         }
       `,
       transparent:true,
@@ -209,28 +292,12 @@ function EarthGlobe(){
       blending:THREE.AdditiveBlending,
       side:THREE.BackSide
     });
-    const shell=new THREE.Mesh(new THREE.SphereGeometry(1.018,48,48),shellMaterial);
-    shell.scale.setScalar(.5625);
-    earthSystem.add(shell);
-
-    // Projected hologram lattice: extremely faint geometric scaffold around the map.
-    const lattice=new THREE.Mesh(
-      new THREE.SphereGeometry(1.024,32,20),
-      new THREE.MeshBasicMaterial({
-        color:0x5a7dff,
-        transparent:true,
-        opacity:0.055,
-        wireframe:true,
-        blending:THREE.AdditiveBlending,
-        depthWrite:false
-      })
-    );
-    lattice.scale.setScalar(.5625);
-    earthSystem.add(lattice);
+    const halo=new THREE.Mesh(new THREE.SphereGeometry(1.045,48,32),haloMaterial);
+    halo.scale.setScalar(.5625);
+    earthSystem.add(halo);
 
     let dragging=false;
     let lastPointer={x:0,y:0};
-
     const onPointerDown=(e:PointerEvent)=>{
       dragging=true;
       lastPointer={x:e.clientX,y:e.clientY};
@@ -271,8 +338,9 @@ function EarthGlobe(){
     const clock=new THREE.Clock();
     const animate=()=>{
       const t=clock.getElapsedTime();
-      (earthMaterial.uniforms.uTime as {value:number}).value=t;
-      (shellMaterial.uniforms.uTime as {value:number}).value=t;
+      (hologramMaterial.uniforms.uTime as {value:number}).value=t;
+      (pointMaterial.uniforms.uTime as {value:number}).value=t;
+      (haloMaterial.uniforms.uTime as {value:number}).value=t;
       renderer.render(scene,camera);
       raf=requestAnimationFrame(animate);
     };
@@ -298,7 +366,7 @@ function EarthGlobe(){
     };
   },[]);
 
-  return <div className="earthGlobe realEarth" ref={mountRef} aria-label="Globo 3D da Terra interativo" />;
+  return <div className="earthGlobe realEarth" ref={mountRef} aria-label="Globo holográfico 3D da Terra interativo" />;
 }
 
 function OrbitalRings(){
