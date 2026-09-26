@@ -114,71 +114,73 @@ function EarthGlobe(){
       },
       vertexShader:`
         varying vec2 vUv;
-        varying vec3 vNormal;
+        varying vec3 vWorldNormal;
         void main(){
           vUv=uv;
-          vNormal=normalize(normalMatrix*normal);
+          vWorldNormal=normalize(mat3(modelMatrix)*normal);
           gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);
         }
-      `,
+      `
+      ,
       fragmentShader:`
         uniform sampler2D uMap;
         uniform float uTime;
         uniform vec2 uTexel;
         varying vec2 vUv;
-        varying vec3 vNormal;
+        varying vec3 vWorldNormal;
 
         float landMask(vec3 c){
-          float vegetation=c.g-c.b*0.72;
-          float terrain=c.r+c.g-c.b*1.22;
-          return smoothstep(0.035,0.19,terrain+vegetation*0.18);
+          float greenSignal=c.g-(c.b*0.82+c.r*0.12);
+          float warmSignal=(c.r+c.g)*0.48-c.b*0.58;
+          return smoothstep(0.012,0.075,max(greenSignal,warmSignal));
+        }
+
+        float coastMask(float land){
+          float l=landMask(texture2D(uMap,vUv+vec2(-uTexel.x*1.7,0.0)).rgb);
+          float r=landMask(texture2D(uMap,vUv+vec2( uTexel.x*1.7,0.0)).rgb);
+          float d=landMask(texture2D(uMap,vUv+vec2(0.0,-uTexel.y*1.7)).rgb);
+          float u=landMask(texture2D(uMap,vUv+vec2(0.0, uTexel.y*1.7)).rgb);
+          return clamp(abs(land-l)+abs(land-r)+abs(land-d)+abs(land-u),0.0,1.0);
         }
 
         void main(){
           vec3 src=texture2D(uMap,vUv).rgb;
           float land=landMask(src);
+          float coast=coastMask(land);
 
-          // Neighbor sampling extracts coastline transitions from the real map.
-          float l=landMask(texture2D(uMap,vUv+vec2(-uTexel.x*2.0,0.0)).rgb);
-          float r=landMask(texture2D(uMap,vUv+vec2( uTexel.x*2.0,0.0)).rgb);
-          float d=landMask(texture2D(uMap,vUv+vec2(0.0,-uTexel.y*2.0)).rgb);
-          float u=landMask(texture2D(uMap,vUv+vec2(0.0, uTexel.y*2.0)).rgb);
-          float coast=clamp(abs(land-l)+abs(land-r)+abs(land-d)+abs(land-u),0.0,1.0);
+          float scanA=pow(max(0.0,sin(vUv.y*620.0-uTime*8.0)*0.5+0.5),18.0);
+          float scanB=pow(max(0.0,sin(vUv.y*130.0-uTime*1.8)*0.5+0.5),9.0);
+          float scan=0.72+0.28*scanA+0.10*scanB;
+          float breakup=0.82+0.18*sin(vUv.x*173.0+vUv.y*311.0+uTime*4.0);
+          float fragments=step(0.74,fract(vUv.x*95.0+uTime*0.015))*0.16;
+          float edgePulse=0.72+0.28*sin(uTime*3.5+vUv.y*70.0);
 
-          // Digital fragments break the projection into visible holographic pieces.
-          float gridX=step(0.70,fract(vUv.x*260.0));
-          float gridY=step(0.70,fract(vUv.y*190.0));
-          float micro=step(0.58,fract(vUv.x*137.0+vUv.y*91.0));
-          float fragments=(gridX*gridY)*0.34+micro*0.22;
+          vec3 viewDir=normalize(cameraPosition);
+          float fresnel=pow(1.0-max(dot(normalize(vWorldNormal),viewDir),0.0),2.8);
 
-          // Moving scan bands + subtle signal instability.
-          float scan=smoothstep(0.47,0.50,fract(vUv.y*76.0-uTime*0.32));
-          float scanFine=0.72+0.28*sin(vUv.y*620.0-uTime*7.5);
-          float glitch=0.84+0.16*sin(vUv.x*117.0+vUv.y*233.0+uTime*3.1);
+          vec3 violet=vec3(0.58,0.10,1.0);
+          vec3 cyan=vec3(0.0,0.78,1.0);
+          vec3 white=vec3(0.82,0.94,1.0);
+          vec3 signal=mix(violet,cyan,smoothstep(0.15,0.85,vUv.x));
+          signal=mix(signal,white,coast*0.72+fresnel*0.28);
 
-          float fresnel=pow(1.0-max(dot(normalize(vNormal),vec3(0.0,0.0,1.0)),0.0),3.15);
+          float landLight=land*(0.20+0.18*fragments);
+          float coastLight=coast*(0.92+0.20*edgePulse);
+          float rimLight=fresnel*0.13;
+          float alpha=(landLight+coastLight+rimLight)*scan*breakup;
 
-          vec3 purple=vec3(0.48,0.035,1.0);
-          vec3 blue=vec3(0.03,0.23,1.0);
-          vec3 cyan=vec3(0.0,0.88,1.0);
-          vec3 color=mix(purple,blue,smoothstep(0.08,0.58,vUv.x));
-          color=mix(color,cyan,coast*0.78+fresnel*0.52);
+          float scanGap=step(0.055,fract(vUv.y*34.0-uTime*0.10));
+          alpha*=scanGap;
+          alpha=clamp(alpha,0.0,0.72);
 
-          // Almost no opaque surface: the geographic information itself glows.
-          // Hologram body: extremely transparent. The map is read as projected
-          // light/data rather than a solid blue Earth.
-          float geographic=land*(0.010+fragments*0.045)+coast*0.18+scan*0.028;
-          float oceanProjection=0.0025*fragments;
-          float alpha=(geographic+oceanProjection+fresnel*0.025)*scanFine*glitch;
-          alpha=clamp(alpha,0.0,0.095);
-
-          // Keep the geographic projection luminous without clipping highlights.
-          gl_FragColor=vec4(color*0.62,alpha);
+          if(alpha<0.012) discard;
+          gl_FragColor=vec4(signal*(0.72+coast*0.55),alpha);
         }
-      `,
+      `
+      ,
       transparent:true,
       depthWrite:false,
-      blending:THREE.NormalBlending,
+      blending:THREE.AdditiveBlending,
       side:THREE.FrontSide
     });
 
