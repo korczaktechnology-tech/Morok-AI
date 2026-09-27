@@ -532,14 +532,13 @@ function OrbitalRings(){
         const routePoints:THREE.Vector3[]=[];
         const predictionPoints:THREE.Vector3[]=[];
 
-        // O estado atual é calculado uma única vez. Ele é a âncora comum
-        // do marcador e da predição, evitando qualquer deslocamento entre eles.
+        // O estado atual continua vindo do SGP4. Ele é usado exclusivamente
+        // para posicionar o marcador real do satélite.
         const current=propagateMarkerToThree(satrec,now);
         if(!current?.position)throw new Error("current_propagation_failed");
         const currentPosition=current.position.clone();
 
-        // Trajetória já percorrida: termina exatamente no estado atual.
-        // A metade futura fica exclusivamente na linha de predição.
+        // A trajetória passada continua baseada no SGP4.
         for(let minute=-period/2;minute<=0;minute+=stepMinutes){
           const date=new Date(now.getTime()+minute*60000);
           const sample=propagateEci(satrec,date);
@@ -547,24 +546,49 @@ function OrbitalRings(){
           routePoints.push(eciToThreeAtReferenceEarth(sample.position,now));
         }
 
-        // A predição é uma órbita completa fechada, começando no estado
-        // atual e retornando ao mesmo ponto ao completar exatamente um período.
-        // Assim ela aparece como uma elipse/círculo contínuo, e não como
-        // uma linha aberta de previsão.
-        predictionPoints.push(currentPosition.clone());
-        for(let index=1;index<=720;index++){
-          const minute=(period*index)/720;
-          const date=new Date(now.getTime()+minute*60000);
-          const sample=propagateEci(satrec,date);
-          if(!sample?.position)continue;
-          predictionPoints.push(eciToThreeAtReferenceEarth(sample.position,now));
+        // A predição visual é construída diretamente no plano orbital atual.
+        // Isso evita que a distância real do Chandra ou a rotação terrestre
+        // faça a curva desaparecer atrás/fora da área visível.
+        const currentEci=current.propagated?.position;
+        const currentVelocity=current.propagated?.velocity;
+        if(!currentEci||!currentVelocity)throw new Error("current_orbital_state_missing");
+
+        const rEci=new THREE.Vector3(currentEci.x,currentEci.y,currentEci.z);
+        const vEci=new THREE.Vector3(currentVelocity.x,currentVelocity.y,currentVelocity.z);
+        const normal=rEci.clone().cross(vEci).normalize();
+        if(normal.lengthSq()<0.5)throw new Error("invalid_orbital_plane");
+
+        let basisX=rEci.clone().normalize();
+        let basisY=normal.clone().cross(basisX).normalize();
+        if(basisY.lengthSq()<0.5)throw new Error("invalid_orbital_basis");
+
+        const visualSemiMajor=1.12;
+        const visualEccentricity=Math.min(Math.max(Number(satrec.ecco)||0,0),0.35);
+        const visualSemiMinor=visualSemiMajor*Math.sqrt(1-visualEccentricity*visualEccentricity);
+        const visualCenterOffset=visualSemiMajor*visualEccentricity;
+
+        for(let index=0;index<=720;index++){
+          const theta=(index/720)*Math.PI*2;
+          const x=visualSemiMajor*Math.cos(theta)-visualCenterOffset;
+          const y=visualSemiMinor*Math.sin(theta);
+          const orbitalPoint=rEci.clone().set(0,0,0)
+            .add(basisX.clone().multiplyScalar(x))
+            .add(basisY.clone().multiplyScalar(y));
+
+          // Converte o plano orbital ECI para o mesmo referencial terrestre
+          // usado pelo globo, sempre usando o GMST do instante atual.
+          predictionPoints.push(
+            eciToThreeAtReferenceEarth(
+              {x:orbitalPoint.x,y:orbitalPoint.y,z:orbitalPoint.z},
+              now
+            )
+          );
         }
-        // Fecha geometricamente a curva no ponto inicial.
-        predictionPoints.push(currentPosition.clone());
 
         if(routePoints.length>1)setPoints(track.line,routePoints);
         if(predictionPoints.length>1)setPoints(track.prediction,predictionPoints);
-        track.marker.position.copy(currentPosition);track.marker.visible=true;
+        track.marker.position.copy(currentPosition);
+        track.marker.visible=true;
       }catch(error){
         // Mantém a última previsão válida na tela em caso de indisponibilidade
         // momentânea da fonte orbital, em vez de fabricar uma nova órbita.
