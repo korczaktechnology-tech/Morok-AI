@@ -1501,3 +1501,246 @@ mix-blend-mode:screen;opacity:.65}
   .dashRight{right:178px!important;width:210px!important}.dashNav{width:165px!important}
   .dashCore{left:53%!important;width:min(500px,48vw,64vh)!important}
 }
+
+/* MOROK // DASHBOARD REFINEMENT — alignment, scale, visual hierarchy */
+.morokFullDashboard{
+  --hud-blue:#5b8cff;
+  --hud-cyan:#1bc9ff;
+  --hud-purple:#9a43ff;
+  --hud-magenta:#e33cff;
+  --hud-red:#ff315c;
+  --hud-text:#dbe7ff;
+  --hud-muted:#8294bd;
+  --hud-panel:rgba(3,6,18,.86);
+  position:relative!important;
+  width:100%!important;
+  height:100dvh!important;
+  min-height:720px!important;
+  overflow:hidden!important;
+  padding:0!important;
+}
+
+/* Keep every major region inside a common visual frame */
+.dashHeader,.dashLeft,.dashSystems,.dashCore,.dashRight,.dashNav,.dashMiniStatus,.dashGoal,.dashActions,.dashFooter{
+  transform-origin:center center;
+}
+
+/* Header becomes a real top rail */
+.dashHeader{
+  left:28px!important;right:28px!important;top:14px!important;height:72px!important;
+  align-items:flex-start!important;
+}
+.kosBrand{gap:20px!important}.kosMark{font-size:48px!important;letter-spacing:-6px!important}
+.kosBrand strong{font-size:12px!important;letter-spacing:1.2px!important}
+.kosBrand small{font-size:10px!important;letter-spacing:1px!important;margin-top:13px!important}
+.dashClock strong{font-size:21px!important}.dashClock span,.dashWeather small{font-size:10px!important}
+.dashWeather .sunGlyph{font-size:32px!important}
+
+/* Left column: wider, readable, and vertically locked */
+.dashLeft{
+  left:20px!important;top:105px!important;width:330px!important;bottom:84px!important;
+}
+.resourcePanel{
+  height:276px!important;padding:17px 22px!important;
+  background:linear-gradient(145deg,rgba(6,10,28,.96),rgba(2,5,17,.86))!important;
+}
+.resourceRow{height:61px!important}
+.resourceIcon{width:42px!important;height:42px!important;font-size:21px!important}
+.resourceData b{font-size:12px!important;letter-spacing:.3px!important}
+.resourceData strong{font-size:17px!important}
+.resourceBar{height:8px!important}
+.processPanel{
+  height:230px!important;margin-top:12px!important;padding:17px 22px!important;
+}
+.processPanel h3{font-size:12px!important;margin-bottom:9px!important}
+.processRow{height:31px!important;font-size:11px!important}
+.processRow strong{font-size:11px!important}
+.assistantPanel{
+  left:0!important;bottom:0!important;width:100%!important;height:190px!important;
+  padding:15px 17px!important;gap:14px!important;
+}
+.miniRadar{width:145px!important;height:145px!important;flex-basis:145px!important}
+.assistantPanel h3{font-size:18px!important}.assistantPanel small{font-size:9px!important}
+.assistantPanel p{font-size:11px!important;line-height:1.5!important;margin:12px 0!important}
+
+/* Systems panel aligned to the core, not floating independently */
+.dashSystems{
+  left:365px!important;top:157px!important;width:188px!important;height:386px!important;
+  padding:31px 18px 18px 57px!important;
+  background:linear-gradient(150deg,rgba(8,6,24,.94),rgba(2,4,15,.88))!important;
+  border-color:rgba(104,102,255,.62)!important;
+  box-shadow:inset 10px 0 25px rgba(151,35,255,.10),0 0 24px rgba(44,45,170,.10)!important;
+}
+.dashSystems h2{font-size:18px!important;letter-spacing:1.5px!important;margin-bottom:16px!important}
+.dashSystems li{height:41px!important;font-size:12px!important;gap:11px!important}
+.sysGlyph{font-size:17px!important;width:20px!important}
+
+/* Central core: move upward and make it the visual anchor */
+.dashCore{
+  left:50%!important;
+  top:43.5%!important;
+  width:min(690px,45vw,72vh)!important;
+  aspect-ratio:1!important;
+  z-index:10!important;
+}
+.coreRing{border-color:rgba(90,118,255,.72)!important}
+.ringA{box-shadow:0 0 32px rgba(62,76,255,.25),inset 0 0 28px rgba(45,50,180,.08)!important}
+.ringB{border-color:#b84cff!important;box-shadow:0 0 20px rgba(184,76,255,.48)!important}
+.ringC{border-color:#557aff!important}
+.ringD{border-color:#ff36b0!important}
+.ringE{border-color:#18c4ff!important}
+.coreSweep{height:2px!important;box-shadow:0 0 13px #bd42ff!important}
+.coreStar{width:7px!important;height:7px!important}
+.coreLogo{
+  width:47%!important;height:47%!important;
+  transform:translateY(-2%)!important;
+}
+.coreLogo img{
+  filter:drop-shadow(0 0 18px rgba(129,61,255,.95))
+          drop-shadow(0 0 34px rgba(0,170,255,.68))
+          drop-shadow(0 0 5px white)!important;
+}
+.coreName{
+  top:72%!important;
+  font-size:clamp(34px,3vw,48px)!important;
+  letter-spacing:8px!important;
+  font-weight:400!important;
+}
+.coreSubtitle{
+  top:83%!important;
+  font-size:clamp(9px,.72vw,12px)!important;
+  letter-spacing:1.6px!important;
+}
+.coreTopLabel{top:-1%!important}.coreTopLabel b{font-size:24px!important}
+
+/* Right information column */
+.dashRight{
+  right:236px!important;top:112px!important;width:292px!important;
+}
+.notificationPanel{
+  height:184px!important;padding:17px 21px!important;
+}
+.activityPanel{
+  margin-top:18px!important;height:225px!important;padding:17px 21px!important;
+}
+.dashPanel h3{font-size:12px!important}
+.noticeRow,.activityRow{font-size:11px!important}
+.noticeRow{height:32px!important}.activityRow{height:38px!important}
+
+/* Right navigation is taller and visually connected to the panels */
+.dashNav{
+  right:14px!important;top:112px!important;width:211px!important;
+  background:linear-gradient(145deg,rgba(5,8,24,.94),rgba(2,4,14,.84))!important;
+  box-shadow:inset 0 0 24px rgba(48,67,210,.07),0 0 24px rgba(30,47,150,.12)!important;
+}
+.dashNav button{
+  height:61px!important;padding:0 20px!important;font-size:12px!important;
+  gap:17px!important;
+}
+.dashNav button span{font-size:23px!important}
+
+/* Lower dashboard gets a proper information band */
+.dashMiniStatus{
+  left:365px!important;bottom:118px!important;width:188px!important;height:136px!important;
+  padding:14px 14px!important;
+}
+.dashMiniStatus>span{font-size:9px!important}
+.dashGoal{
+  right:14px!important;bottom:70px!important;width:330px!important;height:190px!important;
+  padding:18px 22px!important;
+}
+.dashGoal h3{font-size:12px!important}.dashGoal>b{font-size:10px!important}
+.dashGoal p{font-size:11px!important}.dashGoal strong{font-size:9px!important}
+
+/* Action rail sits below the core and fills the central width */
+.dashActions{
+  left:50%!important;
+  bottom:49px!important;
+  gap:9px!important;
+  z-index:16!important;
+}
+.dashActions button{
+  width:112px!important;height:78px!important;
+  font-size:10px!important;
+  border-color:rgba(88,119,255,.72)!important;
+  background:linear-gradient(145deg,rgba(7,11,30,.96),rgba(2,4,15,.94))!important;
+}
+.dashActions button span{font-size:26px!important}
+.dashActions .execute{
+  border-color:#ff315c!important;
+  box-shadow:0 0 25px rgba(255,24,77,.24),inset 0 0 18px rgba(255,0,70,.08)!important;
+}
+
+/* Bottom rail spans the available dashboard instead of leaving dead space */
+.dashFooter{
+  left:24%!important;right:24%!important;bottom:9px!important;height:28px!important;
+  font-size:9px!important;
+}
+
+/* Decorative data brackets to make the empty corners part of the HUD */
+.morokFullDashboard .dashLeft:after{
+  content:"SYSTEM LOAD // 04";
+  position:absolute;left:8px;bottom:-18px;
+  font:600 7px "Segoe UI",sans-serif;letter-spacing:1.8px;color:rgba(90,127,255,.42);
+}
+.morokFullDashboard .dashRight:after{
+  content:"LIVE DATA // SYNC";
+  position:absolute;right:7px;bottom:-17px;
+  font:600 7px "Segoe UI",sans-serif;letter-spacing:1.8px;color:rgba(92,133,255,.42);
+}
+.dashSystems:after{
+  content:"KOS // MODULES";
+  position:absolute;left:58px;bottom:11px;
+  font:600 7px "Segoe UI",sans-serif;letter-spacing:1.6px;color:rgba(157,92,255,.45);
+}
+
+/* Stronger panel geometry: corner lights instead of plain boxes */
+.dashPanel,.dashGoal,.dashMiniStatus,.assistantPanel,.dashNav{
+  backdrop-filter:blur(7px)!important;
+}
+.dashPanel:after{
+  width:58px!important;right:15px!important;top:11px!important;
+  background:linear-gradient(90deg,transparent,#758bff 70%,#b34dff)!important;
+  box-shadow:0 0 9px rgba(90,110,255,.7)!important;
+}
+.resourcePanel:before,.processPanel:before,.notificationPanel:before,.activityPanel:before{
+  border-color:rgba(112,91,255,.17)!important;
+}
+
+/* Fill the outer margins with subtle circuitry, not empty black */
+.dashTechLines{
+  opacity:.7!important;
+  background-size:320px 210px,380px 250px,460px 300px,430px 280px,100% 74px!important;
+}
+.dashAmbient{
+  background:
+    radial-gradient(circle at 50% 42%,rgba(83,33,255,.21),transparent 28%),
+    radial-gradient(circle at 30% 42%,rgba(28,105,255,.09),transparent 23%),
+    radial-gradient(circle at 73% 45%,rgba(191,0,255,.09),transparent 23%),
+    radial-gradient(circle at 50% 100%,rgba(255,0,86,.07),transparent 31%)!important;
+}
+
+/* Common desktop target: 1360px+ */
+@media(min-width:1360px){
+  .dashCore{width:min(710px,46vw,74vh)!important}
+  .dashSystems{left:calc(50% - 485px)!important}
+  .dashLeft{width:335px!important}
+  .dashRight{right:calc(50% - 715px)!important;width:300px!important}
+  .dashNav{right:18px!important;width:220px!important}
+}
+
+/* Smaller desktop: preserve alignment rather than shrinking everything */
+@media(max-width:1359px) and (min-width:901px){
+  .dashLeft{width:285px!important}.dashSystems{left:305px!important;width:175px!important}
+  .dashRight{right:195px!important;width:235px!important}.dashNav{width:175px!important}
+  .dashCore{left:51%!important;width:min(600px,43vw,68vh)!important}
+  .dashActions button{width:95px!important}
+}
+
+/* Mobile keeps only the core and action rail; no tiny unreadable desktop panels */
+@media(max-width:760px){
+  .dashCore{left:50%!important;top:40%!important;width:min(430px,90vw)!important}
+  .dashActions{bottom:30px!important;gap:4px!important}
+  .dashActions button{width:62px!important;height:64px!important}
+  .dashActions button span{font-size:19px!important}
+}
