@@ -378,18 +378,12 @@ function OrbitalRings(){
       tleUrl:string;
     };
 
-    // Exatamente nove órbitas reais. As cores são únicas e pertencem ao objeto
-    // durante toda a vida da camada orbital.
+    // Nesta etapa, somente a órbita mais distante está ativa.
+    // O Chandra possui uma órbita altamente elíptica; mantemos sua geometria
+    // real propagada pelo SGP4 e comprimimos apenas a distância radial para
+    // que a trajetória permaneça próxima e visível junto ao globo.
     const definitions:SatelliteDefinition[]=[
-      {key:"iss",label:"Estação Espacial Internacional (ISS)",norad:"25544",color:0x36e6ff,periodMinutes:92.95,tleUrl:"https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE"},
-      {key:"hubble",label:"Telescópio Espacial Hubble",norad:"20580",color:0x9a5cff,periodMinutes:94.02,tleUrl:"https://celestrak.org/NORAD/elements/gp.php?CATNR=20580&FORMAT=TLE"},
-      {key:"fermi",label:"Telescópio Espacial Fermi",norad:"33053",color:0xff9f3f,periodMinutes:95.69,tleUrl:"https://celestrak.org/NORAD/elements/gp.php?CATNR=33053&FORMAT=TLE"},
-      {key:"chandra",label:"Chandra X-ray Observatory",norad:"25867",color:0xff3d68,periodMinutes:3809.0,tleUrl:"https://celestrak.org/NORAD/elements/gp.php?CATNR=25867&FORMAT=TLE"},
-      {key:"noaa20",label:"Satélite NOAA-20",norad:"43013",color:0x58e36d,periodMinutes:101.44,tleUrl:"https://celestrak.org/NORAD/elements/gp.php?CATNR=43013&FORMAT=TLE"},
-      {key:"landsat9",label:"Satélite Landsat 9",norad:"49260",color:0x4c8dff,periodMinutes:98.83,tleUrl:"https://celestrak.org/NORAD/elements/gp.php?CATNR=49260&FORMAT=TLE"},
-      {key:"sentinel6",label:"Satélite Sentinel-6 Michael Freilich",norad:"46924",color:0xffdf4d,periodMinutes:112.43,tleUrl:"https://celestrak.org/NORAD/elements/gp.php?CATNR=46924&FORMAT=TLE"},
-      {key:"tiangong",label:"Estação Espacial Tiangong",norad:"48274",color:0xff4fc3,periodMinutes:92.29,tleUrl:"https://celestrak.org/NORAD/elements/gp.php?CATNR=48274&FORMAT=TLE"},
-      {key:"gpm",label:"Satélite GPM (Global Precipitation Measurement)",norad:"39574",color:0x7dffcf,periodMinutes:93.21,tleUrl:"https://celestrak.org/NORAD/elements/gp.php?CATNR=39574&FORMAT=TLE"}
+      {key:"chandra",label:"Chandra X-ray Observatory",norad:"25867",color:0xff3d68,periodMinutes:3809.0,tleUrl:"https://celestrak.org/NORAD/elements/gp.php?CATNR=25867&FORMAT=TLE"}
     ];
 
     const earthRadiusKm=6378.137;
@@ -454,9 +448,16 @@ function OrbitalRings(){
       return track;
     };
 
-    // O globo usa raio 1. Portanto 1 unidade visual = 1 raio terrestre.
-    // Não há compressão logarítmica: a distância do satélite ao centro é
-    // proporcional à distância orbital real em quilômetros.
+    // O globo usa raio 1. A geometria orbital continua sendo calculada
+    // em quilômetros, mas a distância ao centro da Terra é comprimida
+    // visualmente. A direção e a forma da órbita permanecem reais.
+    const orbitDistanceCompression=.08;
+    const compressOrbitPosition=(position:THREE.Vector3)=>{
+      const radius=position.length();
+      if(radius===0)return position.clone();
+      const compressedRadius=1+(radius-1)*orbitDistanceCompression;
+      return position.clone().multiplyScalar(compressedRadius/radius);
+    };
     const eciToEarthFixed=(position:{x:number;y:number;z:number},date:Date)=>{
       const gmst=satellite.gstime(date);
       return satellite.eciToEcf(position,gmst);
@@ -464,11 +465,11 @@ function OrbitalRings(){
 
     const earthFixedToThree=(position:{x:number;y:number;z:number})=>{
       const factor=1/earthRadiusKm;
-      return new THREE.Vector3(
+      return compressOrbitPosition(new THREE.Vector3(
         position.x*factor,
         position.z*factor,
         -position.y*factor
-      );
+      ));
     };
 
     const propagateToThree=(satrec:ReturnType<typeof satellite.twoline2satrec>,date:Date)=>{
