@@ -7,6 +7,7 @@ import "./styles.css";
 
 const API = import.meta.env.VITE_API_URL ?? "https://morok-ai.onrender.com";
 const MOROK_SUB_ICON = `${import.meta.env.BASE_URL}MorokSubIcon.svg`;
+const globeRotation={x:0,y:0,z:0};
 
 type Msg = { role: "user" | "assistant"; content: string };
 type Task = { id: string; title: string; status: string; dueAt?: string };
@@ -289,7 +290,7 @@ function EarthGlobe(){
       lastY=e.clientY;
       earthSystem.rotation.y+=dx*.006;
       earthSystem.rotation.x+=dy*.0045;
-      earthSystem.rotation.x=Math.max(-1.45,Math.min(1.45,earthSystem.rotation.x));
+      earthSystem.rotation.x=Math.max(-1.45,Math.min(1.45,earthSystem.rotation.x));globeRotation.x=earthSystem.rotation.x;globeRotation.y=earthSystem.rotation.y;globeRotation.z=earthSystem.rotation.z;
     };
 
     const up=(e:PointerEvent)=>{
@@ -417,13 +418,13 @@ function OrbitalRings(){
     const makeTrack=(definition:SatelliteDefinition):Track=>{
       const line=new THREE.Line(
         new THREE.BufferGeometry(),
-        makeLineMaterial(definition.color,.78)
+        makeLineMaterial(definition.color,.46)
       );
       line.renderOrder=30;
 
       const prediction=new THREE.Line(
         new THREE.BufferGeometry(),
-        makeLineMaterial(definition.color,.585)
+        makeLineMaterial(definition.color,.34)
       );
       prediction.renderOrder=40;
 
@@ -440,7 +441,7 @@ function OrbitalRings(){
           toneMapped:false
         })
       );
-      marker.renderOrder=35;
+      marker.renderOrder=35;marker.visible=false;
 
       orbitGroup.add(line,prediction,marker);
       const track={definition,line,prediction,marker};
@@ -495,10 +496,10 @@ function OrbitalRings(){
 
     const refreshTrack=async(definition:SatelliteDefinition)=>{
       try{
-        const response=await fetch(definition.tleUrl,{cache:"no-store"});
+        const response=await fetch(`${API}/api/v1/orbital/tle/${definition.norad}`,{cache:"no-store"});
         if(!response.ok)throw new Error("tle_fetch_failed");
 
-        const tle=parseTle(await response.text());
+        const payload=await response.json() as {tle?:string};if(!payload.tle)throw new Error("tle_payload_missing");const tle=parseTle(payload.tle);
         const satrec=satellite.twoline2satrec(tle.line1,tle.line2);
         if(disposed)return;
 
@@ -546,7 +547,7 @@ function OrbitalRings(){
 
         if(routePoints.length>1)setPoints(track.line,routePoints);
         if(predictionPoints.length>1)setPoints(track.prediction,predictionPoints);
-        track.marker.position.copy(currentPosition);
+        track.marker.position.copy(currentPosition);track.marker.visible=true;
       }catch(error){
         // Mantém a última previsão válida na tela em caso de indisponibilidade
         // momentânea da fonte orbital, em vez de fabricar uma nova órbita.
@@ -577,7 +578,7 @@ function OrbitalRings(){
     const animate=()=>{
       if(disposed)return;
       raf=requestAnimationFrame(animate);
-      const now=new Date();
+      const now=new Date();orbitGroup.rotation.set(globeRotation.x,globeRotation.y,globeRotation.z);
 
       tracks.forEach(track=>{
         if(!track.satrec)return;
