@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import * as satellite from "satellite.js";
 import { createRoot } from "react-dom/client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Capacitor } from "@capacitor/core";
@@ -139,10 +140,10 @@ function EarthGlobe(){
         color:0xffffff,
         transparent:false,
         opacity:1,
-        depthTest:false,
+        depthTest:true,
         depthWrite:false,
         toneMapped:false,
-        blending:THREE.AdditiveBlending
+        blending:THREE.NormalBlending
       });
       const borderLine=new THREE.Line(borderGeometry,borderMaterial);
       borderLine.renderOrder=50;
@@ -295,7 +296,7 @@ function OrbitalRings(){
     if(!mount)return;
 
     const scene=new THREE.Scene();
-    const camera=new THREE.PerspectiveCamera(34,1,0.1,100);
+    const camera=new THREE.PerspectiveCamera(34,1,.1,100);
     camera.position.set(0,0,6.3);
 
     const renderer=new THREE.WebGLRenderer({
@@ -306,123 +307,237 @@ function OrbitalRings(){
     renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.25));
     renderer.outputColorSpace=THREE.SRGBColorSpace;
     renderer.setClearColor(0x000000,0);
-    mount.appendChild(renderer.domElement);
+    mount.replaceChildren(renderer.domElement);
 
-    const orbitalGroup=new THREE.Group();
-    scene.add(orbitalGroup);
-
-    type RingState={
-      group:THREE.Group;
-      markerA:THREE.Mesh;
-      markerB:THREE.Mesh;
-      markerC:THREE.Mesh;
-      radius:number;
-      axis:THREE.Vector3;
-      speed:number;
-      phase:number;
+    type SatelliteDefinition={
+      key:string;
+      label:string;
+      norad:string;
+      color:number;
+      periodMinutes:number;
+      tleUrl:string;
     };
 
-    const ringStates:RingState[]=[];
-    const makeRing=(
-      radius:number,thickness:number,color:number,opacity:number,
-      axis:THREE.Vector3,speed:number,phase:number,scaleX:number
-    )=>{
-      const group=new THREE.Group();
-      const ringMaterial=new THREE.MeshBasicMaterial({
-        color,transparent:true,opacity,
-        blending:THREE.AdditiveBlending,depthWrite:false
+    const definitions:SatelliteDefinition[]=[
+      {key:"sputnik1",label:"Sputnik 1",norad:"00002",color:0xffffff,periodMinutes:96.2,tleUrl:""},
+      {key:"hubble",label:"Hubble",norad:"20580",color:0x7b61ff,periodMinutes:94.02,tleUrl:"https://celestrak.org/NORAD/elements/gp.php?CATNR=20580&FORMAT=TLE"},
+      {key:"iss",label:"ISS",norad:"25544",color:0xff315f,periodMinutes:92.95,tleUrl:"https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE"},
+      {key:"gps",label:"GPS / NAVSTAR",norad:"24876",color:0x4b83ff,periodMinutes:717.97,tleUrl:"https://celestrak.org/NORAD/elements/gp.php?CATNR=24876&FORMAT=TLE"},
+      {key:"voyager1",label:"Voyager 1",norad:"-31",color:0x9d65ff,periodMinutes:0,tleUrl:""},
+      {key:"jwst",label:"James Webb",norad:"-170",color:0xff6685,periodMinutes:0,tleUrl:""},
+      {key:"landsat1",label:"Landsat 1",norad:"06126",color:0x55a1ff,periodMinutes:103.02,tleUrl:"https://celestrak.org/NORAD/elements/gp.php?CATNR=6126&FORMAT=TLE"},
+      {key:"telstar1",label:"Telstar 1",norad:"00340",color:0xc06bff,periodMinutes:157.74,tleUrl:"https://celestrak.org/NORAD/elements/gp.php?CATNR=340&FORMAT=TLE"},
+      {key:"tiros1",label:"TIROS-1",norad:"00029",color:0xff416e,periodMinutes:97.38,tleUrl:"https://celestrak.org/NORAD/elements/gp.php?CATNR=29&FORMAT=TLE"}
+    ];
+
+    const earthRadiusKm=6378.137;
+    const orbitGroup=new THREE.Group();
+    scene.add(orbitGroup);
+
+    type Track={
+      definition:SatelliteDefinition;
+      satrec?:satellite.SatRec;
+      line:THREE.Line;
+      marker:THREE.Mesh;
+      points:THREE.Vector3[];
+      isDeepSpace:boolean;
+    };
+    const tracks=new Map<string,Track>();
+    let disposed=false;
+
+    const makeMaterial=(color:number,opacity:number)=>{
+      return new THREE.LineBasicMaterial({
+        color,
+        transparent:true,
+        opacity,
+        blending:THREE.AdditiveBlending,
+        depthWrite:false,
+        depthTest:false,
+        toneMapped:false
       });
-      const ring=new THREE.Mesh(
-        new THREE.TorusGeometry(radius,thickness,6,96),
-        ringMaterial
-      );
-      ring.scale.x=scaleX;
-      group.add(ring);
-
-      const techTrace=new THREE.Mesh(
-        new THREE.TorusGeometry(radius*1.012,Math.max(.0012,thickness*.58),4,96),
-        new THREE.MeshBasicMaterial({
-          color,transparent:true,opacity:Math.min(1,opacity*.62),
-          blending:THREE.AdditiveBlending,depthWrite:false
-        })
-      );
-      techTrace.scale.x=scaleX;
-      techTrace.rotation.z=.012;
-      group.add(techTrace);
-
-      const markerMaterial=new THREE.MeshBasicMaterial({
-        color,transparent:true,opacity:Math.min(1,opacity+.25),
-        blending:THREE.AdditiveBlending,depthWrite:false
-      });
-      const markerA=new THREE.Mesh(new THREE.SphereGeometry(.018,8,8),markerMaterial);
-      const markerB=new THREE.Mesh(new THREE.SphereGeometry(.010,8,8),markerMaterial);
-      const markerC=new THREE.Mesh(new THREE.SphereGeometry(.008,7,7),markerMaterial);
-      group.add(markerA,markerB,markerC);
-      orbitalGroup.add(group);
-
-      ringStates.push({group,markerA,markerB,markerC,radius,axis,speed,phase});
     };
 
-    makeRing(.714375,.0045,0x7448ff,.72,new THREE.Vector3(.3,.8,.2).normalize(),.225,.35,1.34);
-    makeRing(.781875,.0025,0xff2d56,.52,new THREE.Vector3(-.6,.2,.7).normalize(),-.162,2.1,.78);
-    makeRing(.855,.002,0x3e74ff,.42,new THREE.Vector3(.7,-.4,.3).normalize(),.098,4.0,1.22);
-    makeRing(.945,.0015,0xb23dff,.28,new THREE.Vector3(.2,.6,-.7).normalize(),-.070,1.25,.86);
+    const makeTrack=(definition:SatelliteDefinition,isDeepSpace=false)=>{
+      const lineGeometry=new THREE.BufferGeometry();
+      const line=new THREE.Line(lineGeometry,makeMaterial(definition.color,isDeepSpace?.42:.62));
+      line.renderOrder=30;
+      orbitGroup.add(line);
 
-    const outerRings=new THREE.Group();
-    scene.add(outerRings);
-    const outerStates:{group:THREE.Group;radius:number;phase:number;speed:number}[]=[];
-    for(let i=0;i<5;i++){
-      const r=1.029375+i*.050625;
-      const group=new THREE.Group();
-      const ring=new THREE.Mesh(
-        new THREE.TorusGeometry(r,.00105+(i%3)*.0005,5,80),
-        new THREE.MeshBasicMaterial({
-          color:i%2?0x765cff:0xff3d69,
-          transparent:true,
-          opacity:.19+(i%3)*.035,
-          blending:THREE.AdditiveBlending,
-          depthWrite:false
-        })
-      );
-      ring.rotation.x=Math.PI/2;
-      ring.scale.x=i%2?1.08:.94;
-      ring.rotation.z=i*.31;
-      group.add(ring);
-
-      const techTrace=new THREE.Mesh(
-        new THREE.TorusGeometry(r*1.008,.00065,4,80),
-        new THREE.MeshBasicMaterial({
-          color:i%2?0x9b8aff:0xff708d,
-          transparent:true,
-          opacity:.24,
-          blending:THREE.AdditiveBlending,
-          depthWrite:false
-        })
-      );
-      techTrace.rotation.x=Math.PI/2;
-      techTrace.scale.x=i%2?1.08:.94;
-      techTrace.rotation.z=i*.31+.018;
-      group.add(techTrace);
       const marker=new THREE.Mesh(
-        new THREE.SphereGeometry(.007,6,6),
+        new THREE.SphereGeometry(isDeepSpace?.018:.013,8,8),
         new THREE.MeshBasicMaterial({
-          color:i%2?0x9d8cff:0xff6f86,
-          transparent:true,opacity:.7,
-          blending:THREE.AdditiveBlending,depthWrite:false
+          color:definition.color,
+          transparent:true,
+          opacity:.95,
+          blending:THREE.AdditiveBlending,
+          depthWrite:false,
+          depthTest:false,
+          toneMapped:false
         })
       );
-      const marker2=new THREE.Mesh(
-        new THREE.SphereGeometry(.0055,6,6),
-        new THREE.MeshBasicMaterial({
-          color:i%2?0x7d68ff:0xff5878,
-          transparent:true,opacity:.62,
-          blending:THREE.AdditiveBlending,depthWrite:false
-        })
+      marker.renderOrder=35;
+      orbitGroup.add(marker);
+
+      const track={definition,line,marker,points:[],isDeepSpace};
+      tracks.set(definition.key,track);
+      return track;
+    };
+
+    const sphericalScale=(x:number,y:number,z:number)=>{
+      const distanceKm=Math.sqrt(x*x+y*y+z*z);
+      if(distanceKm<=earthRadiusKm*8){
+        return distanceKm/earthRadiusKm;
+      }
+      // Mantém objetos de espaço profundo visíveis no HUD sem falsificar a
+      // geometria orbital: a compressão é somente visual e monotônica.
+      return Math.min(2.35,1+Math.log10(Math.max(1,distanceKm/earthRadiusKm))*.34);
+    };
+
+    const eciToThree=(position:{x:number;y:number;z:number})=>{
+      const distanceKm=Math.sqrt(position.x**2+position.y**2+position.z**2);
+      const scale=sphericalScale(position.x,position.y,position.z);
+      const factor=distanceKm>0?scale/(distanceKm/earthRadiusKm):1;
+      return new THREE.Vector3(
+        position.x*factor,
+        position.z*factor,
+        -position.y*factor
       );
-      group.add(marker,marker2);
-      outerRings.add(group);
-      outerStates.push({group,radius:r,phase:i*.73,speed:(i%2?-.026:.021)*(1+i*.11)});
-    }
+    };
+
+    const setLinePoints=(track:Track,points:THREE.Vector3[])=>{
+      track.points=points;
+      track.line.geometry.dispose();
+      track.line.geometry=new THREE.BufferGeometry().setFromPoints(points);
+      track.line.frustumCulled=false;
+    };
+
+    const staticSputnik={
+      semiMajorKm:6955.2,
+      eccentricity:.05201,
+      inclination:THREE.MathUtils.degToRad(65.1),
+      ascendingNode:THREE.MathUtils.degToRad(0),
+      argumentPerigee:THREE.MathUtils.degToRad(0)
+    };
+
+    const makeKeplerOrbit=(definition:SatelliteDefinition)=>{
+      const points:THREE.Vector3[]=[];
+      const {semiMajorKm:a,eccentricity:e,inclination:i,ascendingNode:raan,argumentPerigee:arg}=staticSputnik;
+      for(let step=0;step<=240;step++){
+        const nu=(step/240)*Math.PI*2;
+        const radius=a*(1-e*e)/(1+e*Math.cos(nu));
+        const xOrb=radius*Math.cos(nu);
+        const yOrb=radius*Math.sin(nu);
+        const cosO=Math.cos(raan),sinO=Math.sin(raan);
+        const cosI=Math.cos(i),sinI=Math.sin(i);
+        const cosW=Math.cos(arg),sinW=Math.sin(arg);
+        const x=(cosO*cosW-sinO*sinW*cosI)*xOrb+(-cosO*sinW-sinO*cosW*cosI)*yOrb;
+        const y=(sinO*cosW+cosO*sinW*cosI)*xOrb+(-sinO*sinW+cosO*cosW*cosI)*yOrb;
+        const z=(sinW*sinI)*xOrb+(cosW*sinI)*yOrb;
+        points.push(eciToThree({x,y,z}));
+      }
+      const track=makeTrack(definition,false);
+      setLinePoints(track,points);
+      track.marker.visible=false;
+    };
+
+    makeKeplerOrbit(definitions[0]!);
+
+    const parseTle=(text:string)=>{
+      const lines=text.split(/\\r?\\n/).map(line=>line.trim()).filter(Boolean);
+      const line1=lines.find(line=>line.startsWith("1 "));
+      const line2=lines.find(line=>line.startsWith("2 "));
+      if(!line1||!line2)throw new Error("invalid_tle");
+      return {line1,line2};
+    };
+
+    const refreshTleTrack=async(definition:SatelliteDefinition)=>{
+      if(!definition.tleUrl||disposed)return;
+      try{
+        const response=await fetch(definition.tleUrl,{cache:"no-store"});
+        if(!response.ok)throw new Error("tle_fetch_failed");
+        const tle=parseTle(await response.text());
+        const satrec=satellite.twoline2satrec(tle.line1,tle.line2);
+        if(disposed)return;
+
+        let track=tracks.get(definition.key);
+        if(!track)track=makeTrack(definition,false);
+        track.satrec=satrec;
+
+        const now=new Date();
+        const span=Math.max(90,definition.periodMinutes*1.15);
+        const points:THREE.Vector3[]=[];
+        for(let minute=-span/2;minute<=span/2;minute+=Math.max(.75,span/180)){
+          const date=new Date(now.getTime()+minute*60000);
+          const propagated=satellite.propagate(satrec,date);
+          if(!propagated||!propagated.position)continue;
+          points.push(eciToThree(propagated.position));
+        }
+        if(points.length>1)setLinePoints(track,points);
+      }catch(error){
+        console.warn(`Não foi possível atualizar a órbita de ${definition.label}.`,error);
+      }
+    };
+
+    const refreshDeepSpace=async(definition:SatelliteDefinition)=>{
+      if(disposed)return;
+      try{
+        const now=new Date();
+        const start=new Date(now.getTime()-15*86400000);
+        const stop=new Date(now.getTime()+15*86400000);
+        const url=new URL("https://ssd.jpl.nasa.gov/api/horizons.api");
+        url.searchParams.set("format","json");
+        url.searchParams.set("COMMAND",`'${definition.norad}'`);
+        url.searchParams.set("OBJ_DATA","NO");
+        url.searchParams.set("MAKE_EPHEM","YES");
+        url.searchParams.set("EPHEM_TYPE","VECTORS");
+        url.searchParams.set("CENTER","500@399");
+        url.searchParams.set("START_TIME",`'${start.toISOString().slice(0,10)}'`);
+        url.searchParams.set("STOP_TIME",`'${stop.toISOString().slice(0,10)}'`);
+        url.searchParams.set("STEP_SIZE","1 d");
+        url.searchParams.set("OUT_UNITS","KM-S");
+        url.searchParams.set("VEC_TABLE","1");
+        url.searchParams.set("VEC_LABELS","NO");
+        url.searchParams.set("CSV_FORMAT","YES");
+
+        const response=await fetch(url.toString(),{cache:"no-store"});
+        if(!response.ok)throw new Error("horizons_fetch_failed");
+        const data=await response.json();
+        const text=String(data?.result??"");
+        const match=text.match(/\\$\\$SOE([\\s\\S]*?)\\$\\$EOE/);
+        if(!match)throw new Error("horizons_empty");
+
+        const points:THREE.Vector3[]=[];
+        for(const row of match[1].split(/\\r?\\n/)){
+          const fields=row.split(",").map(v=>v.trim());
+          const nums=fields.map(v=>Number(v));
+          const numeric=nums.filter(v=>Number.isFinite(v));
+          if(numeric.length<3)continue;
+          const [x,y,z]=numeric.slice(-3);
+          if([x,y,z].every(Number.isFinite))points.push(eciToThree({x,y,z}));
+        }
+
+        if(points.length>1){
+          let track=tracks.get(definition.key);
+          if(!track)track=makeTrack(definition,true);
+          setLinePoints(track,points);
+        }
+      }catch(error){
+        console.warn(`Não foi possível atualizar a trajetória de ${definition.label}.`,error);
+      }
+    };
+
+    const refreshAll=()=>{
+      for(const definition of definitions){
+        if(definition.key==="sputnik1")continue;
+        if(definition.key==="voyager1"||definition.key==="jwst"){
+          void refreshDeepSpace(definition);
+        }else{
+          void refreshTleTrack(definition);
+        }
+      }
+    };
+    refreshAll();
+    const refreshTimer=window.setInterval(refreshAll,15*60*1000);
 
     const resize=()=>{
       const w=Math.max(1,mount.clientWidth);
@@ -436,85 +551,40 @@ function OrbitalRings(){
     resize();
 
     let raf=0;
-    const animate=(now:number)=>{
-      const elapsed=now*.001;
-      const q=new THREE.Quaternion();
-      const axis=new THREE.Vector3();
+    const animate=()=>{
+      if(disposed)return;
+      raf=requestAnimationFrame(animate);
+      const now=new Date();
 
-      q.setFromEuler(new THREE.Euler(elapsed*.021,elapsed*.055,elapsed*.0137,"XYZ"));
-      orbitalGroup.quaternion.copy(q);
-
-      ringStates.forEach((state,index)=>{
-        axis.copy(state.axis);
-        const angle=elapsed*state.speed+Math.sin(elapsed*(.0071+index*.0013)+state.phase)*.17;
-        q.setFromAxisAngle(axis,angle);
-        state.group.quaternion.copy(q);
-        state.group.scale.set(
-          1+Math.sin(elapsed*(.023+index*.0047)+state.phase)*.055,
-          1+Math.cos(elapsed*(.017+index*.0031)+state.phase*1.7)*.035,
-          1
-        );
-
-        const markerPhase=elapsed*(.31+index*.071)+state.phase;
-        state.markerA.position.set(
-          Math.cos(markerPhase)*state.radius,
-          Math.sin(markerPhase)*state.radius,
-          Math.sin(markerPhase*.73)*.08
-        );
-        state.markerB.position.set(
-          Math.cos(markerPhase*1.37+1.4)*state.radius*.48,
-          Math.sin(markerPhase*1.37+1.4)*state.radius*.48,
-          Math.cos(markerPhase*.91)*.11
-        );
-        state.markerC.position.set(
-          Math.cos(markerPhase*.83+3.2)*state.radius*.78,
-          Math.sin(markerPhase*.83+3.2)*state.radius*.78,
-          Math.sin(markerPhase*1.11)*.09
-        );
-      });
-
-      outerStates.forEach((state,index)=>{
-        const angle=elapsed*state.speed+Math.sin(elapsed*(.009+index*.0011)+state.phase)*.11;
-        const wobble=1+Math.sin(elapsed*(.019+index*.0023)+state.phase)*.035;
-        state.group.quaternion.setFromEuler(new THREE.Euler(
-          Math.PI/2+Math.sin(elapsed*.013+index)*.08,
-          angle,
-          index*.31+Math.cos(elapsed*.011+index*.7)*.12,
-          "XYZ"
-        ));
-        state.group.scale.set(wobble,1,1);
-        const marker=state.group.children[1] as THREE.Mesh;
-        const marker2=state.group.children[2] as THREE.Mesh;
-        const markerPhase=elapsed*(.17+index*.023)+state.phase;
-        marker.position.set(
-          Math.cos(markerPhase)*state.radius,
-          Math.sin(markerPhase)*state.radius,
-          Math.sin(markerPhase*.67)*.05
-        );
-        marker2.position.set(
-          Math.cos(markerPhase*1.31+2.2)*state.radius,
-          Math.sin(markerPhase*1.31+2.2)*state.radius,
-          Math.cos(markerPhase*.81)*.07
-        );
+      tracks.forEach(track=>{
+        if(!track.satrec)return;
+        const propagated=satellite.propagate(track.satrec,now);
+        if(!propagated||!propagated.position){
+          track.marker.visible=false;
+          return;
+        }
+        track.marker.visible=true;
+        track.marker.position.copy(eciToThree(propagated.position));
       });
 
       renderer.render(scene,camera);
-      raf=requestAnimationFrame(animate);
     };
-    raf=requestAnimationFrame(animate);
+    animate();
 
     return()=>{
+      disposed=true;
+      window.clearInterval(refreshTimer);
       cancelAnimationFrame(raf);
       resizeObserver.disconnect();
-      scene.traverse(o=>{
-        const mesh=o as THREE.Mesh;
-        if(mesh.geometry)mesh.geometry.dispose();
+      scene.traverse(object=>{
+        const mesh=object as THREE.Mesh|THREE.Line;
+        mesh.geometry?.dispose();
         const material=mesh.material as THREE.Material|THREE.Material[];
-        if(Array.isArray(material))material.forEach(m=>m.dispose());
-        else if(material)material.dispose();
+        if(Array.isArray(material))material.forEach(item=>item.dispose());
+        else material?.dispose();
       });
       renderer.dispose();
-      if(renderer.domElement.parentElement===mount)mount.removeChild(renderer.domElement);
+      renderer.domElement.remove();
     };
   },[]);
 
