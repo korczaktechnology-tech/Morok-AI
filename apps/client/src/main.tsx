@@ -96,11 +96,11 @@ function EarthGlobe(){
     const earthVisualRadius=1;
     const geometry=new THREE.SphereGeometry(earthVisualRadius,128,128);
     const textureLoader=new THREE.TextureLoader();
-    // Textura cartográfica diurna 4K do conjunto atual do Three.js.
-    // É uma projeção equiretangular 2:1 (4096x2048), portanto cada
-    // longitude/latitude ocupa exatamente a mesma referência UV da esfera.
+    // NASA Blue Marble: textura global oficial da NASA em projeção
+    // equiretangular 2:1 (5400x2700), adequada para aplicação direta
+    // sobre a esfera sem distorcer a relação longitude/latitude.
     const earthTexture=textureLoader.load(
-      "https://threejs.org/examples/textures/planets/earth_day_4096.jpg",
+      "https://assets.science.nasa.gov/content/dam/science/esd/eo/images/bmng/bmng-base/february/world.200402.3x5400x2700.jpg",
       (texture)=>{
         texture.colorSpace=THREE.SRGBColorSpace;
         texture.wrapS=THREE.ClampToEdgeWrapping;
@@ -126,18 +126,8 @@ function EarthGlobe(){
       specular:new THREE.Color(0x111111)
     });
 
-    // Corrige somente o pequeno artefato da borda da projeção equiretangular
-    // no Polo Norte. A máscara cobre apenas os 1.5 graus mais próximos do
-    // polo (região oceânica), ficando bem abaixo da latitude da Groenlândia
-    // e sem remover ou alterar qualquer continente ou fronteira.
-    material.onBeforeCompile=(shader)=>{
-      shader.fragmentShader=shader.fragmentShader.replace(
-        "#include <map_fragment>",
-        `#include <map_fragment>
-        float northPoleMask=smoothstep(0.0,0.0042,vMapUv.y);
-        diffuseColor.rgb=mix(vec3(0.012,0.018,0.026),diffuseColor.rgb,northPoleMask);`
-      );
-    };
+    // A textura NASA já possui a região polar completa; não há máscara
+    // artificial no Polo Norte e nenhum continente é removido.
     const earth=new THREE.Mesh(geometry,material);
     earthSystem.add(earth);
 
