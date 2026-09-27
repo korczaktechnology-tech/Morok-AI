@@ -201,7 +201,7 @@ function ResizablePanel({
     const move = (e: PointerEvent) => {
       const dx = Math.abs(e.clientX - startX);
       const dy = Math.abs(e.clientY - startY);
-      const amount = Math.min(maxRadius, Math.max(dx, dy) * 1.15);
+      const amount = Math.min(maxRadius, Math.max(18, Math.max(dx, dy) * 2.2));
       const next = { ...start };
       if (direction === "n") {
         next.topLeft = Math.max(0, Math.min(maxRadius, amount * (1 - xRatio)));
