@@ -1981,30 +1981,17 @@ mix-blend-mode:screen;opacity:.65}
   clip-path:polygon(3% 0,97% 0,100% 4%,100% 96%,97% 100%,3% 100%,0 96%,0 4%)!important
 }
 
-/* Ctrl + vertex: real border-radius, while the untouched state remains polygonal. */
-.morokResizablePanel[style*="--panel-curve-tl"]{
+/* Ctrl + vertex = real border-radius. */
+.morokResizablePanel[data-vertex-curve="1"]{
   border-top-left-radius:var(--panel-curve-tl,0)!important;
   border-top-right-radius:var(--panel-curve-tr,0)!important;
   border-bottom-right-radius:var(--panel-curve-br,0)!important;
   border-bottom-left-radius:var(--panel-curve-bl,0)!important;
-}
-.morokResizablePanel[style*="--panel-curve-tl"][style*="--panel-curve-tr"]{
-  clip-path:polygon(
-    3% 0,97% 0,100% 4%,100% 96%,
-    97% 100%,3% 100%,0 96%,0 4%
-  )!important;
+  clip-path:none!important;
 }
 
-/* When a vertex has been curved, remove clipping so the radius is actually visible. */
-.morokResizablePanel[style*="--panel-curve-tl"][style*="--panel-curve-tr"][style*="--panel-curve-br"][style*="--panel-curve-bl"]{
-  clip-path:polygon(
-    3% 0,97% 0,100% 4%,100% 96%,
-    97% 100%,3% 100%,0 96%,0 4%
-  )!important;
-}
-
-/* Ctrl + edge: bend the polygon itself. */
-.morokResizablePanel[style*="--panel-curve-top"]{
+/* Ctrl + edge = polygonal deformation, never transform/clip-path-as-a-rounding. */
+.morokResizablePanel[data-edge-curve="1"]:not([data-vertex-curve="1"]){
   --f:var(--panel-curve-focus,.5);
   --ct:var(--panel-curve-top,0);--cr:var(--panel-curve-right,0);
   --cb:var(--panel-curve-bottom,0);--cl:var(--panel-curve-left,0);
