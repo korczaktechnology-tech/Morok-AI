@@ -1942,3 +1942,17 @@ mix-blend-mode:screen;opacity:.65}
 @media(max-width:760px){
   .resizeHandleE,.resizeHandleS,.resizeHandleSE{display:block!important}
 }
+
+/* FINAL PANEL GEOMETRY OVERRIDE — CSS variables outrank the dashboard's positional !important rules */
+.morokResizablePanel{
+  width:var(--panel-width,auto)!important;
+  height:var(--panel-height,auto)!important;
+  left:var(--panel-left,auto)!important;
+  top:var(--panel-top,auto)!important;
+}
+.morokResizablePanel[style*="--panel-left"]{
+  right:auto!important;
+}
+.morokResizablePanel[style*="--panel-top"]{
+  bottom:auto!important;
+}
