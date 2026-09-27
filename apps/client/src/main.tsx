@@ -794,26 +794,42 @@ function OrbitalRings(){
     resize();
 
     let raf=0;
-    const animate=()=>{
+    let lastOrbitUpdate=0;
+    const animate=(timestamp:number)=>{
       if(disposed)return;
       raf=requestAnimationFrame(animate);
-      const now=new Date();orbitGroup.rotation.set(globeRotation.x,globeRotation.y,globeRotation.z);
 
-      tracks.forEach(track=>{
-        if(!track.satrec)return;
-        const propagated=satellite.propagate(track.satrec,now);
-        if(!propagated?.position){
-          track.marker.visible=false;
-          return;
-        }
-        track.marker.visible=true;
-        const ecf=eciToEarthFixed(propagated.position,now);
-        track.marker.position.copy(earthFixedToThree(ecf));
-      });
+      // A órbita não precisa ser recalculada a cada frame. Atualizamos a
+      // posição dos objetos rastreados em baixa frequência e deixamos o
+      // Three.js cuidar apenas da animação/renderização contínua.
+      if(timestamp-lastOrbitUpdate>=250){
+        lastOrbitUpdate=timestamp;
+        const now=new Date();
+        tracks.forEach(track=>{
+          if(!track.satrec)return;
+          const propagated=satellite.propagate(track.satrec,now);
+          if(!propagated?.position){
+            track.marker.visible=false;
+            return;
+          }
+          track.marker.visible=true;
+          const ecf=eciToEarthFixed(propagated.position,now);
+          track.marker.position.copy(earthFixedToThree(ecf));
+        });
+      }
+
+      // Só sincroniza a rotação orbital quando ela realmente mudou.
+      if(
+        orbitGroup.rotation.x!==globeRotation.x ||
+        orbitGroup.rotation.y!==globeRotation.y ||
+        orbitGroup.rotation.z!==globeRotation.z
+      ){
+        orbitGroup.rotation.set(globeRotation.x,globeRotation.y,globeRotation.z);
+      }
 
       renderer.render(scene,camera);
     };
-    animate();
+    animate(performance.now());
 
     return()=>{
       disposed=true;
