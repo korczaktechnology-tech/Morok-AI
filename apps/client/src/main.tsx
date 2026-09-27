@@ -87,8 +87,8 @@ function EarthGlobe(){
     });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.25));
     renderer.outputColorSpace=THREE.SRGBColorSpace;
-    renderer.toneMapping=THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure=0.72;
+    renderer.toneMapping=THREE.NoToneMapping;
+    renderer.toneMappingExposure=1;
     renderer.setClearColor(0x000000,0);
     mount.appendChild(renderer.domElement);
 
@@ -148,9 +148,11 @@ function EarthGlobe(){
           vec3 cyan=vec3(0.08,0.62,0.88);
           vec3 signal=mix(violet,cyan,smoothstep(0.12,0.88,vUv.x));
 
-          float mapAlpha=land*0.38;
-          float coastAlpha=coast*0.82;
-          float alpha=clamp(mapAlpha+coastAlpha,0.0,0.82);
+          // Strictly matte holographic projection: no emissive bloom, no rim light,
+          // no fresnel, no specular response and no additive light accumulation.
+          float mapAlpha=land*0.22;
+          float coastAlpha=coast*0.58;
+          float alpha=clamp(mapAlpha+coastAlpha,0.0,0.58);
 
           if(alpha<0.025) discard;
           gl_FragColor=vec4(signal,alpha);
