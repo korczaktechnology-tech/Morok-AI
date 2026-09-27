@@ -2309,3 +2309,19 @@ mix-blend-mode:screen;opacity:.65}
     width:156px!important;height:156px!important;flex:0 0 156px!important;
   }
 }
+
+
+/* MOROK // VOICE CORE — final visual refinement */
+.morokVoiceCore{
+  background:radial-gradient(circle,rgba(16,21,54,.14) 0 42%,transparent 43%);
+}
+.morokVoiceCore canvas{
+  opacity:1!important;
+}
+.morokVoiceCore .voiceCoreCenter{
+  width:11px!important;
+  height:11px!important;
+}
+.dashLeft .assistantPanel .wave{
+  display:none!important;
+}
