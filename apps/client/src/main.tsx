@@ -325,6 +325,7 @@ function EarthGlobe(){
     }
 
     let dragging=false;
+    let dragMoved=false;
     let lastX=0;
     let lastY=0;
     let returningToAxis=false;
@@ -369,6 +370,7 @@ function EarthGlobe(){
 
     const down=(e:PointerEvent)=>{
       dragging=true;
+      dragMoved=false;
       lastX=e.clientX;
       lastY=e.clientY;
       mount.setPointerCapture(e.pointerId);
@@ -379,6 +381,7 @@ function EarthGlobe(){
       if(!dragging)return;
       const dx=e.clientX-lastX;
       const dy=e.clientY-lastY;
+      if(Math.abs(dx)+Math.abs(dy)>0.5)dragMoved=true;
       lastX=e.clientX;
       lastY=e.clientY;
       returningToAxis=false;
@@ -397,7 +400,7 @@ function EarthGlobe(){
 
       // No modo de rotação terrestre, o arrasto é temporário. Ao soltar,
       // retorna suavemente ao eixo correto antes de continuar a rotação.
-      if(!earthLocationLock){
+      if(!earthLocationLock && dragMoved){
         returningToAxis=true;
       }else{
         returningToAxis=false;
