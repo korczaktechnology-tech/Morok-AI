@@ -103,9 +103,9 @@ function EarthGlobe(){
     earthTexture.colorSpace=THREE.SRGBColorSpace;
     earthTexture.anisotropy=renderer.capabilities.getMaxAnisotropy();
 
-    // Holographic Earth: geographic data is kept, but all glow/light effects
-    // are intentionally removed. The map is rendered as a clean projected
-    // technical surface with restrained transparency and no luminous halo.
+    // Holographic Earth: use the real geographic texture only as a mask.
+    // The globe itself is deliberately matte and non-luminous: no bloom, halo,
+    // additive blending, specular response, fresnel edge or external glow.
     const hologramMaterial=new THREE.ShaderMaterial({
       uniforms:{
         uMap:{value:earthTexture},
@@ -113,8 +113,10 @@ function EarthGlobe(){
       },
       vertexShader:`
         varying vec2 vUv;
+        varying vec3 vNormal;
         void main(){
           vUv=uv;
+          vNormal=normalize(normalMatrix*normal);
           gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);
         }
       `,
@@ -122,6 +124,7 @@ function EarthGlobe(){
         uniform sampler2D uMap;
         uniform vec2 uTexel;
         varying vec2 vUv;
+        varying vec3 vNormal;
 
         float landMask(vec3 c){
           float greenSignal=c.g-(c.b*0.82+c.r*0.12);
@@ -129,33 +132,51 @@ function EarthGlobe(){
           return smoothstep(0.012,0.075,max(greenSignal,warmSignal));
         }
 
-        float coastMask(float land){
-          float l=landMask(texture2D(uMap,vUv+vec2(-uTexel.x*1.7,0.0)).rgb);
-          float r=landMask(texture2D(uMap,vUv+vec2( uTexel.x*1.7,0.0)).rgb);
-          float d=landMask(texture2D(uMap,vUv+vec2(0.0,-uTexel.y*1.7)).rgb);
-          float u=landMask(texture2D(uMap,vUv+vec2(0.0, uTexel.y*1.7)).rgb);
+        float landAt(vec2 uv){
+          return landMask(texture2D(uMap,uv).rgb);
+        }
+
+        float coastLine(float land){
+          float l=landAt(vUv+vec2(-uTexel.x*2.0,0.0));
+          float r=landAt(vUv+vec2( uTexel.x*2.0,0.0));
+          float d=landAt(vUv+vec2(0.0,-uTexel.y*2.0));
+          float u=landAt(vUv+vec2(0.0, uTexel.y*2.0));
           return clamp(abs(land-l)+abs(land-r)+abs(land-d)+abs(land-u),0.0,1.0);
+        }
+
+        float hash21(vec2 p){
+          p=fract(p*vec2(123.34,456.21));
+          p+=dot(p,p+45.32);
+          return fract(p.x*p.y);
         }
 
         void main(){
           vec3 src=texture2D(uMap,vUv).rgb;
           float land=landMask(src);
-          float coast=coastMask(land);
+          float coast=coastLine(land);
 
-          // Keep the projection clean: no bloom, no pulse, no scan glow,
-          // no fresnel rim and no additive light accumulation.
-          vec3 violet=vec3(0.58,0.18,0.92);
-          vec3 cyan=vec3(0.08,0.62,0.88);
-          vec3 signal=mix(violet,cyan,smoothstep(0.12,0.88,vUv.x));
+          // Technical hologram palette, but without emissive light.
+          vec3 violet=vec3(0.42,0.12,0.72);
+          vec3 cyan=vec3(0.04,0.42,0.62);
+          vec3 signal=mix(violet,cyan,smoothstep(0.08,0.92,vUv.x));
 
-          // Strictly matte holographic projection: no emissive bloom, no rim light,
-          // no fresnel, no specular response and no additive light accumulation.
-          float mapAlpha=land*0.22;
-          float coastAlpha=coast*0.58;
-          float alpha=clamp(mapAlpha+coastAlpha,0.0,0.58);
+          // Thin projected scanlines: these are part of the hologram surface,
+          // not a glow effect.
+          float scan=step(0.72,fract(vUv.y*150.0));
+          float scanAlpha=scan*0.045;
 
-          if(alpha<0.025) discard;
-          gl_FragColor=vec4(signal,alpha);
+          // Sparse projected particles on land make the map read as a live
+          // holographic projection instead of a colored Earth texture.
+          vec2 cell=floor(vUv*vec2(180.0,120.0));
+          float particle=step(0.985,hash21(cell));
+          float particleMask=particle*land*0.28;
+
+          // A very restrained translucent land body plus crisp coast projection.
+          float alpha=land*0.075+coast*0.34+scanAlpha+particleMask;
+          alpha*=smoothstep(0.0,0.18,vNormal.z);
+
+          if(alpha<0.012) discard;
+          gl_FragColor=vec4(signal,clamp(alpha,0.0,0.42));
         }
       `,
       transparent:true,
@@ -211,11 +232,7 @@ function EarthGlobe(){
     resize();
 
     let raf=0;
-    const clock=new THREE.Clock();
     const animate=()=>{
-      const t=clock.getElapsedTime();
-      (hologramMaterial.uniforms.uTime as {value:number}).value=t;
-      (pointMaterial.uniforms.uTime as {value:number}).value=t;
       renderer.render(scene,camera);
       raf=requestAnimationFrame(animate);
     };
