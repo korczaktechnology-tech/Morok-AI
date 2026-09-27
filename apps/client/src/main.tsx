@@ -90,8 +90,8 @@ function EarthGlobe(){
     const orbitalColor=0x9b5cff;
     const orbitPoints:THREE.Vector3[]=[];
     const predictionPointsVisual:THREE.Vector3[]=[];
-    const semiMajor=1.28;
-    const semiMinor=.82;
+    const semiMajor=1.65;
+    const semiMinor=1.32;
     const tiltX=THREE.MathUtils.degToRad(58);
     const tiltZ=THREE.MathUtils.degToRad(-18);
 
