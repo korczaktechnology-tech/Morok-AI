@@ -895,32 +895,52 @@ function StandaloneOrbit(){
     const group=new THREE.Group();
     scene.add(group);
 
-    const points:THREE.Vector3[]=[];
-    const semiMajor=1.05;
-    const semiMinor=0.85;
-    for(let i=0;i<=720;i++){
-      const a=(i/720)*Math.PI*2;
-      points.push(new THREE.Vector3(semiMajor*Math.cos(a),0,semiMinor*Math.sin(a)));
+    const orbitDefinitions=[
+      {a:1.05,b:.85,color:0x9b5cff,opacity:.20,rot:[58,12,-18]},
+      {a:1.13,b:.72,color:0x5c8cff,opacity:.14,rot:[38,-28,31]},
+      {a:.94,b:.80,color:0xff3d68,opacity:.13,rot:[72,42,8]},
+      {a:1.18,b:.66,color:0x35d7ff,opacity:.12,rot:[24,64,-36]},
+      {a:1.00,b:.68,color:0xff7a3d,opacity:.11,rot:[61,-52,47]},
+      {a:1.10,b:.78,color:0xb76cff,opacity:.12,rot:[44,22,71]},
+      {a:.91,b:.74,color:0x65f0c2,opacity:.10,rot:[78,-18,-54]},
+      {a:1.16,b:.58,color:0xffffff,opacity:.09,rot:[31,48,19]},
+      {a:.98,b:.63,color:0xffd45c,opacity:.09,rot:[67,-67,35]}
+    ];
+
+    const resources:{geometry:THREE.BufferGeometry;material:THREE.LineBasicMaterial}[]=[];
+
+    for(const orbit of orbitDefinitions){
+      const points:THREE.Vector3[]=[];
+      const segments=720;
+      for(let i=0;i<=segments;i++){
+        const t=(i/segments)*Math.PI*2;
+        const curvature=1+0.035*Math.sin(t*3+orbit.rot[0]);
+        points.push(new THREE.Vector3(
+          orbit.a*Math.cos(t)*curvature,
+          0.035*Math.sin(t*2+orbit.rot[1]),
+          orbit.b*Math.sin(t)
+        ));
+      }
+
+      const geometry=new THREE.BufferGeometry().setFromPoints(points);
+      const material=new THREE.LineBasicMaterial({
+        color:orbit.color,
+        transparent:true,
+        opacity:orbit.opacity,
+        depthTest:false,
+        depthWrite:false,
+        toneMapped:false
+      });
+      const line=new THREE.LineLoop(geometry,material);
+      line.renderOrder=100;
+      line.rotation.set(
+        THREE.MathUtils.degToRad(orbit.rot[0]),
+        THREE.MathUtils.degToRad(orbit.rot[1]),
+        THREE.MathUtils.degToRad(orbit.rot[2])
+      );
+      group.add(line);
+      resources.push({geometry,material});
     }
-
-    const geometry=new THREE.BufferGeometry().setFromPoints(points);
-    const material=new THREE.LineBasicMaterial({
-      color:0x9b5cff,
-      transparent:true,
-      opacity:0.20,
-      depthTest:false,
-      depthWrite:false,
-      toneMapped:false
-    });
-    const line=new THREE.LineLoop(geometry,material);
-    line.renderOrder=100;
-    group.add(line);
-
-    group.rotation.set(
-      THREE.MathUtils.degToRad(58),
-      THREE.MathUtils.degToRad(12),
-      THREE.MathUtils.degToRad(-18)
-    );
 
     let disposed=false;
     const resize=()=>{
@@ -946,8 +966,10 @@ function StandaloneOrbit(){
       disposed=true;
       cancelAnimationFrame(raf);
       observer.disconnect();
-      geometry.dispose();
-      material.dispose();
+      for(const resource of resources){
+        resource.geometry.dispose();
+        resource.material.dispose();
+      }
       renderer.dispose();
       renderer.domElement.remove();
     };
@@ -955,7 +977,6 @@ function StandaloneOrbit(){
 
   return <div className="standaloneOrbitLayer" ref={mountRef} aria-hidden="true" />;
 }
-
 function Dashboard() {
   return (
     <div className="dashboard cleanCommandCenter">
