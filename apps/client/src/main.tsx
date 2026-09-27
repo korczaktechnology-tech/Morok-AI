@@ -71,65 +71,115 @@ function Icon({ children }: { children: React.ReactNode }) {
 
 function EarthGlobe(){
   const mountRef=useRef<HTMLDivElement>(null);
-  const [rotation,setRotation]=useState({x:-8,y:-18});
 
   useEffect(()=>{
     const mount=mountRef.current;
     if(!mount)return;
+
+    const scene=new THREE.Scene();
+    const camera=new THREE.PerspectiveCamera(34,1,.1,100);
+    camera.position.z=2.65;
+
+    const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:"high-performance"});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio,1.25));
+    renderer.setClearColor(0x000000,0);
+    renderer.outputColorSpace=THREE.SRGBColorSpace;
+    mount.replaceChildren(renderer.domElement);
+
+    const earthSystem=new THREE.Group();
+    scene.add(earthSystem);
+
+    const geometry=new THREE.SphereGeometry(1,96,96);
+    const textureLoader=new THREE.TextureLoader();
+    const earthTexture=textureLoader.load(
+      "https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg",
+      (texture)=>{
+        texture.colorSpace=THREE.SRGBColorSpace;
+        texture.anisotropy=Math.min(renderer.capabilities.getMaxAnisotropy(),8);
+      }
+    );
+    const material=new THREE.MeshBasicMaterial({
+      map:earthTexture
+    });
+    const earth=new THREE.Mesh(geometry,material);
+    earthSystem.add(earth);
+
     let dragging=false;
-    let startX=0;
-    let startY=0;
-    let baseX=rotation.x;
-    let baseY=rotation.y;
+    let lastX=0;
+    let lastY=0;
+
+    const resize=()=>{
+      const width=Math.max(1,mount.clientWidth);
+      const height=Math.max(1,mount.clientHeight);
+      renderer.setSize(width,height,false);
+      camera.aspect=width/height;
+      camera.updateProjectionMatrix();
+    };
 
     const down=(e:PointerEvent)=>{
       dragging=true;
-      startX=e.clientX;
-      startY=e.clientY;
-      baseX=rotation.x;
-      baseY=rotation.y;
+      lastX=e.clientX;
+      lastY=e.clientY;
       mount.setPointerCapture(e.pointerId);
       mount.style.cursor="grabbing";
     };
+
     const move=(e:PointerEvent)=>{
       if(!dragging)return;
-      setRotation({
-        x:Math.max(-24,Math.min(24,baseX+(e.clientY-startY)*.08)),
-        y:baseY+(e.clientX-startX)*.08
-      });
+      const dx=e.clientX-lastX;
+      const dy=e.clientY-lastY;
+      lastX=e.clientX;
+      lastY=e.clientY;
+      earthSystem.rotation.y+=dx*.006;
+      earthSystem.rotation.x+=dy*.0045;
+      earthSystem.rotation.x=Math.max(-1.45,Math.min(1.45,earthSystem.rotation.x));
     };
+
     const up=(e:PointerEvent)=>{
       dragging=false;
       if(mount.hasPointerCapture(e.pointerId))mount.releasePointerCapture(e.pointerId);
       mount.style.cursor="grab";
     };
 
+    const observer=new ResizeObserver(resize);
+    observer.observe(mount);
+    resize();
+
     mount.addEventListener("pointerdown",down);
     mount.addEventListener("pointermove",move);
     mount.addEventListener("pointerup",up);
     mount.addEventListener("pointercancel",up);
+    mount.addEventListener("pointerleave",up);
+
+    let frame=0;
+    const animate=()=>{
+      frame=requestAnimationFrame(animate);
+      renderer.render(scene,camera);
+    };
+    animate();
+
     return()=>{
+      cancelAnimationFrame(frame);
+      observer.disconnect();
       mount.removeEventListener("pointerdown",down);
       mount.removeEventListener("pointermove",move);
       mount.removeEventListener("pointerup",up);
       mount.removeEventListener("pointercancel",up);
+      mount.removeEventListener("pointerleave",up);
+      geometry.dispose();
+      material.dispose();
+      earthTexture.dispose();
+      renderer.dispose();
+      renderer.domElement.remove();
     };
-  },[rotation]);
+  },[]);
 
   return (
     <div
-      className="earthGlobe holographicEarth"
+      className="earthGlobe realEarth"
       ref={mountRef}
-      style={{"--globe-x":`${rotation.x}deg`,"--globe-y":`${rotation.y}deg`} as React.CSSProperties}
-      aria-label="Globo holográfico tecnológico da Terra interativo"
-    >
-      <img
-        src={`${import.meta.env.BASE_URL}holographic-earth.svg`}
-        alt=""
-        className="holographicEarthSvg"
-        draggable={false}
-        aria-hidden="true"
-      />   </div>
+      aria-label="Globo real da Terra interativo"
+    />
   );
 }
 
