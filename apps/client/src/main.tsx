@@ -896,39 +896,52 @@ function StandaloneOrbit(){
     scene.add(group);
 
     const orbitDefinitions:Array<{
-      a:number;b:number;color:number;opacity:number;rot:[number,number,number]
+      a:number;b:number;color:number;rot:[number,number,number];speed:number
     }>= [
-      {a:1.05,b:.85,color:0x9b5cff,opacity:.20,rot:[58,12,-18]},
-      {a:1.13,b:.72,color:0x5c8cff,opacity:.14,rot:[38,-28,31]},
-      {a:.94,b:.80,color:0xff3d68,opacity:.13,rot:[72,42,8]},
-      {a:1.18,b:.66,color:0x35d7ff,opacity:.12,rot:[24,64,-36]},
-      {a:1.00,b:.68,color:0xff7a3d,opacity:.11,rot:[61,-52,47]},
-      {a:1.10,b:.78,color:0xb76cff,opacity:.12,rot:[44,22,71]},
-      {a:.91,b:.74,color:0x65f0c2,opacity:.10,rot:[78,-18,-54]},
-      {a:1.16,b:.58,color:0xffffff,opacity:.09,rot:[31,48,19]},
-      {a:.98,b:.63,color:0xffd45c,opacity:.09,rot:[67,-67,35]}
+      {a:1.05,b:.85,color:0x9b5cff,rot:[58,12,-18],speed:.72},
+      {a:1.13,b:.72,color:0x5c8cff,rot:[38,-28,31],speed:-.58},
+      {a:.94,b:.80,color:0xff3d68,rot:[72,42,8],speed:.91},
+      {a:1.18,b:.66,color:0x35d7ff,rot:[24,64,-36],speed:-.67},
+      {a:1.00,b:.68,color:0xff7a3d,rot:[61,-52,47],speed:.81},
+      {a:1.10,b:.78,color:0xb76cff,rot:[44,22,71],speed:-.76},
+      {a:.91,b:.74,color:0x65f0c2,rot:[78,-18,-54],speed:.63},
+      {a:1.16,b:.58,color:0xffffff,rot:[31,48,19],speed:-.87},
+      {a:.98,b:.63,color:0xffd45c,rot:[67,-67,35],speed:.69}
     ];
 
-    const resources:{geometry:THREE.BufferGeometry;material:THREE.LineBasicMaterial}[]=[];
+    const resources:{
+      geometry:THREE.BufferGeometry;
+      material:THREE.LineBasicMaterial;
+      particleGeometry:THREE.SphereGeometry;
+      particleMaterial:THREE.MeshBasicMaterial;
+    }[]=[];
+    const animatedParticles:{
+      particle:THREE.Mesh<THREE.SphereGeometry,THREE.MeshBasicMaterial>;
+      orbit:(typeof orbitDefinitions)[number];
+      phase:number;
+    }[]=[];
 
-    for(const orbit of orbitDefinitions){
+    const getOrbitPoint=(orbit:(typeof orbitDefinitions)[number],t:number)=>{
+      const curvature=1+0.035*Math.sin(t*3+orbit.rot[0]);
+      return new THREE.Vector3(
+        orbit.a*Math.cos(t)*curvature,
+        0.035*Math.sin(t*2+orbit.rot[1]),
+        orbit.b*Math.sin(t)
+      );
+    };
+
+    for(const [index,orbit] of orbitDefinitions.entries()){
       const points:THREE.Vector3[]=[];
       const segments=720;
       for(let i=0;i<=segments;i++){
-        const t=(i/segments)*Math.PI*2;
-        const curvature=1+0.035*Math.sin(t*3+orbit.rot[0]);
-        points.push(new THREE.Vector3(
-          orbit.a*Math.cos(t)*curvature,
-          0.035*Math.sin(t*2+orbit.rot[1]),
-          orbit.b*Math.sin(t)
-        ));
+        points.push(getOrbitPoint(orbit,(i/segments)*Math.PI*2));
       }
 
       const geometry=new THREE.BufferGeometry().setFromPoints(points);
       const material=new THREE.LineBasicMaterial({
         color:orbit.color,
         transparent:true,
-        opacity:orbit.opacity,
+        opacity:.70,
         depthTest:false,
         depthWrite:false,
         toneMapped:false
@@ -940,11 +953,28 @@ function StandaloneOrbit(){
         THREE.MathUtils.degToRad(orbit.rot[1]),
         THREE.MathUtils.degToRad(orbit.rot[2])
       );
+
+      const particleGeometry=new THREE.SphereGeometry(.035,12,12);
+      const particleMaterial=new THREE.MeshBasicMaterial({
+        color:orbit.color,
+        transparent:false,
+        opacity:1,
+        depthTest:false,
+        depthWrite:false,
+        toneMapped:false
+      });
+      const particle=new THREE.Mesh(particleGeometry,particleMaterial);
+      particle.position.copy(getOrbitPoint(orbit,(index/orbitDefinitions.length)*Math.PI*2));
+      particle.renderOrder=120;
+      line.add(particle);
       group.add(line);
-      resources.push({geometry,material});
+
+      resources.push({geometry,material,particleGeometry,particleMaterial});
+      animatedParticles.push({particle,orbit,phase:(index/orbitDefinitions.length)*Math.PI*2});
     }
 
     let disposed=false;
+    let lastTime=performance.now();
     const resize=()=>{
       const w=Math.max(1,mount.clientWidth);
       const h=Math.max(1,mount.clientHeight);
@@ -957,12 +987,21 @@ function StandaloneOrbit(){
     resize();
 
     let raf=0;
-    const animate=()=>{
+    const animate=(now:number)=>{
       if(disposed)return;
       raf=requestAnimationFrame(animate);
+      const delta=Math.min((now-lastTime)/1000,.05);
+      lastTime=now;
+
+      for(const item of animatedParticles){
+        item.phase=(item.phase+item.orbit.speed*delta)% (Math.PI*2);
+        if(item.phase<0)item.phase+=Math.PI*2;
+        item.particle.position.copy(getOrbitPoint(item.orbit,item.phase));
+      }
+
       renderer.render(scene,camera);
     };
-    animate();
+    raf=requestAnimationFrame(animate);
 
     return()=>{
       disposed=true;
@@ -971,6 +1010,8 @@ function StandaloneOrbit(){
       for(const resource of resources){
         resource.geometry.dispose();
         resource.material.dispose();
+        resource.particleGeometry.dispose();
+        resource.particleMaterial.dispose();
       }
       renderer.dispose();
       renderer.domElement.remove();
