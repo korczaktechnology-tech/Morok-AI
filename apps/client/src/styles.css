@@ -1436,6 +1436,29 @@ mix-blend-mode:screen;opacity:.65}
 /* REAL EARTH — desktop web */
 @media (min-width:701px){
   .earthGlobe.realEarth{
+    width:min(52vw,620px)!important;
+    height:min(52vw,620px)!important;
+    aspect-ratio:1 / 1!important;
+    min-width:1px!important;
+    min-height:1px!important;
+    max-width:620px!important;
+    max-height:620px!important;
+    overflow:hidden!important;
+    border-radius:50%!important;
+    clip-path:circle(50% at 50% 50%)!important;
+    contain:strict!important;
+  }
+  .earthGlobe.realEarth canvas{
+    aspect-ratio:1 / 1!important;
+    border-radius:50%!important;
+    clip-path:circle(50% at 50% 50%)!important;
+    overflow:hidden!important;
+  }
+}
+
+/* REAL EARTH — desktop web */
+@media (min-width:701px){
+  .earthGlobe.realEarth{
     position:absolute!important;
     left:50%!important;
     top:50%!important;
