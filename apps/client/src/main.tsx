@@ -231,6 +231,7 @@ function EarthGlobe(){
         uTexel:{value:new THREE.Vector2(1/2048,1/2048)}
       },
       vertexShader:`
+        uniform float uTime;
         varying vec2 vUv;
         varying float vFacing;
         void main(){
