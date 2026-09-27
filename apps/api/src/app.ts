@@ -38,7 +38,6 @@ export function buildApp(){
 
   app.get("/api/v1/github/workflows",async(_req,reply)=>{
     const now=Date.now();
-    const getCachedWorkflows=()=>githubWorkflowCache?.workflows??[];
     if(githubWorkflowCache && githubWorkflowCache.expiresAt>now){
       return reply.header("cache-control","no-store, no-cache, must-revalidate").send({workflows:githubWorkflowCache.workflows});
     }
@@ -55,56 +54,60 @@ export function buildApp(){
       };
       if(githubToken)headers.authorization=`Bearer ${githubToken}`;
 
-      const response=await fetch(
-        "https://api.github.com/repos/korczaktechnology-tech/Morok-AI/actions/runs?per_page=100&sort=created&direction=desc",
-        {
-          headers,
-          signal:controller.signal,
-          cache:"no-store"
-        }
-      );
-      if(!response.ok){
+      const [workflowsResponse,runsResponse]=await Promise.all([
+        fetch("https://api.github.com/repos/korczaktechnology-tech/Morok-AI/actions/workflows?per_page=100",{
+          headers,signal:controller.signal,cache:"no-store"
+        }),
+        fetch("https://api.github.com/repos/korczaktechnology-tech/Morok-AI/actions/runs?per_page=100&sort=created&direction=desc",{
+          headers,signal:controller.signal,cache:"no-store"
+        })
+      ]);
+
+      if(!workflowsResponse.ok || !runsResponse.ok){
         if(githubWorkflowCache){
-          return reply.header("cache-control","no-store, no-cache, must-revalidate").send({
-            workflows:githubWorkflowCache.workflows,
-            stale:true
-          });
+          return reply.header("cache-control","no-store, no-cache, must-revalidate").send({workflows:githubWorkflowCache.workflows,stale:true});
         }
-        return reply.header("cache-control","no-store, no-cache, must-revalidate").send({
-        workflows:getCachedWorkflows(),
-        stale:true,
-        error:"github_workflow_runs_unavailable"
-      });
+        return reply.code(502).header("cache-control","no-store, no-cache, must-revalidate").send({
+          workflows:[],
+          stale:true,
+          error:"github_workflows_unavailable"
+        });
       }
 
-      const data=await response.json() as {
+      const workflowsData=await workflowsResponse.json() as {
+        workflows?:Array<{id:number;name:string;state:string;path:string}>
+      };
+      const runsData=await runsResponse.json() as {
         workflow_runs?:Array<{
           id:number;workflow_id:number;name:string;run_number:number;status:string;conclusion:string|null;
           head_sha:string;head_commit?:{message?:string}|null;updated_at:string;
         }>
       };
 
-      const latestByWorkflow=new Map<number,NonNullable<typeof data.workflow_runs>[number]>();
-      for(const run of data.workflow_runs??[]){
+      const latestByWorkflow=new Map<number,NonNullable<typeof runsData.workflow_runs>[number]>();
+      for(const run of runsData.workflow_runs??[]){
         const current=latestByWorkflow.get(run.workflow_id);
-        if(!current || run.run_number>current.run_number || (run.run_number===current.run_number && Date.parse(run.updated_at)>Date.parse(current.updated_at))){
+        if(!current || Date.parse(run.updated_at)>Date.parse(current.updated_at)){
           latestByWorkflow.set(run.workflow_id,run);
         }
       }
 
-      const workflows=[...latestByWorkflow.values()]
-        .map(run=>({
-          id:run.id,
-          workflowId:run.workflow_id,
-          name:run.name,
-          runNumber:run.run_number,
-          commit:run.head_commit?.message?.split("\n")[0]??"SEM COMMIT",
-          sha:run.head_sha,
-          status:run.status,
-          conclusion:run.conclusion,
-          updatedAt:run.updated_at,
-          workflowState:"active"
-        }))
+      const workflows=(workflowsData.workflows??[])
+        .map(workflow=>{
+          const run=latestByWorkflow.get(workflow.id);
+          return {
+            id:run?.id??workflow.id,
+            workflowId:workflow.id,
+            name:workflow.name,
+            runNumber:run?.run_number??0,
+            commit:run?.head_commit?.message?.split("\n")[0]??"SEM EXECUÇÃO",
+            sha:run?.head_sha??"",
+            status:run?.status??"idle",
+            conclusion:run?.conclusion??null,
+            updatedAt:run?.updated_at??"",
+            workflowState:workflow.state
+          };
+        })
         .sort((a,b)=>a.name.localeCompare(b.name));
 
       githubWorkflowCache={expiresAt:Date.now()+1000,workflows};
@@ -112,17 +115,12 @@ export function buildApp(){
     }catch(error){
       app.log.warn({error},"Falha ao obter estado dos workflows do GitHub");
       if(githubWorkflowCache){
-        return reply.header("cache-control","no-store, no-cache, must-revalidate").send({
-          workflows:githubWorkflowCache.workflows,
-          stale:true
-        });
+        return reply.header("cache-control","no-store, no-cache, must-revalidate").send({workflows:githubWorkflowCache.workflows,stale:true});
       }
-      return reply.header("cache-control","no-store, no-cache, must-revalidate").send({
+      return reply.code(502).header("cache-control","no-store, no-cache, must-revalidate").send({
         workflows:[],
         stale:true,
-        error:error instanceof DOMException&&error.name==="AbortError"
-          ?"github_workflows_timeout"
-          :"github_workflows_fetch_failed"
+        error:error instanceof DOMException&&error.name==="AbortError"?"github_workflows_timeout":"github_workflows_fetch_failed"
       });
     }finally{
       clearTimeout(timeout);
