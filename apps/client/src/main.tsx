@@ -421,8 +421,12 @@ function EarthGlobe(){
 
       // Rotação sideral real da Terra: uma volta em 23h 56min 4.0905s.
       // A escala visual não altera a velocidade angular física.
-      const siderealDaySeconds=86164.0905;
-      const earthAngularVelocity=(Math.PI*2)/siderealDaySeconds;
+      // Rotação da Terra na escala visual: 1.670 km/h no equador.
+      // Converte a velocidade linear equatorial para velocidade angular (rad/s)
+      // usando o raio real adotado pelo globo.
+      const earthEquatorialSpeedKmh=1670;
+      const earthRadiusKm=6378.137;
+      const earthAngularVelocity=(earthEquatorialSpeedKmh/3600)/earthRadiusKm;
 
       if(!dragging && !earthLocationLock){
         earthSystem.rotateY(earthAngularVelocity*deltaSeconds);
