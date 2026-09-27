@@ -8,7 +8,7 @@ import "./styles.css";
 const API = import.meta.env.VITE_API_URL ?? "https://morok-ai.onrender.com";
 const MOROK_SUB_ICON = `${import.meta.env.BASE_URL}MorokSubIcon.svg`;
 const globeRotation={x:0,y:0,z:0};
-let earthLocationLock=true;
+let earthLocationLock=false;
 
 type Msg = { role: "user" | "assistant"; content: string };
 type Task = { id: string; title: string; status: string; dueAt?: string };
@@ -74,7 +74,7 @@ function Icon({ children }: { children: React.ReactNode }) {
 
 function EarthGlobe(){
   const mountRef=useRef<HTMLDivElement>(null);
-  const [locationLocked,setLocationLocked]=useState(true);
+  const [locationLocked,setLocationLocked]=useState(false);
   const returnToUserLocationRef=useRef<(()=>void)|null>(null);
 
   useEffect(()=>{
