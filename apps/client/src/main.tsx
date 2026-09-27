@@ -1285,6 +1285,12 @@ function App() {
   }, [workflowMonitorOpen]);
 
   useEffect(()=>{
+    try {
+      localStorage.setItem("morok_workflow_monitor_position",JSON.stringify(workflowMonitorPosition));
+    } catch {}
+  }, [workflowMonitorPosition]);
+
+  useEffect(()=>{
     const onPointerMove=(event:PointerEvent)=>{
       const drag=workflowDragRef.current;
       if(!drag)return;
@@ -1582,9 +1588,7 @@ function App() {
               };
               event.currentTarget.setPointerCapture?.(event.pointerId);
             }}
-            onPointerUp={()=>{
-              localStorage.setItem("morok_workflow_monitor_position",JSON.stringify(workflowMonitorPosition));
-            }}
+            onPointerUp={()=>{ workflowDragRef.current=null; }}
           >
             <span>GITHUB ACTIONS</span>
             <span className="workflowMonitorHint">ARRASTE · CTRL + ALT + K</span>
