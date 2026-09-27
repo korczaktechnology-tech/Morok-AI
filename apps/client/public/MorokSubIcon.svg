@@ -16,8 +16,3 @@
  <path d="M227 335 L227 541 M541 335 L541 541" stroke="#7cecff" stroke-width="2"/>
  <path d="M384 431 L384 538 L323 493 L323 390 Z" fill="url(#mid)" stroke="#e78cff" stroke-width="3"/>
 </g>
-<g opacity=".32" stroke="#fff" stroke-width="1.5">
- <path d="M116 158 L227 335 L384 326 L227 541"/><path d="M652 158 L541 335 L384 326 L541 541"/>
- <path d="M116 390 L227 493 L227 335"/><path d="M652 390 L541 493 L541 335"/>
-<circle cx="384" cy="384" r="400" fill="none" stroke="url(#mid)" stroke-width="5" opacity=".9" filter="url(#glow)"/>
-</svg>
