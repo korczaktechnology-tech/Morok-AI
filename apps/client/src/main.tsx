@@ -452,7 +452,7 @@ function OrbitalRings(){
     // O globo usa raio 1. A geometria orbital continua sendo calculada
     // em quilômetros, mas a distância ao centro da Terra é comprimida
     // visualmente. A direção e a forma da órbita permanecem reais.
-    const orbitDistanceCompression=.08;
+    const orbitDistanceCompression=.035;
     const compressOrbitPosition=(position:THREE.Vector3)=>{
       const radius=position.length();
       if(radius===0)return position.clone();
