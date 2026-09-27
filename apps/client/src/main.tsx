@@ -425,7 +425,7 @@ function OrbitalRings(){
         new THREE.BufferGeometry(),
         makeLineMaterial(definition.color,.585)
       );
-      prediction.renderOrder=29;
+      prediction.renderOrder=40;
 
       // A predição é ~25% mais transparente que a trajetória principal.
       const marker=new THREE.Mesh(
@@ -517,8 +517,9 @@ function OrbitalRings(){
         if(!current?.position)throw new Error("current_propagation_failed");
         const currentPosition=current.position.clone();
 
-        // Trajetória orbital real ao redor do instante atual.
-        for(let minute=-period/2;minute<=period/2;minute+=stepMinutes){
+        // Trajetória já percorrida: termina exatamente no estado atual.
+        // A metade futura fica exclusivamente na linha de predição.
+        for(let minute=-period/2;minute<=0;minute+=stepMinutes){
           const date=new Date(now.getTime()+minute*60000);
           const sample=propagateToThree(satrec,date);
           if(!sample)continue;
