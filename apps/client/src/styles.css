@@ -1981,3 +1981,16 @@ mix-blend-mode:screen;opacity:.65}
 .morokResizablePanel.is-interacting{
   transition:none!important;
 }
+
+
+/* CURVATURE VISUAL FEEDBACK */
+.morokResizablePanel[style*="--panel-curve-tl"]{
+  border-radius:
+    var(--panel-curve-tl) var(--panel-curve-tr)
+    var(--panel-curve-br) var(--panel-curve-bl)!important;
+  overflow:hidden!important;
+}
+.morokResizablePanel.is-interacting{
+  outline:1px solid rgba(123,91,255,.28);
+  outline-offset:1px;
+}
