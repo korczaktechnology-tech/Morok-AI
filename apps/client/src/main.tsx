@@ -5,6 +5,7 @@ import "./styles.css";
 
 const API = import.meta.env.VITE_API_URL ?? "https://morok-ai.onrender.com";
 const MOROK_SUB_ICON = `${import.meta.env.BASE_URL}MorokSubIcon.svg`;
+const MOROK_CENTER_ICON = `${import.meta.env.BASE_URL}MorokCenterIcon.svg`;
 
 type Msg = { role: "user" | "assistant"; content: string };
 type Task = { id: string; title: string; status: string; dueAt?: string };
@@ -74,7 +75,7 @@ function Dashboard() {
     <div className="dashboard cleanCommandCenter">
       <img
         className="morokCenterSymbol"
-        src={MOROK_SUB_ICON}
+        src={MOROK_CENTER_ICON}
         alt="Símbolo Morok"
       />
     </div>
