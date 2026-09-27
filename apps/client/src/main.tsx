@@ -75,6 +75,7 @@ function Icon({ children }: { children: React.ReactNode }) {
 function EarthGlobe(){
   const mountRef=useRef<HTMLDivElement>(null);
   const [locationLocked,setLocationLocked]=useState(true);
+  const returnToUserLocationRef=useRef<(()=>void)|null>(null);
 
   useEffect(()=>{
     const mount=mountRef.current;
@@ -336,6 +337,10 @@ function EarthGlobe(){
       globeRotation.z=earthSystem.rotation.z;
     };
 
+    returnToUserLocationRef.current=()=>{
+      applyLocationLock();
+    };
+
     const resize=()=>{
       const width=Math.max(1,mount.clientWidth);
       const height=Math.max(1,mount.clientHeight);
@@ -377,10 +382,6 @@ function EarthGlobe(){
       lastX=e.clientX;
       lastY=e.clientY;
       returningToAxis=false;
-      if(earthLocationLock){
-        // O arraste continua funcionando mesmo com a trava ligada; ao soltar,
-        // a posição cadastrada volta a ser a referência fixa.
-      }
       earthSystem.rotation.y+=dx*.006;
       earthSystem.rotation.x+=dy*.0045;
       earthSystem.rotation.x=Math.max(-1.45,Math.min(1.45,earthSystem.rotation.x));
@@ -391,7 +392,7 @@ function EarthGlobe(){
 
     const up=(e:PointerEvent)=>{
       dragging=false;
-      returningToAxis=earthLocationLock;
+      returningToAxis=false;
       if(mount.hasPointerCapture(e.pointerId))mount.releasePointerCapture(e.pointerId);
       mount.style.cursor="grab";
     };
@@ -427,31 +428,13 @@ function EarthGlobe(){
       }
 
       // No modo travado, a região do usuário permanece exatamente na frente.
-      if(earthLocationLock && !dragging && userLocationQuaternion){
-        applyLocationLock();
-        returningToAxis=false;
-      }
-
-      if(returningToAxis&&!dragging&&!earthLocationLock){
-        const ease=.12;
-        earthSystem.quaternion.slerp(earthRestQuaternion,ease);
-
-        const angleToRest=earthSystem.quaternion.angleTo(earthRestQuaternion);
-        if(angleToRest<0.0005){
-          earthSystem.quaternion.copy(earthRestQuaternion);
-          returningToAxis=false;
-        }
-
-        globeRotation.x=earthSystem.rotation.x;
-        globeRotation.y=earthSystem.rotation.y;
-        globeRotation.z=earthSystem.rotation.z;
-      }
 
       renderer.render(scene,camera);
     };
     animate();
 
     return()=>{
+      returnToUserLocationRef.current=null;
       cancelAnimationFrame(frame);
       observer.disconnect();
       mount.removeEventListener("pointerdown",down);
@@ -479,14 +462,24 @@ function EarthGlobe(){
     const next=!locationLocked;
     setLocationLocked(next);
     earthLocationLock=next;
-    if(next){
-      // A função de efeito já possui a referência da localização. O próximo
-      // frame reposiciona o globo exatamente no endereço salvo.
-    }
+    // Ao ativar LOCAL FIXO, a posição atual é preservada. O retorno ao
+    // endereço salvo é uma ação explícita pelo botão VOLTAR ENDEREÇO.
   };
 
   return (
     <>
+      {locationLocked && (
+        <button
+          type="button"
+          className="earthReturnLocationButton"
+          onClick={()=>returnToUserLocationRef.current?.()}
+          aria-label="Voltar para o endereço da localização detectada"
+          title="Voltar para o endereço da localização detectada"
+        >
+          <span className="earthReturnLocationIcon">⌖</span>
+          <span>VOLTAR ENDEREÇO</span>
+        </button>
+      )}
       <div
         className="earthGlobe realEarth"
         ref={mountRef}
