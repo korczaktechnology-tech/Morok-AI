@@ -1203,12 +1203,13 @@ function App() {
       setWorkflowError(null);
 
       try{
-        const response=await fetch("https://api.github.com/repos/korczaktechnology-tech/Morok-AI/actions/runs?per_page=100",{
+        const response=await fetch(`https://api.github.com/repos/korczaktechnology-tech/Morok-AI/actions/runs?per_page=100&_=1790493839467`,{
           cache:"no-store",
           signal:controller.signal,
           headers:{
             Accept:"application/vnd.github+json",
-            "X-GitHub-Api-Version":"2022-11-28"
+            "X-GitHub-Api-Version":"2022-11-28",
+            "Cache-Control":"no-cache"
           }
         });
         if(!response.ok)throw new Error(`HTTP_${response.status}`);
@@ -1276,7 +1277,7 @@ function App() {
 
     if(workflowMonitorOpen){
       void loadWorkflows();
-      refreshTimer=window.setInterval(()=>void loadWorkflows(),10000);
+      refreshTimer=window.setInterval(()=>void loadWorkflows(),5000);
     }else{
       workflowRequestRef.current?.abort();
     }
