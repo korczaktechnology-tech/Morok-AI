@@ -1219,15 +1219,38 @@ function App() {
       setWorkflowError(null);
 
       try{
-        const response=await fetch(API+"/api/v1/github/workflows",{
+        const response=await fetch("https://api.github.com/repos/korczaktechnology-tech/Morok-AI/actions/runs?per_page=100",{
           cache:"no-store",
           signal:controller.signal,
-          headers:{Accept:"application/json"}
+          headers:{
+            Accept:"application/vnd.github+json",
+            "X-GitHub-Api-Version":"2022-11-28"
+          }
         });
         if(!response.ok)throw new Error(`HTTP_${response.status}`);
-        const data=await response.json() as {workflows?:GithubWorkflow[]};
+        const data=await response.json() as {
+          workflow_runs?:Array<{
+            id:number;workflow_id:number;name:string;run_number:number;status:string;conclusion:string|null;
+            head_sha:string;head_commit?:{message?:string}|null;updated_at:string;
+          }>
+        };
+        const latestByWorkflow=new Map<number,NonNullable<typeof data.workflow_runs>[number]>();
+        for(const run of data.workflow_runs??[]){
+          if(!latestByWorkflow.has(run.workflow_id))latestByWorkflow.set(run.workflow_id,run);
+        }
+        const workflows=[...latestByWorkflow.values()].map(run=>({
+          id:run.id,
+          workflowId:run.workflow_id,
+          name:run.name,
+          runNumber:run.run_number,
+          commit:run.head_commit?.message?.split("\n")[0]??"SEM COMMIT",
+          sha:run.head_sha,
+          status:run.status,
+          conclusion:run.conclusion,
+          updatedAt:run.updated_at,
+          workflowState:"active"
+        })).sort((a,b)=>a.name.localeCompare(b.name));
         if(!disposed){
-          const workflows=Array.isArray(data.workflows)?data.workflows:[];
           setGithubWorkflows(workflows);
           if(workflows.length===0)setWorkflowError("NENHUM WORKFLOW ENCONTRADO");
         }
