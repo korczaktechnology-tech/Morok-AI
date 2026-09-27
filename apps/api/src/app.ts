@@ -43,7 +43,7 @@ export function buildApp(){
     }
 
     const controller=new AbortController();
-    const timeout=setTimeout(()=>controller.abort(),8000);
+    const timeout=setTimeout(()=>controller.abort(),15000);
     const githubToken=process.env.GITHUB_TOKEN?.trim();
 
     try{
@@ -55,7 +55,7 @@ export function buildApp(){
       if(githubToken)headers.authorization=`Bearer ${githubToken}`;
 
       const response=await fetch(
-        "https://api.github.com/repos/korczaktechnology-tech/Morok-AI/actions/runs?per_page=100",
+        "https://api.github.com/repos/korczaktechnology-tech/Morok-AI/actions/runs?per_page=100&sort=created&direction=desc",
         {
           headers,
           signal:controller.signal,
@@ -81,7 +81,10 @@ export function buildApp(){
 
       const latestByWorkflow=new Map<number,NonNullable<typeof data.workflow_runs>[number]>();
       for(const run of data.workflow_runs??[]){
-        if(!latestByWorkflow.has(run.workflow_id))latestByWorkflow.set(run.workflow_id,run);
+        const current=latestByWorkflow.get(run.workflow_id);
+        if(!current || run.run_number>current.run_number || (run.run_number===current.run_number && Date.parse(run.updated_at)>Date.parse(current.updated_at))){
+          latestByWorkflow.set(run.workflow_id,run);
+        }
       }
 
       const workflows=[...latestByWorkflow.values()]
