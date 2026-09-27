@@ -87,8 +87,6 @@ function EarthGlobe(){
     });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.25));
     renderer.outputColorSpace=THREE.SRGBColorSpace;
-    renderer.toneMapping=THREE.NoToneMapping;
-    renderer.toneMappingExposure=1;
     renderer.setClearColor(0x000000,0);
     mount.appendChild(renderer.domElement);
 
@@ -101,46 +99,62 @@ function EarthGlobe(){
       "https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg"
     );
     earthTexture.colorSpace=THREE.SRGBColorSpace;
-    earthTexture.anisotropy=renderer.capabilities.getMaxAnisotropy();
+    earthTexture.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
 
-    // Desktop globe: real geographic map rendered as a projected hologram.
-    // No emissive lighting, bloom, halo, specular response or additive blending.
-    const hologramMaterial=new THREE.ShaderMaterial({
+    /*
+     * HOLOGRAPHIC EARTH
+     * The geographic texture remains the source of truth for the continents.
+     * Instead of painting the texture onto a normal sphere, the shader converts
+     * the real landmass into transparent projection fragments, scanlines and
+     * coast contours. A second particle layer breaks the projection into
+     * visible holographic points. This is intentionally NOT a blue-tinted globe.
+     */
+    const hologramSurface=new THREE.ShaderMaterial({
       uniforms:{
         uMap:{value:earthTexture},
+        uTime:{value:0},
         uTexel:{value:new THREE.Vector2(1/2048,1/2048)}
       },
       vertexShader:`
         varying vec2 vUv;
         varying vec3 vNormal;
+        varying vec3 vWorldPosition;
         void main(){
           vUv=uv;
           vNormal=normalize(normalMatrix*normal);
-          gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);
+          vec4 worldPosition=modelMatrix*vec4(position,1.0);
+          vWorldPosition=worldPosition.xyz;
+          gl_Position=projectionMatrix*viewMatrix*worldPosition;
         }
       `,
       fragmentShader:`
         uniform sampler2D uMap;
+        uniform float uTime;
         uniform vec2 uTexel;
         varying vec2 vUv;
         varying vec3 vNormal;
+        varying vec3 vWorldPosition;
 
         float landMask(vec3 c){
-          float green=c.g-(c.b*0.82+c.r*0.12);
-          float warm=(c.r+c.g)*0.48-c.b*0.58;
-          return smoothstep(0.012,0.075,max(green,warm));
+          float green=c.g-(c.b*0.78+c.r*0.10);
+          float warm=(c.r+c.g)*0.42-c.b*0.52;
+          float brightness=dot(c,vec3(.299,.587,.114));
+          float chroma=max(c.r,max(c.g,c.b))-min(c.r,min(c.g,c.b));
+          return smoothstep(.015,.085,max(green,warm))*
+                 smoothstep(.08,.62,brightness+.35*chroma);
         }
 
         float landAt(vec2 uv){
-          return landMask(texture2D(uMap,uv).rgb);
+          return landMask(texture2D(uMap,fract(uv)).rgb);
         }
 
-        float coastLine(float land){
-          float l=landAt(vUv-vec2(uTexel.x*2.0,0.0));
-          float r=landAt(vUv+vec2(uTexel.x*2.0,0.0));
-          float d=landAt(vUv-vec2(0.0,uTexel.y*2.0));
-          float u=landAt(vUv+vec2(0.0,uTexel.y*2.0));
-          return clamp(abs(land-l)+abs(land-r)+abs(land-d)+abs(land-u),0.0,1.0);
+        float coastAt(vec2 uv){
+          float c=landAt(uv);
+          float l=landAt(uv-vec2(uTexel.x*2.4,0.0));
+          float r=landAt(uv+vec2(uTexel.x*2.4,0.0));
+          float d=landAt(uv-vec2(0.0,uTexel.y*2.4));
+          float u=landAt(uv+vec2(0.0,uTexel.y*2.4));
+          return clamp(abs(c-l)+abs(c-r)+abs(c-d)+abs(c-u),0.0,1.0);
         }
 
         float hash21(vec2 p){
@@ -150,52 +164,202 @@ function EarthGlobe(){
         }
 
         void main(){
-          float land=landMask(texture2D(uMap,vUv).rgb);
-          float coast=coastLine(land);
+          float land=landAt(vUv);
+          float coast=coastAt(vUv);
 
-          // Deliberately low-luminance projection colors.
-          // These are surface colors, not light sources.
-          vec3 violet=vec3(0.22,0.09,0.34);
-          vec3 cyan=vec3(0.05,0.27,0.36);
-          vec3 projected=mix(violet,cyan,smoothstep(0.12,0.88,vUv.x));
+          // Hologram projection is strongest on the visible hemisphere.
+          float facing=smoothstep(-.12,.52,vNormal.z);
+          float edgeFade=smoothstep(.01,.28,facing);
 
-          // Horizontal scanline structure.
-          float scan=step(0.78,fract(vUv.y*180.0));
+          // Multi-spectrum projection: violet, electric blue and cyan,
+          // with tiny magenta/red interference instead of a flat blue tint.
+          vec3 violet=vec3(.62,.12,1.0);
+          vec3 blue=vec3(.10,.38,1.0);
+          vec3 cyan=vec3(.05,.95,1.0);
+          vec3 magenta=vec3(1.0,.05,.48);
+          float spectrum=fract(vUv.x*1.35+vUv.y*.22);
+          vec3 projected=mix(violet,blue,smoothstep(.0,.42,spectrum));
+          projected=mix(projected,cyan,smoothstep(.42,.78,spectrum));
+          projected=mix(projected,magenta,smoothstep(.92,1.0,spectrum));
 
-          // Small broken projection pixels follow the real land mask.
-          vec2 cell=floor(vUv*vec2(210.0,140.0));
-          float fragments=step(0.988,hash21(cell))*land;
+          // Fine horizontal scanlines and a moving projection sweep.
+          float scanBand=pow(max(0.0,sin(vUv.y*420.0)),18.0);
+          float sweep=exp(-pow((fract(vUv.y-uTime*.055)-.5)*10.0,2.0));
 
-          // The hologram fades toward the silhouette instead of glowing around it.
-          float facing=smoothstep(0.02,0.48,vNormal.z);
+          // Fragment the continent into projected digital cells.
+          vec2 cell=floor(vUv*vec2(260.0,170.0));
+          float cellNoise=hash21(cell);
+          float broken=step(.075,cellNoise);
+          float micro=step(.40,hash21(cell+17.0));
+          float fragments=land*broken*(.45+.55*micro);
+
+          // Real coastlines remain sharply visible.
+          float coastLine=smoothstep(.035,.28,coast);
 
           float alpha=
-            land*0.035 +
-            coast*0.18 +
-            scan*0.018 +
-            fragments*0.10;
+            land*0.16+
+            fragments*0.34+
+            coastLine*0.78+
+            scanBand*land*0.28+
+            sweep*land*0.42;
 
-          alpha*=facing;
+          alpha*=edgeFade;
 
-          if(alpha<0.008) discard;
-
-          // Normal blending + low alpha = transparent projected material.
-          gl_FragColor=vec4(projected,clamp(alpha,0.0,0.24));
+          if(alpha<.025) discard;
+          gl_FragColor=vec4(projected,clamp(alpha,.0,.86));
         }
       `,
       transparent:true,
       depthWrite:false,
-      blending:THREE.NormalBlending,
+      blending:THREE.AdditiveBlending,
       side:THREE.FrontSide
     });
 
-    const earth=new THREE.Mesh(new THREE.SphereGeometry(1,96,64),hologramMaterial);
+    const earth=new THREE.Mesh(
+      new THREE.SphereGeometry(1,128,96),
+      hologramSurface
+    );
     earth.scale.setScalar(.5625);
     earthSystem.add(earth);
 
-    // The hologram is generated entirely in WebGL from the real geographic texture.
-    // No baked/generated image is used for the globe.
-    const mapDisposers:(()=>void)[]=[];
+    // Holographic point projection: real land areas become separated luminous dots.
+    const pointGeometry=new THREE.SphereGeometry(1.012,112,72);
+    const pointMaterial=new THREE.ShaderMaterial({
+      uniforms:{
+        uMap:{value:earthTexture},
+        uTime:{value:0},
+        uTexel:{value:new THREE.Vector2(1/2048,1/2048)}
+      },
+      vertexShader:`
+        varying vec2 vUv;
+        varying float vFacing;
+        void main(){
+          vUv=uv;
+          vec4 mvPosition=modelViewMatrix*vec4(position,1.0);
+          vec3 n=normalize(normalMatrix*normal);
+          vFacing=smoothstep(-.15,.58,n.z);
+          float pulse=.82+.18*sin(uTime*2.1+position.y*12.0+position.x*9.0);
+          gl_PointSize=(2.0+2.8*pulse)*vFacing;
+          gl_Position=projectionMatrix*mvPosition;
+        }
+      `,
+      fragmentShader:`
+        uniform sampler2D uMap;
+        uniform float uTime;
+        varying vec2 vUv;
+        varying float vFacing;
+
+        float landMask(vec3 c){
+          float green=c.g-(c.b*0.78+c.r*0.10);
+          float warm=(c.r+c.g)*0.42-c.b*0.52;
+          float brightness=dot(c,vec3(.299,.587,.114));
+          float chroma=max(c.r,max(c.g,c.b))-min(c.r,min(c.g,c.b));
+          return smoothstep(.015,.085,max(green,warm))*
+                 smoothstep(.08,.62,brightness+.35*chroma);
+        }
+
+        void main(){
+          vec2 p=gl_PointCoord-.5;
+          float d=length(p);
+          if(d>.5) discard;
+          float land=landMask(texture2D(uMap,vUv).rgb);
+          if(land<.22 || vFacing<.04) discard;
+
+          float sparkle=step(.68,fract(sin(dot(vUv+uTime*.002,vec2(127.1,311.7)))*43758.5453));
+          vec3 c=mix(vec3(.18,.55,1.0),vec3(.75,.18,1.0),fract(vUv.x*2.0));
+          c=mix(c,vec3(1.0,.12,.48),sparkle*.35);
+          float a=(1.0-smoothstep(.0,.5,d))*(.32+.32*sparkle)*vFacing;
+          gl_FragColor=vec4(c,a);
+        }
+      `,
+      transparent:true,
+      depthWrite:false,
+      blending:THREE.AdditiveBlending
+    });
+    pointMaterial.uniforms.uMap.value=earthTexture;
+
+    const landPoints=new THREE.Points(pointGeometry,pointMaterial);
+    landPoints.scale.setScalar(.5625);
+    earthSystem.add(landPoints);
+
+    // Transparent latitude/longitude projection grid: technical hologram scaffold.
+    const gridMaterial=new THREE.LineBasicMaterial({
+      color:0x4fa9ff,
+      transparent:true,
+      opacity:.16,
+      blending:THREE.AdditiveBlending,
+      depthWrite:false
+    });
+    const gridGroup=new THREE.Group();
+    const gridRadius=.566;
+    const gridSegments=96;
+
+    for(let lat=-60;lat<=60;lat+=20){
+      const phi=THREE.MathUtils.degToRad(lat);
+      const r=Math.cos(phi)*gridRadius;
+      const y=Math.sin(phi)*gridRadius;
+      const pts=[];
+      for(let i=0;i<=gridSegments;i++){
+        const a=(i/gridSegments)*Math.PI*2;
+        pts.push(new THREE.Vector3(Math.cos(a)*r,y,Math.sin(a)*r));
+      }
+      const line=new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints(pts),
+        gridMaterial
+      );
+      gridGroup.add(line);
+    }
+
+    for(let lon=0;lon<360;lon+=20){
+      const pts=[];
+      const theta=THREE.MathUtils.degToRad(lon);
+      for(let i=0;i<=72;i++){
+        const t=i/72;
+        const phi=-Math.PI/2+t*Math.PI;
+        pts.push(new THREE.Vector3(
+          Math.cos(phi)*Math.cos(theta)*gridRadius,
+          Math.sin(phi)*gridRadius,
+          Math.cos(phi)*Math.sin(theta)*gridRadius
+        ));
+      }
+      const line=new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints(pts),
+        gridMaterial
+      );
+      gridGroup.add(line);
+    }
+    earthSystem.add(gridGroup);
+
+    // Floating hologram shell: broken equator bands instead of a physical glow.
+    const shellMaterial=new THREE.ShaderMaterial({
+      uniforms:{uTime:{value:0}},
+      vertexShader:`
+        varying vec3 vNormal;
+        void main(){
+          vNormal=normalize(normalMatrix*normal);
+          gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);
+        }
+      `,
+      fragmentShader:`
+        uniform float uTime;
+        varying vec3 vNormal;
+        void main(){
+          float facing=pow(1.0-max(0.0,vNormal.z),2.2);
+          float scan=step(.74,fract((vNormal.y+uTime*.025)*34.0));
+          float a=facing*.08+scan*.035;
+          if(a<.012) discard;
+          vec3 c=mix(vec3(.45,.08,1.0),vec3(.05,.75,1.0),vNormal.y*.5+.5);
+          gl_FragColor=vec4(c,a);
+        }
+      `,
+      transparent:true,
+      depthWrite:false,
+      blending:THREE.AdditiveBlending,
+      side:THREE.BackSide
+    });
+    const shell=new THREE.Mesh(new THREE.SphereGeometry(1.035,64,48),shellMaterial);
+    shell.scale.setScalar(.5625);
+    earthSystem.add(shell);
 
     let dragging=false;
     let lastPointer={x:0,y:0};
@@ -236,7 +400,11 @@ function EarthGlobe(){
     resize();
 
     let raf=0;
-    const animate=()=>{
+    const animate=(now:number)=>{
+      const elapsed=now*.001;
+      hologramSurface.uniforms.uTime.value=elapsed;
+      pointMaterial.uniforms.uTime.value=elapsed;
+      shellMaterial.uniforms.uTime.value=elapsed;
       renderer.render(scene,camera);
       raf=requestAnimationFrame(animate);
     };
@@ -250,13 +418,12 @@ function EarthGlobe(){
       renderer.domElement.removeEventListener("pointerup",onPointerUp);
       renderer.domElement.removeEventListener("pointercancel",onPointerUp);
       scene.traverse(o=>{
-        const mesh=o as THREE.Mesh;
+        const mesh=o as THREE.Mesh|THREE.Line|THREE.Points;
         if(mesh.geometry)mesh.geometry.dispose();
         const material=mesh.material as THREE.Material|THREE.Material[];
         if(Array.isArray(material))material.forEach(m=>m.dispose());
         else if(material)material.dispose();
       });
-      mapDisposers.forEach(fn=>fn());
       earthTexture.dispose();
       renderer.dispose();
       if(renderer.domElement.parentElement===mount)mount.removeChild(renderer.domElement);
@@ -265,7 +432,6 @@ function EarthGlobe(){
 
   return <div className="earthGlobe realEarth" ref={mountRef} aria-label="Globo holográfico 3D da Terra interativo" />;
 }
-
 function OrbitalRings(){
   const mountRef=useRef<HTMLDivElement>(null);
 
