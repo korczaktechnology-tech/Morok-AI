@@ -412,6 +412,15 @@ function EarthGlobe(){
     mount.addEventListener("pointerleave",up);
 
     let frame=0;
+    const resetEarthAxis=()=>{
+      earthSystem.quaternion.copy(earthRestQuaternion);
+      globeRotation.x=earthSystem.rotation.x;
+      globeRotation.y=earthSystem.rotation.y;
+      globeRotation.z=earthSystem.rotation.z;
+      dragging=false;
+    };
+    window.addEventListener("morok-reset-earth-axis",resetEarthAxis);
+
     const animate=()=>{
       frame=requestAnimationFrame(animate);
 
@@ -450,6 +459,7 @@ function EarthGlobe(){
       mount.removeEventListener("pointerup",up);
       mount.removeEventListener("pointercancel",up);
       mount.removeEventListener("pointerleave",up);
+      window.removeEventListener("morok-reset-earth-axis",resetEarthAxis);
       bordersDisposed=true;
       borderGroup.traverse(object=>{
         const line=object as THREE.Line;
@@ -470,8 +480,13 @@ function EarthGlobe(){
     const next=!locationLocked;
     setLocationLocked(next);
     earthLocationLock=next;
-    // Ao ativar LOCAL FIXO, a posição atual é preservada. O retorno ao
-    // endereço salvo é uma ação explícita pelo botão VOLTAR ENDEREÇO.
+
+    // Ao entrar em ROTAÇÃO DA TERRA, sempre volta primeiro ao eixo padrão
+    // e somente então libera a rotação contínua.
+    if(!next){
+      const event=new CustomEvent("morok-reset-earth-axis");
+      window.dispatchEvent(event);
+    }
   };
 
   return (
