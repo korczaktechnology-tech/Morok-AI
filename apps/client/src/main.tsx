@@ -131,7 +131,7 @@ function MorokVoiceCore() {
       const h = rect.height;
       const cx = w / 2;
       const cy = h / 2;
-      const radius = Math.min(w, h) * 0.405;
+      const radius = Math.min(w, h) * 0.365;
       const seed = debugMode ? Math.floor(frame * 19) + seedRef.current : seedRef.current;
       const speakingNow = debugMode || active || window.speechSynthesis?.speaking === true;
       const base = speakingNow ? 0.72 : 0.24;
@@ -161,8 +161,8 @@ function MorokVoiceCore() {
         ctx.beginPath();
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
-        ctx.strokeStyle = `hsla(${195 + ((i + Math.floor(seed % 70)) % 130)}, 100%, 68%, ${speakingNow ? 0.5 + harmonic * 0.45 : 0.22})`;
-        ctx.lineWidth = speakingNow ? 1.5 : 0.75;
+        ctx.strokeStyle = `hsla(${195 + ((i + Math.floor(seed % 70)) % 130)}, 100%, 68%, ${speakingNow ? 0.76 + harmonic * 0.24 : 0.46})`;
+        ctx.lineWidth = speakingNow ? 1.65 : 0.9;
         ctx.shadowBlur = speakingNow ? 8 : 4;
         ctx.shadowColor = ctx.strokeStyle;
         ctx.stroke();
@@ -186,6 +186,78 @@ function MorokVoiceCore() {
     </div>
   );
 }
+type MicrophoneDebug = {
+  open: boolean;
+  listening: boolean;
+  transcript: string;
+  supported: boolean;
+};
+
+function MicrophoneDebugWindow({state,onClose,onToggle}:{state:MicrophoneDebug;onClose:()=>void;onToggle:()=>void}) {
+  if(!state.open) return null;
+  return (
+    <div className="microphoneDebugOverlay" role="dialog" aria-modal="true" aria-label="Teste de microfone">
+      <section className="microphoneDebugBox">
+        <div className="microphoneDebugHeader">
+          <div><b>MICROFONE // DEBUG</b><small>CAPTURA DE ÁUDIO EM TEMPO REAL</small></div>
+          <button type="button" onClick={onClose} aria-label="Fechar">×</button>
+        </div>
+        <div className="microphoneDebugBody">
+          <div className={`micDebugOrb ${state.listening ? "is-listening" : ""}`}><i/><span>MIC</span></div>
+          <div className="microphoneDebugText">
+            <small>{state.supported ? (state.listening ? "ESCUTANDO..." : "MICROFONE PRONTO") : "CAPTURA NÃO SUPORTADA PELO NAVEGADOR"}</small>
+            <p>{state.transcript || (state.supported ? "Fale alguma coisa para testar a captura de áudio." : "Use um navegador com Speech Recognition habilitado.")}</p>
+          </div>
+        </div>
+        <div className="microphoneDebugFooter">
+          <span className={state.listening ? "live" : ""}><i/> {state.listening ? "CAPTURANDO" : "AGUARDANDO"}</span>
+          <button type="button" disabled={!state.supported} onClick={onToggle}>{state.listening ? "PARAR TESTE" : "INICIAR TESTE"}</button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function useMicrophoneDebug() {
+  const [state,setState]=useState<MicrophoneDebug>({open:false,listening:false,transcript:"",supported:false});
+  const recognitionRef=useRef<any>(null);
+
+  const stop=()=> {
+    try { recognitionRef.current?.stop?.(); } catch {}
+    recognitionRef.current=null;
+    setState(s=>({...s,listening:false}));
+  };
+
+  const start=()=> {
+    const Recognition=window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!Recognition){ setState(s=>({...s,open:true,supported:false,listening:false})); return; }
+    try {
+      const recognition=new Recognition();
+      recognition.lang="pt-BR";
+      recognition.continuous=true;
+      recognition.interimResults=true;
+      recognition.onstart=()=>setState(s=>({...s,open:true,supported:true,listening:true,transcript:""}));
+      recognition.onresult=(event:any)=>{
+        let text="";
+        for(let i=event.resultIndex;i<event.results.length;i++) text+=event.results[i][0]?.transcript ?? "";
+        if(text) setState(s=>({...s,transcript:text}));
+      };
+      recognition.onerror=()=>setState(s=>({...s,listening:false}));
+      recognition.onend=()=>setState(s=>({...s,listening:false}));
+      recognitionRef.current=recognition;
+      setState(s=>({...s,open:true,supported:true,listening:true,transcript:""}));
+      recognition.start();
+    } catch {
+      setState(s=>({...s,open:true,supported:true,listening:false}));
+    }
+  };
+
+  const toggle=()=>state.listening ? stop() : start();
+
+  useEffect(()=>()=>stop(),[]);
+  return {state,start,stop,toggle,setState};
+}
+
 function Dashboard() {
   const systems = ["ERP","FLOW","OPS","VISION","CONNECT","MOBILE","DOCUMENTS","AI"];
   const processes = [
@@ -202,6 +274,17 @@ function Dashboard() {
   ];
   const actions = [["⌕","ANALISAR"],["▦","PLANEJAR"],["▶","EXECUTAR"],["▥","MONITORAR"],["⚙","OTIMIZAR"]];
 
+  const microphoneDebug = useMicrophoneDebug();
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.code === "Space") {
+        event.preventDefault();
+        microphoneDebug.start();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
   return (
     <div className="morokFullDashboard">
       <div className="dashAmbient" aria-hidden="true" />
@@ -290,6 +373,7 @@ function Dashboard() {
       <footer className="dashFooter">KOS&nbsp; // &nbsp;KORCZAK OPERATIONS SYSTEM</footer>
     </div>
   );
+      <MicrophoneDebugWindow state={microphoneDebug.state} onClose={()=>microphoneDebug.setState(s=>({...s,open:false}))} onToggle={microphoneDebug.toggle} />
 }
 
 function MobileDashboard({onOpenChat}:{onOpenChat:()=>void}){
