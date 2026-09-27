@@ -128,6 +128,20 @@ function EarthGlobe(){
 
     // A textura NASA já possui a região polar completa; não há máscara
     // artificial no Polo Norte e nenhum continente é removido.
+    // Realce mínimo dos oceanos: aumenta levemente a luminosidade e a saturação
+    // apenas nos tons predominantemente azuis da textura, sem alterar os continentes.
+    material.onBeforeCompile=(shader)=>{
+      shader.fragmentShader=shader.fragmentShader.replace(
+        "#include <map_fragment>",
+        `#include <map_fragment>
+        float oceanBlue=max(diffuseColor.b-diffuseColor.r,0.0);
+        oceanBlue=max(oceanBlue,diffuseColor.b-diffuseColor.g);
+        float oceanMask=smoothstep(0.035,0.16,oceanBlue);
+        vec3 oceanBoost=mix(diffuseColor.rgb,diffuseColor.rgb*vec3(1.0,1.0,1.01),oceanMask);
+        diffuseColor.rgb=oceanBoost;`
+      );
+    };
+
     const earth=new THREE.Mesh(geometry,material);
     earthSystem.add(earth);
 
