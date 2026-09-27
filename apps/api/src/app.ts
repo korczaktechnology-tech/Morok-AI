@@ -118,7 +118,7 @@ export function buildApp(){
         });
       }
       return reply.header("cache-control","no-store, no-cache, must-revalidate").send({
-        workflows:githubWorkflowCache?.workflows??[],
+        workflows:[],
         stale:true,
         error:error instanceof DOMException&&error.name==="AbortError"
           ?"github_workflows_timeout"
