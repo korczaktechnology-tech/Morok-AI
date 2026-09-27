@@ -477,11 +477,24 @@ function OrbitalRings(){
       ));
     };
 
-    const propagateToThree=(satrec:ReturnType<typeof satellite.twoline2satrec>,date:Date)=>{
+    // Para desenhar a órbita, todos os pontos usam o mesmo GMST do instante
+    // atual. Assim a curva representa o plano orbital real, sem incorporar a
+    // rotação da Terra durante as 63h do período do Chandra.
+    const eciToThreeAtReferenceEarth=(position:{x:number;y:number;z:number},referenceDate:Date)=>{
+      const ecf=satellite.eciToEcf(position,satellite.gstime(referenceDate));
+      return earthFixedToThree(ecf);
+    };
+
+    const propagateEci=(satrec:ReturnType<typeof satellite.twoline2satrec>,date:Date)=>{
       const propagated=satellite.propagate(satrec,date);
       if(!propagated?.position)return null;
-      const ecf=eciToEarthFixed(propagated.position,date);
-      return {position:earthFixedToThree(ecf),propagated};
+      return propagated;
+    };
+
+    const propagateMarkerToThree=(satrec:ReturnType<typeof satellite.twoline2satrec>,date:Date)=>{
+      const propagated=propagateEci(satrec,date);
+      if(!propagated?.position)return null;
+      return {position:earthFixedToThree(eciToEarthFixed(propagated.position,date)),propagated};
     };
 
     const setPoints=(line:THREE.Line,points:THREE.Vector3[])=>{
@@ -521,7 +534,7 @@ function OrbitalRings(){
 
         // O estado atual é calculado uma única vez. Ele é a âncora comum
         // do marcador e da predição, evitando qualquer deslocamento entre eles.
-        const current=propagateToThree(satrec,now);
+        const current=propagateMarkerToThree(satrec,now);
         if(!current?.position)throw new Error("current_propagation_failed");
         const currentPosition=current.position.clone();
 
