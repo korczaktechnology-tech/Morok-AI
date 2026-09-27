@@ -244,15 +244,74 @@ function EarthGlobe(){
     };
     void loadCountryBorders();
 
+    const setRestOrientationForLocation=(latitude:number,longitude:number)=>{
+      // Coordenadas geográficas -> vetor na esfera no mesmo referencial do mapa.
+      const lat=THREE.MathUtils.degToRad(latitude);
+      const lon=THREE.MathUtils.degToRad(longitude);
+      const locationVector=new THREE.Vector3(
+        Math.cos(lat)*Math.cos(lon),
+        Math.sin(lat),
+        -Math.cos(lat)*Math.sin(lon)
+      ).normalize();
+
+      // O ponto do usuário fica exatamente voltado para a câmera (+Z).
+      const front=new THREE.Vector3(0,0,1);
+      const locationQuaternion=new THREE.Quaternion().setFromUnitVectors(
+        locationVector,
+        front
+      );
+
+      // Mantém o eixo terrestre visualmente estável: depois de centralizar
+      // o local, ajustamos o roll para que o norte continue apontando para
+      // cima da tela tanto quanto a geometria permite.
+      const northVector=new THREE.Vector3(0,1,0).applyQuaternion(locationQuaternion);
+      const northProjected=new THREE.Vector3(northVector.x,northVector.y,0);
+      if(northProjected.lengthSq()>1e-8){
+        northProjected.normalize();
+        const targetUp=new THREE.Vector3(0,1,0);
+        const rollAngle=Math.atan2(
+          northProjected.x*targetUp.y-northProjected.y*targetUp.x,
+          northProjected.dot(targetUp)
+        );
+        const roll=new THREE.Quaternion().setFromAxisAngle(front,-rollAngle);
+        locationQuaternion.premultiply(roll);
+      }
+
+      earthRestQuaternion.copy(locationQuaternion);
+      earthSystem.quaternion.copy(earthRestQuaternion);
+      globeRotation.x=earthSystem.rotation.x;
+      globeRotation.y=earthSystem.rotation.y;
+      globeRotation.z=earthSystem.rotation.z;
+    };
+
     // Inclinação axial real da Terra: aproximadamente 23,439281° em relação
     // ao plano da eclíptica. O eixo geográfico (polo norte/sul) permanece
     // alinhado com esta inclinação quando o globo está em repouso.
     const earthAxialTilt=THREE.MathUtils.degToRad(23.439281);
     const earthRestRotation=new THREE.Euler(0,0,-earthAxialTilt,"YXZ");
-    earthSystem.rotation.copy(earthRestRotation);
+    const earthRestQuaternion=new THREE.Quaternion().setFromEuler(earthRestRotation);
+    earthSystem.quaternion.copy(earthRestQuaternion);
     globeRotation.x=earthSystem.rotation.x;
     globeRotation.y=earthSystem.rotation.y;
     globeRotation.z=earthSystem.rotation.z;
+
+    // A posição padrão é determinada pela localização do usuário.
+    // O navegador pede permissão; nenhum endereço é enviado ao servidor.
+    if("geolocation" in navigator){
+      navigator.geolocation.getCurrentPosition(
+        position=>{
+          if(bordersDisposed)return;
+          setRestOrientationForLocation(
+            position.coords.latitude,
+            position.coords.longitude
+          );
+        },
+        error=>{
+          console.info("Geolocalização indisponível; mantendo orientação padrão da Terra.",error);
+        },
+        {enableHighAccuracy:false,maximumAge:300000,timeout:10000}
+      );
+    }
 
     let dragging=false;
     let lastX=0;
@@ -333,28 +392,11 @@ function EarthGlobe(){
       // Ao soltar, retorna suavemente à orientação astronômica de repouso.
       if(returningToAxis&&!dragging){
         const ease=.12;
-        earthSystem.rotation.x=THREE.MathUtils.lerp(
-          earthSystem.rotation.x,
-          earthRestRotation.x,
-          ease
-        );
-        earthSystem.rotation.y=THREE.MathUtils.lerp(
-          earthSystem.rotation.y,
-          earthRestRotation.y,
-          ease
-        );
-        earthSystem.rotation.z=THREE.MathUtils.lerp(
-          earthSystem.rotation.z,
-          earthRestRotation.z,
-          ease
-        );
+        earthSystem.quaternion.slerp(earthRestQuaternion,ease);
 
-        if(
-          Math.abs(earthSystem.rotation.x-earthRestRotation.x)<0.0005 &&
-          Math.abs(earthSystem.rotation.y-earthRestRotation.y)<0.0005 &&
-          Math.abs(earthSystem.rotation.z-earthRestRotation.z)<0.0005
-        ){
-          earthSystem.rotation.copy(earthRestRotation);
+        const angleToRest=earthSystem.quaternion.angleTo(earthRestQuaternion);
+        if(angleToRest<0.0005){
+          earthSystem.quaternion.copy(earthRestQuaternion);
           returningToAxis=false;
         }
 
