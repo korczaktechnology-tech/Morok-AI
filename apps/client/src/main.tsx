@@ -504,16 +504,20 @@ function OrbitalRings(){
         const data=await response.json();
         const text=String(data?.result??"");
         const match=text.match(/\\$\\$SOE([\\s\\S]*?)\\$\\$EOE/);
-        if(!match)throw new Error("horizons_empty");
+        const csvSection=match?.[1];
+        if(!csvSection)throw new Error("horizons_empty");
 
         const points:THREE.Vector3[]=[];
-        for(const row of match[1].split(/\\r?\\n/)){
+        for(const row of csvSection.split(/\\r?\\n/)){
           const fields=row.split(",").map(v=>v.trim());
           const nums=fields.map(v=>Number(v));
-          const numeric=nums.filter(v=>Number.isFinite(v));
+          const numeric=nums.filter((v):v is number=>Number.isFinite(v));
           if(numeric.length<3)continue;
-          const [x,y,z]=numeric.slice(-3);
-          if([x,y,z].every(Number.isFinite))points.push(eciToThree({x,y,z}));
+          const x=numeric[numeric.length-3];
+          const y=numeric[numeric.length-2];
+          const z=numeric[numeric.length-1];
+          if(x===undefined||y===undefined||z===undefined)continue;
+          points.push(eciToThree({x,y,z}));
         }
 
         if(points.length>1){
