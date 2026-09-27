@@ -895,7 +895,9 @@ function StandaloneOrbit(){
     const group=new THREE.Group();
     scene.add(group);
 
-    const orbitDefinitions=[
+    const orbitDefinitions:Array<{
+      a:number;b:number;color:number;opacity:number;rot:[number,number,number]
+    }>= [
       {a:1.05,b:.85,color:0x9b5cff,opacity:.20,rot:[58,12,-18]},
       {a:1.13,b:.72,color:0x5c8cff,opacity:.14,rot:[38,-28,31]},
       {a:.94,b:.80,color:0xff3d68,opacity:.13,rot:[72,42,8]},
