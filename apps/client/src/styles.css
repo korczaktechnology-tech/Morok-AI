@@ -2091,3 +2091,20 @@ mix-blend-mode:screen;opacity:.65}
 .morokVoiceCore:before{
   display:none!important;
 }
+
+
+@media(min-width:1360px){
+  /* Keep SYSTEMS fully above the bottom-left operations box. */
+  .dashSystems{
+    left:calc(50% - 515px)!important;
+    top:120px!important;
+    transform:none!important;
+    width:214px!important;
+    height:370px!important;
+    bottom:auto!important;
+    padding:24px 18px 16px 58px!important;
+  }
+  .dashSystems h2{margin-bottom:12px!important;font-size:19px!important}
+  .dashSystems li{height:37px!important;font-size:11px!important;gap:9px!important}
+  .dashSystems .sysGlyph{font-size:17px!important}
+}
