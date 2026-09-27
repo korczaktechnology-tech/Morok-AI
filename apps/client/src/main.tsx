@@ -103,9 +103,8 @@ function EarthGlobe(){
     earthTexture.colorSpace=THREE.SRGBColorSpace;
     earthTexture.anisotropy=renderer.capabilities.getMaxAnisotropy();
 
-    // Holographic Earth: use the real geographic texture only as a mask.
-    // The globe itself is deliberately matte and non-luminous: no bloom, halo,
-    // additive blending, specular response, fresnel edge or external glow.
+    // Desktop globe: real geographic map rendered as a projected hologram.
+    // No emissive lighting, bloom, halo, specular response or additive blending.
     const hologramMaterial=new THREE.ShaderMaterial({
       uniforms:{
         uMap:{value:earthTexture},
@@ -127,9 +126,9 @@ function EarthGlobe(){
         varying vec3 vNormal;
 
         float landMask(vec3 c){
-          float greenSignal=c.g-(c.b*0.82+c.r*0.12);
-          float warmSignal=(c.r+c.g)*0.48-c.b*0.58;
-          return smoothstep(0.012,0.075,max(greenSignal,warmSignal));
+          float green=c.g-(c.b*0.82+c.r*0.12);
+          float warm=(c.r+c.g)*0.48-c.b*0.58;
+          return smoothstep(0.012,0.075,max(green,warm));
         }
 
         float landAt(vec2 uv){
@@ -137,46 +136,51 @@ function EarthGlobe(){
         }
 
         float coastLine(float land){
-          float l=landAt(vUv+vec2(-uTexel.x*2.0,0.0));
-          float r=landAt(vUv+vec2( uTexel.x*2.0,0.0));
-          float d=landAt(vUv+vec2(0.0,-uTexel.y*2.0));
-          float u=landAt(vUv+vec2(0.0, uTexel.y*2.0));
+          float l=landAt(vUv-vec2(uTexel.x*2.0,0.0));
+          float r=landAt(vUv+vec2(uTexel.x*2.0,0.0));
+          float d=landAt(vUv-vec2(0.0,uTexel.y*2.0));
+          float u=landAt(vUv+vec2(0.0,uTexel.y*2.0));
           return clamp(abs(land-l)+abs(land-r)+abs(land-d)+abs(land-u),0.0,1.0);
         }
 
         float hash21(vec2 p){
-          p=fract(p*vec2(123.34,456.21));
-          p+=dot(p,p+45.32);
+          p=fract(p*vec2(127.1,311.7));
+          p+=dot(p,p+41.7);
           return fract(p.x*p.y);
         }
 
         void main(){
-          vec3 src=texture2D(uMap,vUv).rgb;
-          float land=landMask(src);
+          float land=landMask(texture2D(uMap,vUv).rgb);
           float coast=coastLine(land);
 
-          // Technical hologram palette, but without emissive light.
-          vec3 violet=vec3(0.42,0.12,0.72);
-          vec3 cyan=vec3(0.04,0.42,0.62);
-          vec3 signal=mix(violet,cyan,smoothstep(0.08,0.92,vUv.x));
+          // Deliberately low-luminance projection colors.
+          // These are surface colors, not light sources.
+          vec3 violet=vec3(0.22,0.09,0.34);
+          vec3 cyan=vec3(0.05,0.27,0.36);
+          vec3 projected=mix(violet,cyan,smoothstep(0.12,0.88,vUv.x));
 
-          // Thin projected scanlines: these are part of the hologram surface,
-          // not a glow effect.
-          float scan=step(0.72,fract(vUv.y*150.0));
-          float scanAlpha=scan*0.045;
+          // Horizontal scanline structure.
+          float scan=step(0.78,fract(vUv.y*180.0));
 
-          // Sparse projected particles on land make the map read as a live
-          // holographic projection instead of a colored Earth texture.
-          vec2 cell=floor(vUv*vec2(180.0,120.0));
-          float particle=step(0.985,hash21(cell));
-          float particleMask=particle*land*0.28;
+          // Small broken projection pixels follow the real land mask.
+          vec2 cell=floor(vUv*vec2(210.0,140.0));
+          float fragments=step(0.988,hash21(cell))*land;
 
-          // A very restrained translucent land body plus crisp coast projection.
-          float alpha=land*0.075+coast*0.34+scanAlpha+particleMask;
-          alpha*=smoothstep(0.0,0.18,vNormal.z);
+          // The hologram fades toward the silhouette instead of glowing around it.
+          float facing=smoothstep(0.02,0.48,vNormal.z);
 
-          if(alpha<0.012) discard;
-          gl_FragColor=vec4(signal,clamp(alpha,0.0,0.42));
+          float alpha=
+            land*0.035 +
+            coast*0.18 +
+            scan*0.018 +
+            fragments*0.10;
+
+          alpha*=facing;
+
+          if(alpha<0.008) discard;
+
+          // Normal blending + low alpha = transparent projected material.
+          gl_FragColor=vec4(projected,clamp(alpha,0.0,0.24));
         }
       `,
       transparent:true,
