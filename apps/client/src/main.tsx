@@ -200,6 +200,7 @@ function EarthGlobe(){
 
       for(let i=0;i<coordinates.length;i++){
         const current=coordinates[i];
+        if(!current)continue;
         const previous=coordinates[i-1];
         if(previous){
           const previousLon=previous[0] ?? 0;
