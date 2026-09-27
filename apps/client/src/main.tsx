@@ -8,6 +8,7 @@ import "./styles.css";
 const API = import.meta.env.VITE_API_URL ?? "https://morok-ai.onrender.com";
 const MOROK_SUB_ICON = `${import.meta.env.BASE_URL}MorokSubIcon.svg`;
 const globeRotation={x:0,y:0,z:0};
+let earthLocationLock=true;
 
 type Msg = { role: "user" | "assistant"; content: string };
 type Task = { id: string; title: string; status: string; dueAt?: string };
@@ -73,6 +74,7 @@ function Icon({ children }: { children: React.ReactNode }) {
 
 function EarthGlobe(){
   const mountRef=useRef<HTMLDivElement>(null);
+  const [locationLocked,setLocationLocked]=useState(true);
 
   useEffect(()=>{
     const mount=mountRef.current;
@@ -90,6 +92,11 @@ function EarthGlobe(){
 
     const earthSystem=new THREE.Group();
     scene.add(earthSystem);
+
+    let userLatitude: number | null=null;
+    let userLongitude: number | null=null;
+    let userLocationQuaternion: THREE.Quaternion | null=null;
+    let lastFrameTime=performance.now();
 
     // Globo 3D real: esfera física com o mapa-múndi real aplicado como textura.
     // Escala visual absoluta: a Terra é a referência de 1 raio terrestre.
@@ -277,6 +284,9 @@ function EarthGlobe(){
         locationQuaternion.premultiply(roll);
       }
 
+      userLatitude=latitude;
+      userLongitude=longitude;
+      userLocationQuaternion=locationQuaternion.clone();
       earthRestQuaternion.copy(locationQuaternion);
       earthSystem.quaternion.copy(earthRestQuaternion);
       globeRotation.x=earthSystem.rotation.x;
@@ -317,6 +327,14 @@ function EarthGlobe(){
     let lastX=0;
     let lastY=0;
     let returningToAxis=false;
+
+    const applyLocationLock=()=>{
+      if(!userLocationQuaternion)return;
+      earthSystem.quaternion.copy(userLocationQuaternion);
+      globeRotation.x=earthSystem.rotation.x;
+      globeRotation.y=earthSystem.rotation.y;
+      globeRotation.z=earthSystem.rotation.z;
+    };
 
     const resize=()=>{
       const width=Math.max(1,mount.clientWidth);
@@ -359,6 +377,10 @@ function EarthGlobe(){
       lastX=e.clientX;
       lastY=e.clientY;
       returningToAxis=false;
+      if(earthLocationLock){
+        // O arraste continua funcionando mesmo com a trava ligada; ao soltar,
+        // a posição cadastrada volta a ser a referência fixa.
+      }
       earthSystem.rotation.y+=dx*.006;
       earthSystem.rotation.x+=dy*.0045;
       earthSystem.rotation.x=Math.max(-1.45,Math.min(1.45,earthSystem.rotation.x));
@@ -369,7 +391,7 @@ function EarthGlobe(){
 
     const up=(e:PointerEvent)=>{
       dragging=false;
-      returningToAxis=true;
+      returningToAxis=earthLocationLock;
       if(mount.hasPointerCapture(e.pointerId))mount.releasePointerCapture(e.pointerId);
       mount.style.cursor="grab";
     };
@@ -388,9 +410,29 @@ function EarthGlobe(){
     const animate=()=>{
       frame=requestAnimationFrame(animate);
 
-      // Enquanto o usuário segura, o globo responde livremente ao arraste.
-      // Ao soltar, retorna suavemente à orientação astronômica de repouso.
-      if(returningToAxis&&!dragging){
+      const now=performance.now();
+      const deltaSeconds=Math.min(.1,Math.max(0,(now-lastFrameTime)/1000));
+      lastFrameTime=now;
+
+      // Rotação sideral real da Terra: uma volta em 23h 56min 4.0905s.
+      // A escala visual não altera a velocidade angular física.
+      const siderealDaySeconds=86164.0905;
+      const earthAngularVelocity=(Math.PI*2)/siderealDaySeconds;
+
+      if(!dragging && !earthLocationLock){
+        earthSystem.rotateY(earthAngularVelocity*deltaSeconds);
+        globeRotation.x=earthSystem.rotation.x;
+        globeRotation.y=earthSystem.rotation.y;
+        globeRotation.z=earthSystem.rotation.z;
+      }
+
+      // No modo travado, a região do usuário permanece exatamente na frente.
+      if(earthLocationLock && !dragging && userLocationQuaternion){
+        applyLocationLock();
+        returningToAxis=false;
+      }
+
+      if(returningToAxis&&!dragging&&!earthLocationLock){
         const ease=.12;
         earthSystem.quaternion.slerp(earthRestQuaternion,ease);
 
@@ -433,12 +475,34 @@ function EarthGlobe(){
     };
   },[]);
 
+  const toggleLocationLock=()=>{
+    const next=!locationLocked;
+    setLocationLocked(next);
+    earthLocationLock=next;
+    if(next){
+      // A função de efeito já possui a referência da localização. O próximo
+      // frame reposiciona o globo exatamente no endereço salvo.
+    }
+  };
+
   return (
-    <div
-      className="earthGlobe realEarth"
-      ref={mountRef}
-      aria-label="Globo real da Terra interativo"
-    />
+    <>
+      <div
+        className="earthGlobe realEarth"
+        ref={mountRef}
+        aria-label="Globo real da Terra interativo"
+      />
+      <button
+        type="button"
+        className={`earthLocationToggle ${locationLocked ? "isLocked" : "isFree"}`}
+        onClick={toggleLocationLock}
+        aria-pressed={locationLocked}
+        title={locationLocked ? "Localização fixa — clique para ativar rotação da Terra" : "Rotação terrestre ativa — clique para fixar sua localização"}
+      >
+        <span className="earthLocationToggleDot" />
+        <span>{locationLocked ? "LOCAL FIXO" : "ROTAÇÃO DA TERRA"}</span>
+      </button>
+    </>
   );
 }
 
