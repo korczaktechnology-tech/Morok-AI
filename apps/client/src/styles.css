@@ -1808,3 +1808,87 @@ mix-blend-mode:screen;opacity:.65}
   .dashNav{right:0!important;bottom:0!important;width:210px!important;top:108px!important}
   .dashNav button{height:64px!important}
 }
+
+/* MOROK // INTERACTIVE PANEL RESIZE SYSTEM */
+.morokResizablePanel{
+  position:absolute!important;
+  box-sizing:border-box!important;
+  isolation:isolate;
+}
+.morokResizablePanel.is-resizing{
+  user-select:none!important;
+  cursor:grabbing!important;
+  transition:none!important;
+}
+.morokResizablePanel.is-resizing *{
+  user-select:none!important;
+  pointer-events:none!important;
+}
+.resizeHandle{
+  position:absolute;
+  z-index:100!important;
+  opacity:.18;
+  transition:opacity .18s ease,background .18s ease,box-shadow .18s ease;
+}
+.morokResizablePanel:hover > .resizeHandle,
+.morokResizablePanel.is-resizing > .resizeHandle{
+  opacity:1;
+}
+.resizeHandleE{
+  top:14px;
+  right:-4px;
+  bottom:14px;
+  width:8px;
+  cursor:ew-resize;
+}
+.resizeHandleS{
+  left:14px;
+  right:14px;
+  bottom:-4px;
+  height:8px;
+  cursor:ns-resize;
+}
+.resizeHandleSE{
+  right:-5px;
+  bottom:-5px;
+  width:18px;
+  height:18px;
+  cursor:nwse-resize;
+}
+.resizeHandleE:before{
+  content:"";
+  position:absolute;
+  top:50%;right:2px;
+  width:2px;height:38px;
+  transform:translateY(-50%);
+  background:linear-gradient(180deg,transparent,#62a7ff 25%,#c55cff 75%,transparent);
+  box-shadow:0 0 7px rgba(87,135,255,.9);
+}
+.resizeHandleS:before{
+  content:"";
+  position:absolute;
+  left:50%;bottom:2px;
+  width:38px;height:2px;
+  transform:translateX(-50%);
+  background:linear-gradient(90deg,transparent,#62a7ff 25%,#c55cff 75%,transparent);
+  box-shadow:0 0 7px rgba(87,135,255,.9);
+}
+.resizeHandleSE:before{
+  content:"";
+  position:absolute;
+  right:2px;bottom:2px;
+  width:10px;height:10px;
+  border-right:2px solid #72b8ff;
+  border-bottom:2px solid #c65cff;
+  filter:drop-shadow(0 0 4px rgba(100,130,255,.9));
+}
+.morokResizablePanel.is-resizing .resizeHandle{
+  opacity:1;
+}
+.morokResizablePanel.is-resizing .resizeHandleE:before,
+.morokResizablePanel.is-resizing .resizeHandleS:before{
+  box-shadow:0 0 13px rgba(113,102,255,1);
+}
+@media(max-width:760px){
+  .resizeHandleE,.resizeHandleS,.resizeHandleSE{display:none!important}
+}
