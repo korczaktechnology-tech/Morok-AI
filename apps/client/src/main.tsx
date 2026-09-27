@@ -359,7 +359,7 @@ function OrbitalRings(){
       });
     };
 
-    const makeTrack=(definition:SatelliteDefinition)=>{
+    const makeTrack=(definition:SatelliteDefinition):Track=>{
       const line=new THREE.Line(
         new THREE.BufferGeometry(),
         makeLineMaterial(definition.color,.78)
