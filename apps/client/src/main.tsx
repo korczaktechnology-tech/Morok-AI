@@ -568,34 +568,6 @@ function EarthGlobe(){
 
   return (
     <>
-      {workflowMonitorOpen && (
-        <div className="workflowMonitor" role="status" aria-label="Status dos workflows do GitHub">
-          <div className="workflowMonitorHeader">
-            <span>GITHUB ACTIONS</span>
-            <span className="workflowMonitorHint">CTRL + ALT + K</span>
-          </div>
-          <div className="workflowMonitorList">
-            {githubWorkflows.length===0 ? (
-              <div className="workflowMonitorEmpty">CARREGANDO WORKFLOWS...</div>
-            ) : githubWorkflows.map(workflow=>{
-              const state=workflow.status==="queued"||workflow.status==="in_progress" ? "queued" : workflow.conclusion==="success" ? "success" : "failure";
-              return (
-                <div className="workflowMonitorItem" key={workflow.id}>
-                  <span className={`workflowStatusDot ${state}`} aria-label={state}/>
-                  <div className="workflowMonitorInfo">
-                    <div className="workflowMonitorName">{workflow.name}</div>
-                    <div className="workflowMonitorMeta">
-                      <span>WORKFLOW #{workflow.runNumber}</span>
-                      <span>{workflow.commit}</span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
       {locationLocked && (
         <button
           type="button"
@@ -1464,6 +1436,35 @@ function App() {
 
   return (
     <>
+      {workflowMonitorOpen && (
+        <div className="workflowMonitor" role="status" aria-label="Status dos workflows do GitHub">
+          <div className="workflowMonitorHeader">
+            <span>GITHUB ACTIONS</span>
+            <span className="workflowMonitorHint">CTRL + ALT + K</span>
+          </div>
+          <div className="workflowMonitorList">
+            {githubWorkflows.length===0 ? (
+              <div className="workflowMonitorEmpty">CARREGANDO WORKFLOWS...</div>
+            ) : githubWorkflows.map(workflow=>{
+              const state=workflow.status==="queued"||workflow.status==="in_progress" ? "queued" : workflow.conclusion==="success" ? "success" : "failure";
+              return (
+                <div className="workflowMonitorItem" key={workflow.id}>
+                  <span className={`workflowStatusDot ${state}`} aria-label={state}/>
+                  <div className="workflowMonitorInfo">
+                    <div className="workflowMonitorName">{workflow.name}</div>
+                    <div className="workflowMonitorMeta">
+                      <span>WORKFLOW #{workflow.runNumber}</span>
+                      <span>{workflow.commit}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+
       <UpdateChecker />
       <main className="appShell">
         <section className="mainStage">
