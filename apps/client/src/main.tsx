@@ -71,6 +71,158 @@ function Icon({ children }: { children: React.ReactNode }) {
 }
 
 
+function MorokVoiceCore() {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [active, setActive] = useState(false);
+  const seedRef = useRef(1);
+
+  useEffect(() => {
+    const onStart = (event: Event) => {
+      const detail = (event as CustomEvent<{ text?: string }>).detail;
+      const text = detail?.text ?? "";
+      let seed = 0;
+      for (let i = 0; i < text.length; i++) seed = (seed * 31 + text.charCodeAt(i)) >>> 0;
+      seedRef.current = seed || 1;
+      setActive(true);
+    };
+    const onEnd = () => setActive(false);
+    window.addEventListener("morok-voice-start", onStart);
+    window.addEventListener("morok-voice-end", onEnd);
+    return () => {
+      window.removeEventListener("morok-voice-start", onStart);
+      window.removeEventListener("morok-voice-end", onEnd);
+    };
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    let frame = 0;
+    let raf = 0;
+
+    const resize = () => {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+      canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    const draw = () => {
+      frame += 0.016;
+      const rect = canvas.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
+      const cx = w / 2;
+      const cy = h / 2;
+      const radius = Math.min(w, h) * 0.405;
+      const seed = seedRef.current;
+      ctx.clearRect(0, 0, w, h);
+
+      const speakingNow = active || window.speechSynthesis?.speaking === true;
+      const base = speakingNow ? 0.72 : 0.24;
+      const pulse = speakingNow ? (0.5 + 0.5 * Math.sin(frame * 8.5 + (seed % 17))) : 0.5;
+      const intensity = base + pulse * (speakingNow ? 0.45 : 0.12);
+
+      ctx.save();
+      ctx.translate(cx, cy);
+
+      // Quiet circular field: no solid radar/grid, only the wave mesh itself.
+      const layers = speakingNow ? 9 : 7;
+      for (let layer = 0; layer < layers; layer++) {
+        const depth = layer / Math.max(1, layers - 1);
+        const yScale = 0.34 + depth * 0.66;
+        const layerRadius = radius * (0.76 + depth * 0.25);
+        ctx.beginPath();
+
+        const points = 180;
+        for (let j = 0; j <= points; j++) {
+          const a = (j / points) * Math.PI * 2;
+          const harmonic =
+            Math.sin(a * (7 + (seed % 5)) - frame * (1.5 + depth)) * 0.42 +
+            Math.sin(a * (13 + (seed % 7)) + frame * 2.1) * 0.24 +
+            Math.sin(a * 23 - frame * 3.4) * 0.12;
+          const voiceWave = speakingNow
+            ? harmonic * (10 + intensity * 22)
+            : Math.sin(a * 5 - frame * 1.2 + depth * 2) * (3 + depth * 5);
+          const r = layerRadius + voiceWave;
+          const x = Math.cos(a) * r;
+          const y = Math.sin(a) * r * yScale;
+          if (j === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+
+        const hue = 195 + ((layer * 19 + Math.floor(seed % 80)) % 105);
+        ctx.strokeStyle = `hsla(${hue}, 100%, 67%, ${0.18 + intensity * 0.14})`;
+        ctx.lineWidth = speakingNow ? 1.05 : 0.8;
+        ctx.shadowBlur = speakingNow ? 8 : 4;
+        ctx.shadowColor = ctx.strokeStyle;
+        ctx.stroke();
+      }
+
+      // Radial frequency bars around the perimeter.
+      const bars = 128;
+      for (let i = 0; i < bars; i++) {
+        const a = (i / bars) * Math.PI * 2;
+        const harmonic =
+          Math.abs(Math.sin(a * (4 + (seed % 4)) + frame * 3.2)) * 0.5 +
+          Math.abs(Math.sin(a * (9 + (seed % 6)) - frame * 5.1)) * 0.3 +
+          Math.abs(Math.sin(a * 17 + frame * 2.3)) * 0.2;
+        const idle = 3 + 5 * (0.5 + 0.5 * Math.sin(a * 8 - frame * 1.7));
+        const length = speakingNow ? 5 + harmonic * (13 + intensity * 22) : idle;
+        const inner = radius * 1.03;
+        const outer = inner + length;
+        const x1 = Math.cos(a) * inner;
+        const y1 = Math.sin(a) * inner * 0.72;
+        const x2 = Math.cos(a) * outer;
+        const y2 = Math.sin(a) * outer * 0.72;
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.strokeStyle = `hsla(${195 + ((i + Math.floor(seed % 70)) % 130)}, 100%, 68%, ${speakingNow ? 0.5 + harmonic * 0.45 : 0.22})`;
+        ctx.lineWidth = speakingNow ? 1.5 : 0.75;
+        ctx.stroke();
+      }
+
+      // Fine 3D latitude/longitude traces, restricted to the wave surface.
+      for (let line = 0; line < 7; line++) {
+        const phase = line * 0.9 + frame * (speakingNow ? 0.9 : 0.45);
+        ctx.beginPath();
+        for (let j = 0; j <= 150; j++) {
+          const a = (j / 150) * Math.PI * 2;
+          const wave = Math.sin(a * 8 + phase) * (speakingNow ? 8 + intensity * 8 : 4);
+          const rr = radius * (0.80 + line * 0.035) + wave;
+          const x = Math.cos(a) * rr;
+          const y = Math.sin(a) * rr * 0.72;
+          if (j === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = `rgba(91, 178, 255, ${speakingNow ? 0.16 : 0.11})`;
+        ctx.lineWidth = 0.55;
+        ctx.stroke();
+      }
+
+      ctx.restore();
+      raf = requestAnimationFrame(draw);
+    };
+
+    draw();
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", resize);
+    };
+  }, [active]);
+
+  return (
+    <div className={`morokVoiceCore ${active ? "is-speaking" : "is-idle"}`} aria-label="Visualizador da voz do Morok">
+      <canvas ref={canvasRef} />
+      <span className="voiceCoreCenter" aria-hidden="true" />
+    </div>
+  );
+}
+
 function Dashboard() {
   const systems = ["ERP","FLOW","OPS","VISION","CONNECT","MOBILE","DOCUMENTS","AI"];
   const processes = [
@@ -119,7 +271,7 @@ function Dashboard() {
           {processes.map(([name,val],i)=><div className="processRow" key={name}><i className={"processDot p"+i}/><span>{name}</span><strong>{val}</strong></div>)}
         </div>
         <div className="assistantPanel">
-          <div className="miniRadar"><span/><i/><b/></div>
+          <MorokVoiceCore />
           <div><h3>MOROK</h3><small>ASSISTENTE VIRTUAL</small><p>Olá, Korczak.<br/>Todos os sistemas estão operando normalmente.</p><div className="wave">▁▃▅▂▆▃▇▂▅▁▃▆▂</div></div>
         </div>
       </aside>
@@ -654,7 +806,13 @@ function App() {
           } catch {}
         }
       }
-      if (speaking && full) window.speechSynthesis?.speak(new SpeechSynthesisUtterance(full));
+      if (speaking && full) {
+        const utterance = new SpeechSynthesisUtterance(full);
+        window.dispatchEvent(new CustomEvent("morok-voice-start", { detail: { text: full } }));
+        utterance.onend = () => window.dispatchEvent(new Event("morok-voice-end"));
+        utterance.onerror = () => window.dispatchEvent(new Event("morok-voice-end"));
+        window.speechSynthesis?.speak(utterance);
+      }
     } catch (e) {
       setNotice(e instanceof Error ? e.message : "Falha de comunicação");
       setMessages(m => m.slice(0, -1));
