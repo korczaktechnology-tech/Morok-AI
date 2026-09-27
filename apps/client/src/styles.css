@@ -1956,3 +1956,15 @@ mix-blend-mode:screen;opacity:.65}
 .morokResizablePanel[style*="--panel-top"]{
   bottom:auto!important;
 }
+
+/* All eight panel resize directions */
+.morokResizablePanel .resizeHandle{position:absolute;z-index:110;display:block!important;opacity:.22;touch-action:none}
+.morokResizablePanel .resizeHandle:hover,.morokResizablePanel.is-interacting .resizeHandle{opacity:1}
+.morokResizablePanel .resizeHandleN{top:-5px;left:8px;right:8px;height:10px;cursor:ns-resize}
+.morokResizablePanel .resizeHandleS{bottom:-5px;left:8px;right:8px;height:10px;cursor:ns-resize}
+.morokResizablePanel .resizeHandleW{left:-5px;top:8px;bottom:8px;width:10px;cursor:ew-resize}
+.morokResizablePanel .resizeHandleE{right:-5px;top:8px;bottom:8px;width:10px;cursor:ew-resize}
+.morokResizablePanel .resizeHandleNW{left:-7px;top:-7px;width:16px;height:16px;cursor:nwse-resize}
+.morokResizablePanel .resizeHandleNE{right:-7px;top:-7px;width:16px;height:16px;cursor:nesw-resize}
+.morokResizablePanel .resizeHandleSW{left:-7px;bottom:-7px;width:16px;height:16px;cursor:nesw-resize}
+.morokResizablePanel .resizeHandleSE{right:-7px;bottom:-7px;width:16px;height:16px;cursor:nwse-resize}
