@@ -90,8 +90,10 @@ function EarthGlobe(){
     const orbitalColor=0x9b5cff;
     const orbitPoints:THREE.Vector3[]=[];
     const predictionPointsVisual:THREE.Vector3[]=[];
-    const semiMajor=1.65;
-    const semiMinor=1.32;
+    // Sistema orbital visual independente: não usa TLE, satellite.js ou orbitGroup.
+    // A elipse fica claramente fora da superfície terrestre, como uma órbita baixa.
+    const semiMajor=1.82;
+    const semiMinor=1.48;
     const tiltX=THREE.MathUtils.degToRad(58);
     const tiltZ=THREE.MathUtils.degToRad(-18);
 
@@ -134,6 +136,14 @@ function EarthGlobe(){
     predictionLine.renderOrder=19;
     orbitalVisualGroup.add(predictionLine);
 
+    // A órbita visual possui orientação própria e não acompanha a rotação da Terra.
+    orbitalVisualGroup.rotation.set(
+      THREE.MathUtils.degToRad(58),
+      THREE.MathUtils.degToRad(12),
+      THREE.MathUtils.degToRad(-18)
+    );
+    orbitalVisualGroup.position.set(0,0,0);
+    orbitalVisualGroup.visible=true;
 
     const camera=new THREE.PerspectiveCamera(34,1,.1,100);
     camera.position.z=2.65;
@@ -521,8 +531,8 @@ function EarthGlobe(){
         globeRotation.z=earthSystem.rotation.z;
       }
 
-      // No modo travado, a região do usuário permanece exatamente na frente.
-
+      // A órbita visual permanece em seu próprio sistema de referência.
+      // Ela não é ligada à rotação da Terra nem ao sistema de satélites.
       renderer.render(scene,camera);
     };
     animate();
