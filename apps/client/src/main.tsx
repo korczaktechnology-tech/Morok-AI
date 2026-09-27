@@ -222,22 +222,24 @@ function ResizablePanel({
       const amount = Math.max(0, Math.min(Math.min(width, height) * 0.48, startValue + signed));
 
       const curve = { ...startCurveValues };
+      const xRatio = width ? anchorX / width : 0.5;
+      const yRatio = height ? anchorY / height : 0.5;
       if (side === "top") {
-        curve.topLeft = amount;
-        curve.topRight = amount;
+        curve.topLeft = amount * (1 - xRatio);
+        curve.topRight = amount * xRatio;
       } else if (side === "right") {
-        curve.topRight = amount;
-        curve.bottomRight = amount;
+        curve.topRight = amount * (1 - yRatio);
+        curve.bottomRight = amount * yRatio;
       } else if (side === "bottom") {
-        curve.bottomLeft = amount;
-        curve.bottomRight = amount;
+        curve.bottomLeft = amount * (1 - xRatio);
+        curve.bottomRight = amount * xRatio;
       } else {
-        curve.topLeft = amount;
-        curve.bottomLeft = amount;
+        curve.topLeft = amount * (1 - yRatio);
+        curve.bottomLeft = amount * yRatio;
       }
 
-      // Keep the click anchor in the state so the HUD knows where the curvature started.
-      setGeometry(current => ({ ...current, curve, curveAnchor: { x: anchorX, y: anchorY } } as PanelGeometry & { curveAnchor?: {x:number;y:number} }));
+      // The clicked point controls where the curvature is concentrated.
+      setGeometry(current => ({ ...current, curve }));
     };
 
     const end = () => {
