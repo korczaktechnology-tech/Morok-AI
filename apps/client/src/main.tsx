@@ -393,22 +393,28 @@ function OrbitalRings(){
       return track;
     };
 
-    const sphericalScale=(distanceKm:number)=>{
-      if(distanceKm<=earthRadiusKm*8)return distanceKm/earthRadiusKm;
-      // Compressão apenas para objetos muito distantes, mantendo a ordem e a
-      // forma geral da trajetória visível no HUD.
-      return Math.min(2.55,1+Math.log10(Math.max(1,distanceKm/earthRadiusKm))*.34);
+    // O globo usa raio 1. Portanto 1 unidade visual = 1 raio terrestre.
+    // Não há compressão logarítmica: a distância do satélite ao centro é
+    // proporcional à distância orbital real em quilômetros.
+    const eciToEarthFixed=(position:{x:number;y:number;z:number},date:Date)=>{
+      const gmst=satellite.gstime(date);
+      return satellite.eciToEcf(position,gmst);
     };
 
-    const eciToThree=(position:{x:number;y:number;z:number})=>{
-      const distanceKm=Math.sqrt(position.x**2+position.y**2+position.z**2);
-      const scale=sphericalScale(distanceKm);
-      const factor=distanceKm>0?scale/(distanceKm/earthRadiusKm):1;
+    const earthFixedToThree=(position:{x:number;y:number;z:number})=>{
+      const factor=1/earthRadiusKm;
       return new THREE.Vector3(
         position.x*factor,
         position.z*factor,
         -position.y*factor
       );
+    };
+
+    const propagateToThree=(satrec:ReturnType<typeof satellite.twoline2satrec>,date:Date)=>{
+      const propagated=satellite.propagate(satrec,date);
+      if(!propagated?.position)return null;
+      const ecf=eciToEarthFixed(propagated.position,date);
+      return {position:earthFixedToThree(ecf),propagated};
     };
 
     const setPoints=(line:THREE.Line,points:THREE.Vector3[])=>{
@@ -439,27 +445,36 @@ function OrbitalRings(){
 
         const now=new Date();
         const period=Math.max(20,definition.periodMinutes);
+        const stepMinutes=Math.max(.25,period/360);
         const routePoints:THREE.Vector3[]=[];
         const predictionPoints:THREE.Vector3[]=[];
 
-        // Linha principal: uma revolução completa, centrada no instante atual.
-        for(let minute=-period/2;minute<=period/2;minute+=Math.max(.25,period/360)){
+        // O estado atual é calculado uma única vez. Ele é a âncora comum
+        // do marcador e da predição, evitando qualquer deslocamento entre eles.
+        const current=propagateToThree(satrec,now);
+        if(!current?.position)throw new Error("current_propagation_failed");
+        const currentPosition=current.position.clone();
+
+        // Trajetória orbital real ao redor do instante atual.
+        for(let minute=-period/2;minute<=period/2;minute+=stepMinutes){
           const date=new Date(now.getTime()+minute*60000);
-          const propagated=satellite.propagate(satrec,date);
-          if(!propagated?.position)continue;
-          routePoints.push(eciToThree(propagated.position));
+          const sample=propagateToThree(satrec,date);
+          if(!sample)continue;
+          routePoints.push(sample.position);
         }
 
-        // Predição: posição atual -> uma revolução futura completa.
-        for(let minute=0;minute<=period;minute+=Math.max(.25,period/360)){
+        // A predição começa EXATAMENTE no mesmo estado usado pelo marcador.
+        predictionPoints.push(currentPosition.clone());
+        for(let minute=stepMinutes;minute<=period;minute+=stepMinutes){
           const date=new Date(now.getTime()+minute*60000);
-          const propagated=satellite.propagate(satrec,date);
-          if(!propagated?.position)continue;
-          predictionPoints.push(eciToThree(propagated.position));
+          const sample=propagateToThree(satrec,date);
+          if(!sample)continue;
+          predictionPoints.push(sample.position);
         }
 
         if(routePoints.length>1)setPoints(track.line,routePoints);
         if(predictionPoints.length>1)setPoints(track.prediction,predictionPoints);
+        track.marker.position.copy(currentPosition);
       }catch(error){
         // Mantém a última previsão válida na tela em caso de indisponibilidade
         // momentânea da fonte orbital, em vez de fabricar uma nova órbita.
@@ -500,7 +515,8 @@ function OrbitalRings(){
           return;
         }
         track.marker.visible=true;
-        track.marker.position.copy(eciToThree(propagated.position));
+        const ecf=eciToEarthFixed(propagated.position,now);
+        track.marker.position.copy(earthFixedToThree(ecf));
       });
 
       renderer.render(scene,camera);
