@@ -31,6 +31,23 @@ export function buildApp(){
 
   app.get("/health",async()=>({status:"ok",service:"morok-api",environment:config.nodeEnv}));
   app.get("/api/v1/status",async()=>({status:"ok",identity:MOROK_IDENTITY,phase:1,capabilities:{commands:coreCommands.length,permissions:corePermissions.length,tools:createCoreToolRegistry(await connectDatabase()).list().length,modelGateway:Boolean(config.modelApiUrl),voice:true,web:true,files:true,automation:true,organizer:true}}));
+  app.get("/api/v1/orbital/tle/:norad",async(req,reply)=>{
+    const {norad}=req.params as {norad?:string};
+    if(!norad||!/^\\d{1,9}$/.test(norad))return reply.code(400).send({error:"invalid_norad"});
+    const url=new URL("https://celestrak.org/NORAD/elements/gp.php");
+    url.searchParams.set("CATNR",norad);
+    url.searchParams.set("FORMAT","TLE");
+    try{
+      const response=await fetch(url,{headers:{"user-agent":"Morok-AI/1.0"},cache:"no-store"});
+      if(!response.ok)return reply.code(response.status).send({error:"tle_source_unavailable"});
+      const tle=(await response.text()).trim();
+      if(!/^1 .*\\n2 /s.test(tle))return reply.code(502).send({error:"invalid_tle"});
+      return reply.header("cache-control","public, max-age=900").send({tle});
+    }catch(error){
+      app.log.warn({error,norad},"Falha ao obter TLE orbital");
+      return reply.code(502).send({error:"tle_fetch_failed"});
+    }
+  });
   app.get("/api/v1/commands",async()=>({commands:coreCommands}));
   app.get("/api/v1/permissions",async()=>({permissions:corePermissions}));
   app.get("/api/v1/permissions/:id",async(req)=>{const {id}=req.params as {id:string};return {permission:id,requiresConfirmation:requiresConfirmation(id)};});
