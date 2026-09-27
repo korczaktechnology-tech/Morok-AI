@@ -39,20 +39,25 @@ export function buildApp(){
   app.get("/api/v1/github/workflows",async(_req,reply)=>{
     const now=Date.now();
     if(githubWorkflowCache && githubWorkflowCache.expiresAt>now){
-      return reply.header("cache-control","public, max-age=5").send({workflows:githubWorkflowCache.workflows});
+      return reply.header("cache-control","public, max-age=30").send({workflows:githubWorkflowCache.workflows});
     }
 
     const controller=new AbortController();
-    const timeout=setTimeout(()=>controller.abort(),4500);
+    const timeout=setTimeout(()=>controller.abort(),8000);
+    const githubToken=process.env.GITHUB_TOKEN?.trim();
 
     try{
+      const headers:Record<string,string>={
+        "accept":"application/vnd.github+json",
+        "x-github-api-version":"2022-11-28",
+        "user-agent":"Morok-AI/1.0"
+      };
+      if(githubToken)headers.authorization=`Bearer ${githubToken}`;
+
       const response=await fetch(
         "https://api.github.com/repos/korczaktechnology-tech/Morok-AI/actions/runs?per_page=100",
         {
-          headers:{
-            "accept":"application/vnd.github+json",
-            "user-agent":"Morok-AI/1.0"
-          },
+          headers,
           signal:controller.signal,
           cache:"no-store"
         }
@@ -86,10 +91,16 @@ export function buildApp(){
         }))
         .sort((a,b)=>a.name.localeCompare(b.name));
 
-      githubWorkflowCache={expiresAt:Date.now()+5000,workflows};
+      githubWorkflowCache={expiresAt:Date.now()+30000,workflows};
       return reply.header("cache-control","public, max-age=5").send({workflows});
     }catch(error){
       app.log.warn({error},"Falha ao obter estado dos workflows do GitHub");
+      if(githubWorkflowCache){
+        return reply.header("cache-control","public, max-age=5").send({
+          workflows:githubWorkflowCache.workflows,
+          stale:true
+        });
+      }
       return reply.code(502).send({
         error:error instanceof DOMException&&error.name==="AbortError"
           ?"github_workflows_timeout"
