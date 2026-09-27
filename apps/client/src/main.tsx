@@ -244,9 +244,20 @@ function EarthGlobe(){
     };
     void loadCountryBorders();
 
+    // Inclinação axial real da Terra: aproximadamente 23,439281° em relação
+    // ao plano da eclíptica. O eixo geográfico (polo norte/sul) permanece
+    // alinhado com esta inclinação quando o globo está em repouso.
+    const earthAxialTilt=THREE.MathUtils.degToRad(23.439281);
+    const earthRestRotation=new THREE.Euler(0,0,-earthAxialTilt,"YXZ");
+    earthSystem.rotation.copy(earthRestRotation);
+    globeRotation.x=earthSystem.rotation.x;
+    globeRotation.y=earthSystem.rotation.y;
+    globeRotation.z=earthSystem.rotation.z;
+
     let dragging=false;
     let lastX=0;
     let lastY=0;
+    let returningToAxis=false;
 
     const resize=()=>{
       const width=Math.max(1,mount.clientWidth);
@@ -288,13 +299,18 @@ function EarthGlobe(){
       const dy=e.clientY-lastY;
       lastX=e.clientX;
       lastY=e.clientY;
+      returningToAxis=false;
       earthSystem.rotation.y+=dx*.006;
       earthSystem.rotation.x+=dy*.0045;
-      earthSystem.rotation.x=Math.max(-1.45,Math.min(1.45,earthSystem.rotation.x));globeRotation.x=earthSystem.rotation.x;globeRotation.y=earthSystem.rotation.y;globeRotation.z=earthSystem.rotation.z;
+      earthSystem.rotation.x=Math.max(-1.45,Math.min(1.45,earthSystem.rotation.x));
+      globeRotation.x=earthSystem.rotation.x;
+      globeRotation.y=earthSystem.rotation.y;
+      globeRotation.z=earthSystem.rotation.z;
     };
 
     const up=(e:PointerEvent)=>{
       dragging=false;
+      returningToAxis=true;
       if(mount.hasPointerCapture(e.pointerId))mount.releasePointerCapture(e.pointerId);
       mount.style.cursor="grab";
     };
@@ -312,6 +328,41 @@ function EarthGlobe(){
     let frame=0;
     const animate=()=>{
       frame=requestAnimationFrame(animate);
+
+      // Enquanto o usuário segura, o globo responde livremente ao arraste.
+      // Ao soltar, retorna suavemente à orientação astronômica de repouso.
+      if(returningToAxis&&!dragging){
+        const ease=.12;
+        earthSystem.rotation.x=THREE.MathUtils.lerp(
+          earthSystem.rotation.x,
+          earthRestRotation.x,
+          ease
+        );
+        earthSystem.rotation.y=THREE.MathUtils.lerp(
+          earthSystem.rotation.y,
+          earthRestRotation.y,
+          ease
+        );
+        earthSystem.rotation.z=THREE.MathUtils.lerp(
+          earthSystem.rotation.z,
+          earthRestRotation.z,
+          ease
+        );
+
+        if(
+          Math.abs(earthSystem.rotation.x-earthRestRotation.x)<0.0005 &&
+          Math.abs(earthSystem.rotation.y-earthRestRotation.y)<0.0005 &&
+          Math.abs(earthSystem.rotation.z-earthRestRotation.z)<0.0005
+        ){
+          earthSystem.rotation.copy(earthRestRotation);
+          returningToAxis=false;
+        }
+
+        globeRotation.x=earthSystem.rotation.x;
+        globeRotation.y=earthSystem.rotation.y;
+        globeRotation.z=earthSystem.rotation.z;
+      }
+
       renderer.render(scene,camera);
     };
     animate();
