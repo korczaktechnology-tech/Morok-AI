@@ -71,26 +71,62 @@ function Icon({ children }: { children: React.ReactNode }) {
 }
 
 function Dashboard() {
+  const systems = [
+    ["ERP","systemErp"],["FLOW","systemFlow"],["OPS","systemOps"],["VISION","systemVision"],
+    ["CONNECT","systemConnect"],["MOBILE","systemMobile"],["DOCUMENTS","systemDocs"],["AI","systemAi"]
+  ] as const;
+
   return (
-    <div className="dashboard cleanCommandCenter">
-      <img
-        className="morokCenterSymbol"
-        src={MOROK_CENTER_ICON}
-        alt="Símbolo Morok"
-      />
-      <section className="morokSystemsPanel" aria-label="Sistemas">
+    <div className="dashboard morokDashboard">
+      <div className="hudNoise" aria-hidden="true" />
+      <div className="hudGrid" aria-hidden="true" />
+      <div className="hudTopFrame" aria-hidden="true">
+        <i/><i/><i/>
+      </div>
+      <div className="hudBottomFrame" aria-hidden="true">
+        <i/><i/><i/>
+      </div>
+
+      <aside className="morokSystemsPanel" aria-label="Sistemas">
+        <div className="systemsPanelAccent" aria-hidden="true" />
         <h2>SISTEMAS</h2>
         <ul>
-          <li className="systemErp"><span className="systemIcon" />ERP</li>
-          <li className="systemFlow"><span className="systemIcon" />FLOW</li>
-          <li className="systemOps"><span className="systemIcon" />OPS</li>
-          <li className="systemVision"><span className="systemIcon" />VISION</li>
-          <li className="systemConnect"><span className="systemIcon" />CONNECT</li>
-          <li className="systemMobile"><span className="systemIcon" />MOBILE</li>
-          <li className="systemDocs"><span className="systemIcon" />DOCUMENTS</li>
-          <li className="systemAi"><span className="systemIcon" />AI</li>
+          {systems.map(([label, cls]) => (
+            <li className={cls} key={label}>
+              <span className="systemIcon" aria-hidden="true" />
+              <span>{label}</span>
+            </li>
+          ))}
         </ul>
+      </aside>
+
+      <section className="morokCore" aria-label="Morok">
+        <div className="coreOrbit orbitOne" aria-hidden="true" />
+        <div className="coreOrbit orbitTwo" aria-hidden="true" />
+        <div className="coreOrbit orbitThree" aria-hidden="true" />
+        <div className="coreOrbit orbitFour" aria-hidden="true" />
+        <div className="coreTicks" aria-hidden="true" />
+        <div className="coreNode nodeNorth" aria-hidden="true" />
+        <div className="coreNode nodeEast" aria-hidden="true" />
+        <div className="coreNode nodeSouth" aria-hidden="true" />
+        <div className="coreNode nodeWest" aria-hidden="true" />
+        <div className="coreLogoFrame">
+          <img src={MOROK_CENTER_ICON} alt="Símbolo Morok" />
+        </div>
+        <div className="coreLabel">MOROK</div>
       </section>
+
+      <section className="hudRightTelemetry" aria-hidden="true">
+        <div className="telemetryArc arcOne" />
+        <div className="telemetryArc arcTwo" />
+        <div className="telemetryArc arcThree" />
+        <div className="telemetryArc arcFour" />
+        <div className="telemetrySweep" />
+        <div className="telemetryTicks" />
+      </section>
+
+      <div className="hudReadout hudReadoutTop">SYSTEM / CORE <span>ONLINE</span></div>
+      <div className="hudReadout hudReadoutBottom">MOROK // KOS <span>ACTIVE</span></div>
     </div>
   );
 }
