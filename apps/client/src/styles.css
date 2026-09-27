@@ -2381,11 +2381,11 @@ mix-blend-mode:screen;opacity:.65}
    Normalize the dashboard itself so 100% browser zoom uses the intended composition. */
 @media(min-width:1360px) and (min-height:650px){
   .morokFullDashboard{
-    zoom:.5!important;
-    width:200vw!important;
-    min-width:200vw!important;
-    height:200vh!important;
-    min-height:200vh!important;
+    zoom:.375!important;
+    width:266.6667vw!important;
+    min-width:266.6667vw!important;
+    height:266.6667vh!important;
+    min-height:266.6667vh!important;
     transform:none!important;
     transform-origin:top left!important;
   }
