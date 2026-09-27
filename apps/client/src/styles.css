@@ -1808,3 +1808,34 @@ mix-blend-mode:screen;opacity:.65}
   .dashNav{right:0!important;bottom:0!important;width:210px!important;top:108px!important}
   .dashNav button{height:64px!important}
 }
+
+/* MOROK // REFERENCE MATCH 01 — RESOURCE PANEL */
+@media(min-width:1360px){
+  .dashLeft{
+    left:22px!important;
+    top:112px!important;
+    width:302px!important;
+  }
+  .resourcePanel{
+    height:270px!important;
+    padding:15px 20px!important;
+  }
+  .resourceRow{
+    height:60px!important;
+  }
+  .resourceIcon{
+    width:40px!important;
+    height:40px!important;
+    font-size:19px!important;
+  }
+  .resourceData b{
+    font-size:11px!important;
+    letter-spacing:.25px!important;
+  }
+  .resourceData strong{
+    font-size:17px!important;
+  }
+  .resourceBar{
+    height:8px!important;
+  }
+}
