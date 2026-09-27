@@ -2374,3 +2374,40 @@ mix-blend-mode:screen;opacity:.65}
     flex:0 0 156px!important;
   }
 }
+
+
+/* MOROK // DESKTOP 100% SCALE NORMALIZATION
+   The HUD was previously being viewed at 50% browser zoom.
+   Normalize the dashboard itself so 100% browser zoom uses the intended composition. */
+@media(min-width:1360px) and (min-height:650px){
+  .morokFullDashboard{
+    zoom:.5!important;
+    width:200vw!important;
+    min-width:200vw!important;
+    height:200vh!important;
+    min-height:200vh!important;
+    transform:none!important;
+    transform-origin:top left!important;
+  }
+
+  /* Keep viewport-anchored HUD geometry aligned with the normalized canvas. */
+  .morokFullDashboard .dashHeader{
+    width:200vw!important;
+  }
+  .morokFullDashboard .dashAmbient,
+  .morokFullDashboard .dashTechLines{
+    width:200vw!important;
+    height:200vh!important;
+  }
+}
+
+/* Do not apply desktop normalization to compact/tablet layouts. */
+@media(max-width:1359px){
+  .morokFullDashboard{
+    zoom:1!important;
+    width:100%!important;
+    min-width:0!important;
+    height:auto!important;
+    min-height:100vh!important;
+  }
+}
