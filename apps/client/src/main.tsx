@@ -114,6 +114,67 @@ function EarthGlobe(){
     const earth=new THREE.Mesh(geometry,material);
     earthSystem.add(earth);
 
+    // Fronteiras políticas reais em 3D: GeoJSON convertido diretamente
+    // em linhas sobre a esfera. Não usa SVG nem imagem para desenhar os países.
+    const borderGroup=new THREE.Group();
+    earthSystem.add(borderGroup);
+    let bordersDisposed=false;
+
+    const addBorderRing=(coordinates:number[][])=>{
+      if(coordinates.length<2)return;
+      const points=coordinates.map(([longitude,latitude])=>{
+        const lon=THREE.MathUtils.degToRad(longitude);
+        const lat=THREE.MathUtils.degToRad(latitude);
+        const radius=1.006;
+        return new THREE.Vector3(
+          radius*Math.cos(lat)*Math.cos(lon),
+          radius*Math.sin(lat),
+          -radius*Math.cos(lat)*Math.sin(lon)
+        );
+      });
+      const borderGeometry=new THREE.BufferGeometry().setFromPoints(points);
+      const borderMaterial=new THREE.LineBasicMaterial({
+        color:0xffffff,
+        transparent:true,
+        opacity:.92,
+        depthWrite:false
+      });
+      borderGroup.add(new THREE.Line(borderGeometry,borderMaterial));
+    };
+
+    const loadCountryBorders=async()=>{
+      try{
+        const response=await fetch(
+          "https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson"
+        );
+        if(!response.ok)throw new Error("country_borders_failed");
+        const collection=await response.json() as {
+          features?:Array<{geometry?:{type?:string;coordinates?:any}}>;
+        };
+        if(bordersDisposed)return;
+
+        for(const feature of collection.features??[]){
+          const geometryData=feature.geometry;
+          if(!geometryData?.coordinates)continue;
+
+          if(geometryData.type==="Polygon"){
+            for(const ring of geometryData.coordinates as number[][][]){
+              addBorderRing(ring);
+            }
+          }else if(geometryData.type==="MultiPolygon"){
+            for(const polygon of geometryData.coordinates as number[][][][]){
+              for(const ring of polygon){
+                addBorderRing(ring);
+              }
+            }
+          }
+        }
+      }catch(error){
+        console.warn("Não foi possível carregar as fronteiras dos países.",error);
+      }
+    };
+    void loadCountryBorders();
+
     let dragging=false;
     let lastX=0;
     let lastY=0;
@@ -194,6 +255,13 @@ function EarthGlobe(){
       mount.removeEventListener("pointerup",up);
       mount.removeEventListener("pointercancel",up);
       mount.removeEventListener("pointerleave",up);
+      bordersDisposed=true;
+      borderGroup.traverse(object=>{
+        const line=object as THREE.Line;
+        line.geometry?.dispose();
+        const lineMaterial=line.material as THREE.Material;
+        lineMaterial?.dispose();
+      });
       geometry.dispose();
       material.dispose();
       earthTexture.dispose();
