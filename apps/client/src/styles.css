@@ -1684,3 +1684,132 @@ mix-blend-mode:screen;opacity:.65}
     border-radius:0 44% 44% 0 / 0 14% 14% 0!important;
   }
 }
+
+/* MOROK // SYSTEMS HUD — silhueta da referência */
+.morokSystemsPanel{
+  left:calc(50% - 525px)!important;
+  top:50%!important;
+  width:300px!important;
+  min-height:470px!important;
+  padding:34px 30px 30px 42px!important;
+  border:0!important;
+  border-radius:0!important;
+  overflow:hidden!important;
+  transform:translateY(-50%) skewY(-1.2deg)!important;
+  clip-path:polygon(
+    0 8%,
+    7% 1.5%,
+    23% 0,
+    70% 0,
+    82% 2%,
+    94% 7%,
+    98% 15%,
+    100% 25%,
+    99% 36%,
+    96.5% 48%,
+    93% 59%,
+    88% 70%,
+    81% 81%,
+    73% 91%,
+    64% 98%,
+    58% 100%,
+    15% 100%,
+    6% 96%,
+    0 90%
+  )!important;
+  background:
+    linear-gradient(108deg,rgba(2,3,12,.99) 0%,rgba(4,5,17,.97) 62%,rgba(3,4,14,.84) 100%)!important;
+  box-shadow:
+    inset 18px 0 30px rgba(105,37,255,.08),
+    inset -20px 0 35px rgba(22,55,180,.08)!important;
+}
+
+/* Borda tecnológica acompanhando exatamente o clip-path */
+.morokSystemsPanel:before{
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  border:1px solid rgba(79,103,255,.58)!important;
+  border-radius:0!important;
+  clip-path:inherit!important;
+  background:
+    linear-gradient(
+      180deg,
+      transparent 0 7%,
+      rgba(83,76,255,.95) 7.2%,
+      rgba(255,0,245,.98) 28%,
+      rgba(173,37,255,.94) 55%,
+      rgba(89,61,255,.82) 78%,
+      rgba(42,91,255,.72) 93%,
+      transparent 93.3%
+    ) left 0 top/4px 100% no-repeat!important;
+  box-shadow:
+    0 0 18px rgba(177,37,255,.16),
+    inset 16px 0 26px rgba(130,35,255,.08)!important;
+  pointer-events:none!important;
+}
+
+/* Moldura interna */
+.morokSystemsPanel:after{
+  inset:8px!important;
+  border:1px solid rgba(69,91,170,.20)!important;
+  border-radius:0!important;
+  clip-path:inherit!important;
+  background:
+    linear-gradient(90deg,rgba(87,75,255,.12),transparent 25%)!important;
+  pointer-events:none!important;
+}
+
+/* O conteúdo acompanha a inclinação do painel, mas permanece visualmente reto */
+.morokSystemsPanel h2,
+.morokSystemsPanel ul{
+  transform:skewY(1.2deg)!important;
+  transform-origin:center!important;
+}
+
+/* Linha superior tecnológica */
+.morokSystemsPanel h2:after{
+  right:24px!important;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(132,104,255,.65),
+      rgba(103,88,255,.25) 58%,
+      transparent
+    )!important;
+}
+
+/* Pequenos recortes luminosos no topo/base */
+.morokSystemsPanel h2:before{
+  content:""!important;
+  position:absolute!important;
+  top:-24px!important;
+  right:8px!important;
+  width:62px!important;
+  height:2px!important;
+  background:linear-gradient(90deg,transparent,#744cff,#00a8ff)!important;
+  box-shadow:0 0 8px rgba(120,70,255,.55)!important;
+}
+
+@media(max-width:1120px){
+  .morokSystemsPanel{
+    left:28px!important;
+    width:270px!important;
+    min-height:445px!important;
+    transform:translateY(-50%) skewY(-1deg)!important;
+  }
+}
+@media(max-width:700px){
+  .morokSystemsPanel{
+    left:16px!important;
+    top:auto!important;
+    bottom:20px!important;
+    transform:skewY(-.7deg)!important;
+    width:235px!important;
+    min-height:390px!important;
+  }
+  .morokSystemsPanel h2,
+  .morokSystemsPanel ul{
+    transform:skewY(.7deg)!important;
+  }
+}
