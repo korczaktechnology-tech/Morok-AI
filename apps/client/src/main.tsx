@@ -336,7 +336,7 @@ function OrbitalRings(){
 
     type Track={
       definition:SatelliteDefinition;
-      satrec?:satellite.SatRec;
+      satrec?:ReturnType<typeof satellite.twoline2satrec>;
       line:THREE.Line;
       marker:THREE.Mesh;
       points:THREE.Vector3[];
