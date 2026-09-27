@@ -84,62 +84,6 @@ function EarthGlobe(){
 
     const scene=new THREE.Scene();
 
-    // Órbita visual independente da Terra e dos satélites rastreados.
-    // Este sistema possui seu próprio grupo, geometria e orientação.
-    const standaloneOrbitGroup=new THREE.Group();
-    scene.add(standaloneOrbitGroup);
-
-    const standaloneOrbitColor=0x9b5cff;
-    const orbitPoints:THREE.Vector3[]=[];
-    const predictionPoints:THREE.Vector3[]=[];
-    const semiMajor=2.15;
-    const semiMinor=1.75;
-    const orbitTiltX=THREE.MathUtils.degToRad(58);
-    const orbitTiltY=THREE.MathUtils.degToRad(12);
-    const orbitTiltZ=THREE.MathUtils.degToRad(-18);
-
-    for(let i=0;i<360;i++){
-      const angle=(i/360)*Math.PI*2;
-      const point=new THREE.Vector3(
-        semiMajor*Math.cos(angle),
-        0,
-        semiMinor*Math.sin(angle)
-      );
-      point.applyAxisAngle(new THREE.Vector3(1,0,0),orbitTiltX);
-      point.applyAxisAngle(new THREE.Vector3(0,1,0),orbitTiltY);
-      point.applyAxisAngle(new THREE.Vector3(0,0,1),orbitTiltZ);
-      orbitPoints.push(point);
-      predictionPoints.push(point.clone());
-    }
-
-    const standaloneOrbitGeometry=new THREE.BufferGeometry().setFromPoints(orbitPoints);
-    const standaloneOrbitMaterial=new THREE.LineBasicMaterial({
-      color:standaloneOrbitColor,
-      transparent:true,
-      opacity:.95,
-      depthTest:false,
-      depthWrite:false,
-      toneMapped:false
-    });
-    const standaloneOrbitLine=new THREE.LineLoop(standaloneOrbitGeometry,standaloneOrbitMaterial);
-    standaloneOrbitLine.renderOrder=100;
-    standaloneOrbitGroup.add(standaloneOrbitLine);
-
-    const standalonePredictionGeometry=new THREE.BufferGeometry().setFromPoints(predictionPoints);
-    const standalonePredictionMaterial=new THREE.LineBasicMaterial({
-      color:standaloneOrbitColor,
-      transparent:true,
-      opacity:.22,
-      depthTest:false,
-      depthWrite:false,
-      toneMapped:false
-    });
-    const standalonePredictionLine=new THREE.LineLoop(standalonePredictionGeometry,standalonePredictionMaterial);
-    standalonePredictionLine.renderOrder=99;
-    standaloneOrbitGroup.add(standalonePredictionLine);
-
-    standaloneOrbitGroup.rotation.set(orbitTiltX,orbitTiltY,orbitTiltZ);
-
     const camera=new THREE.PerspectiveCamera(34,1,.1,100);
     camera.position.z=2.65;
 
@@ -931,12 +875,110 @@ function OrbitalRings(){
   return <div className="orbitalLayer" ref={mountRef} aria-hidden="true" />;
 }
 
+function StandaloneOrbit(){
+  const mountRef=useRef<HTMLDivElement>(null);
+
+  useEffect(()=>{
+    const mount=mountRef.current;
+    if(!mount)return;
+
+    const scene=new THREE.Scene();
+    const camera=new THREE.PerspectiveCamera(32,1,.1,100);
+    camera.position.set(0,0,5.2);
+
+    const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:"high-performance"});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.25));
+    renderer.setClearColor(0x000000,0);
+    renderer.outputColorSpace=THREE.SRGBColorSpace;
+    mount.replaceChildren(renderer.domElement);
+
+    const group=new THREE.Group();
+    scene.add(group);
+
+    const points:THREE.Vector3[]=[];
+    const semiMajor=2.15;
+    const semiMinor=1.75;
+    for(let i=0;i<=720;i++){
+      const a=(i/720)*Math.PI*2;
+      points.push(new THREE.Vector3(semiMajor*Math.cos(a),0,semiMinor*Math.sin(a)));
+    }
+
+    const geometry=new THREE.BufferGeometry().setFromPoints(points);
+    const material=new THREE.LineBasicMaterial({
+      color:0x9b5cff,
+      transparent:true,
+      opacity:0.95,
+      depthTest:false,
+      depthWrite:false,
+      toneMapped:false
+    });
+    const line=new THREE.LineLoop(geometry,material);
+    line.renderOrder=100;
+    group.add(line);
+
+    const glowGeometry=new THREE.BufferGeometry().setFromPoints(points);
+    const glowMaterial=new THREE.LineBasicMaterial({
+      color:0x9b5cff,
+      transparent:true,
+      opacity:0.20,
+      depthTest:false,
+      depthWrite:false,
+      toneMapped:false
+    });
+    const glow=new THREE.LineLoop(glowGeometry,glowMaterial);
+    glow.scale.set(1.025,1.025,1.025);
+    glow.renderOrder=99;
+    group.add(glow);
+
+    group.rotation.set(
+      THREE.MathUtils.degToRad(58),
+      THREE.MathUtils.degToRad(12),
+      THREE.MathUtils.degToRad(-18)
+    );
+
+    let disposed=false;
+    const resize=()=>{
+      const w=Math.max(1,mount.clientWidth);
+      const h=Math.max(1,mount.clientHeight);
+      camera.aspect=w/h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w,h,false);
+    };
+    const observer=new ResizeObserver(resize);
+    observer.observe(mount);
+    resize();
+
+    let raf=0;
+    const animate=()=>{
+      if(disposed)return;
+      raf=requestAnimationFrame(animate);
+      renderer.render(scene,camera);
+    };
+    animate();
+
+    return()=>{
+      disposed=true;
+      cancelAnimationFrame(raf);
+      observer.disconnect();
+      geometry.dispose();
+      material.dispose();
+      glowGeometry.dispose();
+      glowMaterial.dispose();
+      renderer.dispose();
+      renderer.domElement.remove();
+    };
+  },[]);
+
+  return <div className="standaloneOrbitLayer" ref={mountRef} aria-hidden="true" />;
+}
+
 function Dashboard() {
   return (
     <div className="dashboard cleanCommandCenter">
       <section className="heroCore">
         <EarthGlobe />
         <OrbitalRings />
+        <StandaloneOrbit />
       </section>
     </div>
   );
