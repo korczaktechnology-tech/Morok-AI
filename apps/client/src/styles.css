@@ -1959,3 +1959,63 @@ mix-blend-mode:screen;opacity:.65}
     flex-basis:156px!important;
   }
 }
+
+/* MOROK // VOICE CORE DEBUG + REFERENCE GEOMETRY */
+@media(min-width:1360px){
+  .dashLeft{
+    bottom:0!important;
+    top:auto!important;
+    height:calc(100vh - 112px)!important;
+  }
+  .dashLeft .assistantPanel{
+    position:absolute!important;
+    left:0!important;
+    bottom:0!important;
+    width:calc(100% + 176px)!important;
+    height:214px!important;
+  }
+  .dashLeft .assistantPanel .morokVoiceCore{
+    width:156px!important;
+    height:156px!important;
+    flex:0 0 156px!important;
+  }
+  .dashLeft .assistantPanel + *{}
+  .dashSystems{
+    left:calc(22px + 302px + 176px + 18px)!important;
+    bottom:0!important;
+    top:auto!important;
+  }
+}
+.morokVoiceCore:before{display:none!important}
+.morokVoiceCore canvas{filter:none!important}
+.morokVoiceCore.is-debugging .voiceCoreCenter{
+  box-shadow:0 0 12px rgba(140,108,255,.95),0 0 28px rgba(40,130,255,.8);
+}
+.morokVoiceCore.is-debugging:after{
+  content:"DEBUG • CTRL+L";
+  position:absolute;
+  left:50%;
+  bottom:-19px;
+  transform:translateX(-50%);
+  font:8px/1 monospace;
+  letter-spacing:1px;
+  color:rgba(145,190,255,.72);
+  white-space:nowrap;
+  pointer-events:none;
+}
+
+/* Every dashboard box uses four square corners — no cuts, no rounding. */
+.morokFullDashboard .dashPanel,
+.morokFullDashboard .resourcePanel,
+.morokFullDashboard .processPanel,
+.morokFullDashboard .assistantPanel,
+.morokFullDashboard .dashSystems,
+.morokFullDashboard .dashNav,
+.morokFullDashboard .dashGoal,
+.morokFullDashboard .dashMiniStatus,
+.morokFullDashboard .dashActions,
+.morokFullDashboard .notificationPanel,
+.morokFullDashboard .activityPanel{
+  border-radius:0!important;
+  clip-path:none!important;
+}
