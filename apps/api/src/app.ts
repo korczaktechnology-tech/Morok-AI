@@ -69,7 +69,11 @@ export function buildApp(){
             stale:true
           });
         }
-        return reply.code(502).send({error:"github_workflow_runs_unavailable"});
+        return reply.header("cache-control","no-store, no-cache, must-revalidate").send({
+        workflows:githubWorkflowCache?.workflows??[],
+        stale:true,
+        error:"github_workflow_runs_unavailable"
+      });
       }
 
       const data=await response.json() as {
@@ -102,7 +106,7 @@ export function buildApp(){
         }))
         .sort((a,b)=>a.name.localeCompare(b.name));
 
-      githubWorkflowCache={expiresAt:Date.now()+2500,workflows};
+      githubWorkflowCache={expiresAt:Date.now()+1000,workflows};
       return reply.header("cache-control","no-store, no-cache, must-revalidate").send({workflows});
     }catch(error){
       app.log.warn({error},"Falha ao obter estado dos workflows do GitHub");
@@ -112,7 +116,9 @@ export function buildApp(){
           stale:true
         });
       }
-      return reply.code(502).send({
+      return reply.header("cache-control","no-store, no-cache, must-revalidate").send({
+        workflows:githubWorkflowCache?.workflows??[],
+        stale:true,
         error:error instanceof DOMException&&error.name==="AbortError"
           ?"github_workflows_timeout"
           :"github_workflows_fetch_failed"
