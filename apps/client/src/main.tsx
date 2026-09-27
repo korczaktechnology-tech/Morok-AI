@@ -318,22 +318,22 @@ function OrbitalRings(){
       tleUrl:string;
     };
 
+    // Exatamente nove órbitas reais. As cores são únicas e pertencem ao objeto
+    // durante toda a vida da camada orbital.
     const definitions:SatelliteDefinition[]=[
-      {key:"sputnik1",label:"Sputnik 1",norad:"00002",color:0xffffff,periodMinutes:96.2,tleUrl:""},
-      {key:"hubble",label:"Hubble",norad:"20580",color:0x7b61ff,periodMinutes:94.02,tleUrl:"https://celestrak.org/NORAD/elements/gp.php?CATNR=20580&FORMAT=TLE"},
-      {key:"iss",label:"ISS",norad:"25544",color:0xff315f,periodMinutes:92.95,tleUrl:"https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE"},
-      {key:"gps",label:"GPS / NAVSTAR",norad:"24876",color:0x4b83ff,periodMinutes:717.97,tleUrl:"https://celestrak.org/NORAD/elements/gp.php?CATNR=24876&FORMAT=TLE"},
-      {key:"voyager1",label:"Voyager 1",norad:"-31",color:0x9d65ff,periodMinutes:0,tleUrl:""},
-      {key:"jwst",label:"James Webb",norad:"-170",color:0xff6685,periodMinutes:0,tleUrl:""},
-      {key:"landsat1",label:"Landsat 1",norad:"06126",color:0x55a1ff,periodMinutes:103.02,tleUrl:"https://celestrak.org/NORAD/elements/gp.php?CATNR=6126&FORMAT=TLE"},
-      {key:"telstar1",label:"Telstar 1",norad:"00340",color:0xc06bff,periodMinutes:157.74,tleUrl:"https://celestrak.org/NORAD/elements/gp.php?CATNR=340&FORMAT=TLE"},
-      {key:"tiros1",label:"TIROS-1",norad:"00029",color:0xff416e,periodMinutes:97.38,tleUrl:"https://celestrak.org/NORAD/elements/gp.php?CATNR=29&FORMAT=TLE"}
+      {key:"iss",label:"Estação Espacial Internacional (ISS)",norad:"25544",color:0x36e6ff,periodMinutes:92.95,tleUrl:"https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE"},
+      {key:"hubble",label:"Telescópio Espacial Hubble",norad:"20580",color:0x9a5cff,periodMinutes:94.02,tleUrl:"https://celestrak.org/NORAD/elements/gp.php?CATNR=20580&FORMAT=TLE"},
+      {key:"fermi",label:"Telescópio Espacial Fermi",norad:"33053",color:0xff9f3f,periodMinutes:95.69,tleUrl:"https://celestrak.org/NORAD/elements/gp.php?CATNR=33053&FORMAT=TLE"},
+      {key:"chandra",label:"Chandra X-ray Observatory",norad:"25867",color:0xff3d68,periodMinutes:3809.0,tleUrl:"https://celestrak.org/NORAD/elements/gp.php?CATNR=25867&FORMAT=TLE"},
+      {key:"noaa20",label:"Satélite NOAA-20",norad:"43013",color:0x58e36d,periodMinutes:101.44,tleUrl:"https://celestrak.org/NORAD/elements/gp.php?CATNR=43013&FORMAT=TLE"},
+      {key:"landsat9",label:"Satélite Landsat 9",norad:"49260",color:0x4c8dff,periodMinutes:98.83,tleUrl:"https://celestrak.org/NORAD/elements/gp.php?CATNR=49260&FORMAT=TLE"},
+      {key:"sentinel6",label:"Satélite Sentinel-6 Michael Freilich",norad:"46924",color:0xffdf4d,periodMinutes:112.43,tleUrl:"https://celestrak.org/NORAD/elements/gp.php?CATNR=46924&FORMAT=TLE"},
+      {key:"tiangong",label:"Estação Espacial Tiangong",norad:"48274",color:0xff4fc3,periodMinutes:92.29,tleUrl:"https://celestrak.org/NORAD/elements/gp.php?CATNR=48274&FORMAT=TLE"},
+      {key:"gpm",label:"Satélite GPM (Global Precipitation Measurement)",norad:"39574",color:0x7dffcf,periodMinutes:93.21,tleUrl:"https://celestrak.org/NORAD/elements/gp.php?CATNR=39574&FORMAT=TLE"}
     ];
 
     const earthRadiusKm=6378.137;
     const orbitGroup=new THREE.Group();
-    // As órbitas ficam em uma camada visual maior que o globo. O fator é aplicado
-    // somente à representação, preservando os cálculos de trajetória/altitude.
     orbitGroup.scale.setScalar(1.18);
     scene.add(orbitGroup);
 
@@ -341,14 +341,13 @@ function OrbitalRings(){
       definition:SatelliteDefinition;
       satrec?:Parameters<typeof satellite.propagate>[0];
       line:THREE.Line;
+      prediction:THREE.Line;
       marker:THREE.Mesh;
-      points:THREE.Vector3[];
-      isDeepSpace:boolean;
     };
     const tracks=new Map<string,Track>();
     let disposed=false;
 
-    const makeMaterial=(color:number,opacity:number)=>{
+    const makeLineMaterial=(color:number,opacity:number)=>{
       return new THREE.LineBasicMaterial({
         color,
         transparent:true,
@@ -360,18 +359,26 @@ function OrbitalRings(){
       });
     };
 
-    const makeTrack=(definition:SatelliteDefinition,isDeepSpace=false)=>{
-      const lineGeometry=new THREE.BufferGeometry();
-      const line=new THREE.Line(lineGeometry,makeMaterial(definition.color,isDeepSpace?.42:.62));
+    const makeTrack=(definition:SatelliteDefinition)=>{
+      const line=new THREE.Line(
+        new THREE.BufferGeometry(),
+        makeLineMaterial(definition.color,.78)
+      );
       line.renderOrder=30;
-      orbitGroup.add(line);
 
+      const prediction=new THREE.Line(
+        new THREE.BufferGeometry(),
+        makeLineMaterial(definition.color,.585)
+      );
+      prediction.renderOrder=29;
+
+      // A predição é ~25% mais transparente que a trajetória principal.
       const marker=new THREE.Mesh(
-        new THREE.SphereGeometry(isDeepSpace?.018:.013,8,8),
+        new THREE.SphereGeometry(.017,10,10),
         new THREE.MeshBasicMaterial({
           color:definition.color,
           transparent:true,
-          opacity:.95,
+          opacity:1,
           blending:THREE.AdditiveBlending,
           depthWrite:false,
           depthTest:false,
@@ -379,26 +386,23 @@ function OrbitalRings(){
         })
       );
       marker.renderOrder=35;
-      orbitGroup.add(marker);
 
-      const track={definition,line,marker,points:[],isDeepSpace};
+      orbitGroup.add(line,prediction,marker);
+      const track={definition,line,prediction,marker};
       tracks.set(definition.key,track);
       return track;
     };
 
-    const sphericalScale=(x:number,y:number,z:number)=>{
-      const distanceKm=Math.sqrt(x*x+y*y+z*z);
-      if(distanceKm<=earthRadiusKm*8){
-        return distanceKm/earthRadiusKm;
-      }
-      // Mantém objetos de espaço profundo visíveis no HUD sem falsificar a
-      // geometria orbital: a compressão é somente visual e monotônica.
-      return Math.min(2.35,1+Math.log10(Math.max(1,distanceKm/earthRadiusKm))*.34);
+    const sphericalScale=(distanceKm:number)=>{
+      if(distanceKm<=earthRadiusKm*8)return distanceKm/earthRadiusKm;
+      // Compressão apenas para objetos muito distantes, mantendo a ordem e a
+      // forma geral da trajetória visível no HUD.
+      return Math.min(2.55,1+Math.log10(Math.max(1,distanceKm/earthRadiusKm))*.34);
     };
 
     const eciToThree=(position:{x:number;y:number;z:number})=>{
       const distanceKm=Math.sqrt(position.x**2+position.y**2+position.z**2);
-      const scale=sphericalScale(position.x,position.y,position.z);
+      const scale=sphericalScale(distanceKm);
       const factor=distanceKm>0?scale/(distanceKm/earthRadiusKm):1;
       return new THREE.Vector3(
         position.x*factor,
@@ -407,43 +411,11 @@ function OrbitalRings(){
       );
     };
 
-    const setLinePoints=(track:Track,points:THREE.Vector3[])=>{
-      track.points=points;
-      track.line.geometry.dispose();
-      track.line.geometry=new THREE.BufferGeometry().setFromPoints(points);
-      track.line.frustumCulled=false;
+    const setPoints=(line:THREE.Line,points:THREE.Vector3[])=>{
+      line.geometry.dispose();
+      line.geometry=new THREE.BufferGeometry().setFromPoints(points);
+      line.frustumCulled=false;
     };
-
-    const staticSputnik={
-      semiMajorKm:6955.2,
-      eccentricity:.05201,
-      inclination:THREE.MathUtils.degToRad(65.1),
-      ascendingNode:THREE.MathUtils.degToRad(0),
-      argumentPerigee:THREE.MathUtils.degToRad(0)
-    };
-
-    const makeKeplerOrbit=(definition:SatelliteDefinition)=>{
-      const points:THREE.Vector3[]=[];
-      const {semiMajorKm:a,eccentricity:e,inclination:i,ascendingNode:raan,argumentPerigee:arg}=staticSputnik;
-      for(let step=0;step<=240;step++){
-        const nu=(step/240)*Math.PI*2;
-        const radius=a*(1-e*e)/(1+e*Math.cos(nu));
-        const xOrb=radius*Math.cos(nu);
-        const yOrb=radius*Math.sin(nu);
-        const cosO=Math.cos(raan),sinO=Math.sin(raan);
-        const cosI=Math.cos(i),sinI=Math.sin(i);
-        const cosW=Math.cos(arg),sinW=Math.sin(arg);
-        const x=(cosO*cosW-sinO*sinW*cosI)*xOrb+(-cosO*sinW-sinO*cosW*cosI)*yOrb;
-        const y=(sinO*cosW+cosO*sinW*cosI)*xOrb+(-sinO*sinW+cosO*cosW*cosI)*yOrb;
-        const z=(sinW*sinI)*xOrb+(cosW*sinI)*yOrb;
-        points.push(eciToThree({x,y,z}));
-      }
-      const track=makeTrack(definition,false);
-      setLinePoints(track,points);
-      track.marker.visible=false;
-    };
-
-    makeKeplerOrbit(definitions[0]!);
 
     const parseTle=(text:string)=>{
       const lines=text.split(/\\r?\\n/).map(line=>line.trim()).filter(Boolean);
@@ -453,135 +425,52 @@ function OrbitalRings(){
       return {line1,line2};
     };
 
-    const fallbackOrbit=(definition:SatelliteDefinition)=>{
-      const orbitalProfiles:Record<string,{altitude:number;inclination:number;eccentricity:number;raan:number;arg:number}>={
-        hubble:{altitude:540,inclination:28.5,eccentricity:.0003,raan:28,arg:0},
-        iss:{altitude:420,inclination:51.64,eccentricity:.0005,raan:15,arg:0},
-        gps:{altitude:20200,inclination:55,eccentricity:.01,raan:65,arg:0},
-        landsat1:{altitude:915,inclination:99.1,eccentricity:.001,raan:110,arg:0},
-        telstar1:{altitude:9550,inclination:44.8,eccentricity:.08,raan:140,arg:0},
-        tiros1:{altitude:697,inclination:48.4,eccentricity:.02,raan:190,arg:0}
-      };
-      const profile=orbitalProfiles[definition.key];
-      if(!profile)return;
-      const radius=earthRadiusKm+profile.altitude;
-      const i=THREE.MathUtils.degToRad(profile.inclination);
-      const raan=THREE.MathUtils.degToRad(profile.raan);
-      const arg=THREE.MathUtils.degToRad(profile.arg);
-      const e=profile.eccentricity;
-      const points:THREE.Vector3[]=[];
-      for(let step=0;step<=360;step++){
-        const nu=step/360*Math.PI*2;
-        const r=radius*(1-e*e)/(1+e*Math.cos(nu));
-        const xo=r*Math.cos(nu),yo=r*Math.sin(nu);
-        const co=Math.cos(raan),so=Math.sin(raan),ci=Math.cos(i),si=Math.sin(i),cw=Math.cos(arg),sw=Math.sin(arg);
-        const x=(co*cw-so*sw*ci)*xo+(-co*sw-so*cw*ci)*yo;
-        const y=(so*cw+co*sw*ci)*xo+(-so*sw+co*cw*ci)*yo;
-        const z=(sw*si)*xo+(cw*si)*yo;
-        points.push(eciToThree({x,y,z}));
-      }
-      const track=makeTrack(definition,false);
-      setLinePoints(track,points);
-      track.marker.visible=false;
-    };
-
-    const refreshTleTrack=async(definition:SatelliteDefinition)=>{
-      if(!definition.tleUrl||disposed)return;
+    const refreshTrack=async(definition:SatelliteDefinition)=>{
       try{
         const response=await fetch(definition.tleUrl,{cache:"no-store"});
         if(!response.ok)throw new Error("tle_fetch_failed");
+
         const tle=parseTle(await response.text());
         const satrec=satellite.twoline2satrec(tle.line1,tle.line2);
         if(disposed)return;
 
-        let track=tracks.get(definition.key);
-        if(!track)track=makeTrack(definition,false);
+        const track=tracks.get(definition.key)??makeTrack(definition);
         track.satrec=satrec;
 
         const now=new Date();
-        const span=Math.max(90,definition.periodMinutes*1.15);
-        const points:THREE.Vector3[]=[];
-        for(let minute=-span/2;minute<=span/2;minute+=Math.max(.75,span/180)){
+        const period=Math.max(20,definition.periodMinutes);
+        const routePoints:THREE.Vector3[]=[];
+        const predictionPoints:THREE.Vector3[]=[];
+
+        // Linha principal: uma revolução completa, centrada no instante atual.
+        for(let minute=-period/2;minute<=period/2;minute+=Math.max(.25,period/360)){
           const date=new Date(now.getTime()+minute*60000);
           const propagated=satellite.propagate(satrec,date);
-          if(!propagated||!propagated.position)continue;
-          points.push(eciToThree(propagated.position));
+          if(!propagated?.position)continue;
+          routePoints.push(eciToThree(propagated.position));
         }
-        if(points.length>1)setLinePoints(track,points);
+
+        // Predição: posição atual -> uma revolução futura completa.
+        for(let minute=0;minute<=period;minute+=Math.max(.25,period/360)){
+          const date=new Date(now.getTime()+minute*60000);
+          const propagated=satellite.propagate(satrec,date);
+          if(!propagated?.position)continue;
+          predictionPoints.push(eciToThree(propagated.position));
+        }
+
+        if(routePoints.length>1)setPoints(track.line,routePoints);
+        if(predictionPoints.length>1)setPoints(track.prediction,predictionPoints);
       }catch(error){
-        // Nunca deixa a camada orbital vazia: usa os elementos orbitais conhecidos
-        // como fallback visual até que o TLE atual possa ser obtido novamente.
-        if(!tracks.has(definition.key))fallbackOrbit(definition);
+        // Mantém a última previsão válida na tela em caso de indisponibilidade
+        // momentânea da fonte orbital, em vez de fabricar uma nova órbita.
         console.warn(`Não foi possível atualizar a órbita de ${definition.label}.`,error);
       }
     };
 
-    const refreshDeepSpace=async(definition:SatelliteDefinition)=>{
-      if(disposed)return;
-      try{
-        const now=new Date();
-        const start=new Date(now.getTime()-15*86400000);
-        const stop=new Date(now.getTime()+15*86400000);
-        const url=new URL("https://ssd.jpl.nasa.gov/api/horizons.api");
-        url.searchParams.set("format","json");
-        url.searchParams.set("COMMAND",`'${definition.norad}'`);
-        url.searchParams.set("OBJ_DATA","NO");
-        url.searchParams.set("MAKE_EPHEM","YES");
-        url.searchParams.set("EPHEM_TYPE","VECTORS");
-        url.searchParams.set("CENTER","500@399");
-        url.searchParams.set("START_TIME",`'${start.toISOString().slice(0,10)}'`);
-        url.searchParams.set("STOP_TIME",`'${stop.toISOString().slice(0,10)}'`);
-        url.searchParams.set("STEP_SIZE","1 d");
-        url.searchParams.set("OUT_UNITS","KM-S");
-        url.searchParams.set("VEC_TABLE","1");
-        url.searchParams.set("VEC_LABELS","NO");
-        url.searchParams.set("CSV_FORMAT","YES");
-
-        const response=await fetch(url.toString(),{cache:"no-store"});
-        if(!response.ok)throw new Error("horizons_fetch_failed");
-        const data=await response.json();
-        const text=String(data?.result??"");
-        const match=text.match(/\\$\\$SOE([\\s\\S]*?)\\$\\$EOE/);
-        const csvSection=match?.[1];
-        if(!csvSection)throw new Error("horizons_empty");
-
-        const points:THREE.Vector3[]=[];
-        for(const row of csvSection.split(/\\r?\\n/)){
-          const fields=row.split(",").map(v=>v.trim());
-          const nums=fields.map(v=>Number(v));
-          const numeric=nums.filter((v):v is number=>Number.isFinite(v));
-          if(numeric.length<3)continue;
-          const x=numeric[numeric.length-3];
-          const y=numeric[numeric.length-2];
-          const z=numeric[numeric.length-1];
-          if(x===undefined||y===undefined||z===undefined)continue;
-          points.push(eciToThree({x,y,z}));
-        }
-
-        if(points.length>1){
-          let track=tracks.get(definition.key);
-          if(!track)track=makeTrack(definition,true);
-          setLinePoints(track,points);
-        }
-      }catch(error){
-        console.warn(`Não foi possível atualizar a trajetória de ${definition.label}.`,error);
-      }
-    };
-
-    // Cria imediatamente as trajetórias conhecidas; os TLEs atuais as substituem quando chegarem.
-    for(const definition of definitions){
-      if(definition.key!=="sputnik1"&&definition.key!=="voyager1"&&definition.key!=="jwst")fallbackOrbit(definition);
-    }
+    definitions.forEach(definition=>makeTrack(definition));
 
     const refreshAll=()=>{
-      for(const definition of definitions){
-        if(definition.key==="sputnik1")continue;
-        if(definition.key==="voyager1"||definition.key==="jwst"){
-          void refreshDeepSpace(definition);
-        }else{
-          void refreshTleTrack(definition);
-        }
-      }
+      for(const definition of definitions)void refreshTrack(definition);
     };
     refreshAll();
     const refreshTimer=window.setInterval(refreshAll,15*60*1000);
@@ -606,7 +495,7 @@ function OrbitalRings(){
       tracks.forEach(track=>{
         if(!track.satrec)return;
         const propagated=satellite.propagate(track.satrec,now);
-        if(!propagated||!propagated.position){
+        if(!propagated?.position){
           track.marker.visible=false;
           return;
         }
@@ -624,9 +513,9 @@ function OrbitalRings(){
       cancelAnimationFrame(raf);
       resizeObserver.disconnect();
       scene.traverse(object=>{
-        const mesh=object as THREE.Mesh|THREE.Line;
-        mesh.geometry?.dispose();
-        const material=mesh.material as THREE.Material|THREE.Material[];
+        const renderable=object as THREE.Mesh|THREE.Line;
+        renderable.geometry?.dispose();
+        const material=renderable.material as THREE.Material|THREE.Material[];
         if(Array.isArray(material))material.forEach(item=>item.dispose());
         else material?.dispose();
       });
