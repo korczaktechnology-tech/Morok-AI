@@ -2108,3 +2108,204 @@ mix-blend-mode:screen;opacity:.65}
   .dashSystems li{height:37px!important;font-size:11px!important;gap:9px!important}
   .dashSystems .sysGlyph{font-size:17px!important}
 }
+
+
+/* MOROK // VOICE CORE POLISH + MICROPHONE DEBUGGER */
+.morokVoiceCore{
+  background:
+    radial-gradient(circle,rgba(16,21,54,.18) 0 48%,transparent 49%),
+    radial-gradient(circle,rgba(55,75,170,.10),transparent 68%);
+}
+.morokVoiceCore canvas{filter:none!important}
+.morokVoiceCore .voiceCoreCenter{z-index:4}
+.morokVoiceCore.is-debugging{
+  box-shadow:inset 0 0 26px rgba(82,70,255,.10),0 0 22px rgba(64,101,255,.08);
+}
+.dashLeft .assistantPanel{
+  position:relative!important;
+  overflow:hidden!important;
+}
+.dashLeft .assistantPanel:before,
+.dashLeft .assistantPanel:after{
+  display:none!important;
+}
+.dashLeft .assistantPanel .voiceCoreCenter{
+  width:13px!important;
+  height:13px!important;
+}
+.dashLeft .assistantPanel > div:last-child{
+  position:relative;
+}
+.dashLeft .assistantPanel > div:last-child:before{
+  content:"VOICE / REALTIME";
+  display:block;
+  margin-bottom:5px;
+  font:600 7px/1 monospace;
+  letter-spacing:1.6px;
+  color:rgba(111,145,255,.55);
+}
+.dashLeft .assistantPanel > div:last-child:after{
+  content:"///";
+  position:absolute;
+  right:0;
+  top:0;
+  font:700 12px/1 monospace;
+  color:rgba(155,79,255,.48);
+}
+.microphoneDebugOverlay{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:grid;
+  place-items:center;
+  background:rgba(1,3,12,.68);
+  backdrop-filter:blur(8px);
+}
+.microphoneDebugBox{
+  position:relative;
+  width:min(620px,78vw);
+  min-height:270px;
+  padding:0;
+  color:#dbe7ff;
+  background:linear-gradient(145deg,rgba(7,10,27,.98),rgba(2,5,17,.97));
+  border:1px solid rgba(102,123,255,.68);
+  border-radius:0;
+  clip-path:none;
+  box-shadow:0 0 36px rgba(37,63,180,.18),inset 0 0 32px rgba(73,50,180,.07);
+}
+.microphoneDebugBox:before{
+  content:"";
+  position:absolute;
+  left:0;top:0;bottom:0;
+  width:3px;
+  background:linear-gradient(#8c54ff,#287dff,#ff315c);
+  box-shadow:0 0 13px rgba(101,74,255,.65);
+}
+.microphoneDebugHeader{
+  height:64px;
+  padding:0 18px 0 25px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1px solid rgba(100,120,255,.22);
+}
+.microphoneDebugHeader b{
+  display:block;
+  font:700 13px/1.2 "Segoe UI",sans-serif;
+  letter-spacing:1.3px;
+}
+.microphoneDebugHeader small{
+  display:block;
+  margin-top:5px;
+  font:8px/1 monospace;
+  letter-spacing:1.3px;
+  color:rgba(139,161,210,.66);
+}
+.microphoneDebugHeader button{
+  width:28px;height:28px;
+  border:1px solid rgba(105,128,255,.45);
+  background:rgba(10,14,35,.75);
+  color:#cdd9ff;
+  font:20px/1 sans-serif;
+  cursor:pointer;
+}
+.microphoneDebugBody{
+  display:flex;
+  align-items:center;
+  gap:28px;
+  min-height:145px;
+  padding:18px 28px;
+}
+.micDebugOrb{
+  position:relative;
+  width:112px;height:112px;
+  flex:0 0 112px;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(104,130,255,.55);
+  border-radius:50%;
+  box-shadow:inset 0 0 22px rgba(53,82,210,.13),0 0 20px rgba(65,95,230,.12);
+}
+.micDebugOrb:before,.micDebugOrb:after{
+  content:"";
+  position:absolute;
+  inset:11px;
+  border:1px solid rgba(155,80,255,.27);
+  border-radius:50%;
+}
+.micDebugOrb:after{inset:25px;border-color:rgba(42,184,255,.3)}
+.micDebugOrb i{
+  width:8px;height:8px;border-radius:50%;
+  background:#b5c8ff;
+  box-shadow:0 0 12px #688dff,0 0 25px rgba(73,100,255,.8);
+}
+.micDebugOrb span{
+  position:absolute;
+  bottom:-19px;
+  font:7px monospace;
+  letter-spacing:2px;
+  color:rgba(142,166,223,.65);
+}
+.micDebugOrb.is-listening{
+  animation:micDebugPulse 1s ease-in-out infinite;
+}
+.micDebugOrb.is-listening i{
+  background:#ff4d78;
+  box-shadow:0 0 12px #ff315c,0 0 28px rgba(255,49,92,.65);
+}
+@keyframes micDebugPulse{
+  0%,100%{transform:scale(.98)}
+  50%{transform:scale(1.04)}
+}
+.microphoneDebugText{flex:1;min-width:0}
+.microphoneDebugText small{
+  font:700 8px/1 monospace;
+  letter-spacing:1.8px;
+  color:rgba(110,151,255,.72);
+}
+.microphoneDebugText p{
+  margin:12px 0 0;
+  min-height:62px;
+  font:500 18px/1.45 "Segoe UI",sans-serif;
+  color:#edf2ff;
+}
+.microphoneDebugFooter{
+  min-height:54px;
+  padding:0 22px 0 25px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-top:1px solid rgba(100,120,255,.20);
+}
+.microphoneDebugFooter span{
+  font:8px monospace;
+  letter-spacing:1.5px;
+  color:rgba(143,160,204,.6);
+}
+.microphoneDebugFooter span i{
+  display:inline-block;width:6px;height:6px;border-radius:50%;
+  background:#53627e;margin-right:6px;
+}
+.microphoneDebugFooter span.live{color:#b9c9ff}
+.microphoneDebugFooter span.live i{background:#ff315c;box-shadow:0 0 9px #ff315c}
+.microphoneDebugFooter button{
+  height:31px;
+  padding:0 15px;
+  border:1px solid rgba(101,128,255,.62);
+  border-radius:0;
+  background:linear-gradient(90deg,rgba(35,45,110,.42),rgba(70,38,122,.38));
+  color:#dce6ff;
+  font:700 8px monospace;
+  letter-spacing:1px;
+  cursor:pointer;
+}
+.microphoneDebugFooter button:disabled{opacity:.45;cursor:not-allowed}
+
+@media(min-width:1360px){
+  .dashLeft .assistantPanel{
+    box-shadow:inset 0 1px 0 rgba(114,138,255,.24),inset 0 0 32px rgba(39,49,128,.10)!important;
+  }
+  .dashLeft .morokVoiceCore{
+    width:156px!important;height:156px!important;flex:0 0 156px!important;
+  }
+}
