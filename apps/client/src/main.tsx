@@ -131,7 +131,7 @@ function MorokVoiceCore() {
       const h = rect.height;
       const cx = w / 2;
       const cy = h / 2;
-      const radius = Math.min(w, h) * 0.365;
+      const radius = Math.min(w, h) * 0.31;
       const seed = debugMode ? Math.floor(frame * 19) + seedRef.current : seedRef.current;
       const speakingNow = debugMode || active || window.speechSynthesis?.speaking === true;
       const base = speakingNow ? 0.72 : 0.24;
@@ -161,8 +161,8 @@ function MorokVoiceCore() {
         ctx.beginPath();
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
-        ctx.strokeStyle = `hsla(${195 + ((i + Math.floor(seed % 70)) % 130)}, 100%, 68%, ${speakingNow ? 0.76 + harmonic * 0.24 : 0.46})`;
-        ctx.lineWidth = speakingNow ? 1.65 : 0.9;
+        ctx.strokeStyle = `hsla(${195 + ((i + Math.floor(seed % 70)) % 130)}, 100%, 68%, ${speakingNow ? 0.88 + harmonic * 0.12 : 0.58})`;
+        ctx.lineWidth = speakingNow ? 1.9 : 1.05;
         ctx.shadowBlur = speakingNow ? 8 : 4;
         ctx.shadowColor = ctx.strokeStyle;
         ctx.stroke();
@@ -318,7 +318,7 @@ function Dashboard() {
         </div>
         <div className="assistantPanel">
           <MorokVoiceCore />
-          <div><h3>MOROK</h3><small>ASSISTENTE VIRTUAL</small><p>Olá, Korczak.<br/>Todos os sistemas estão operando normalmente.</p><div className="wave">▁▃▅▂▆▃▇▂▅▁▃▆▂</div></div>
+          <div><h3>MOROK</h3><small>ASSISTENTE VIRTUAL</small><p>Olá, Korczak.<br/>Todos os sistemas estão operando normalmente.</p></div>
         </div>
       </aside>
 
