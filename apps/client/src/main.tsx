@@ -77,15 +77,15 @@ function MorokVoiceCore() {
   const seedRef = useRef(1);
 
   useEffect(() => {
-    const onStart = (event: Event) => {
-      const detail = (event as CustomEvent<{ text?: string }>).detail;
+    const onStart: EventListener = (event) => {
+      const detail = (event as unknown as CustomEvent<{ text?: string }>).detail;
       const text = detail?.text ?? "";
       let seed = 0;
       for (let i = 0; i < text.length; i++) seed = (seed * 31 + text.charCodeAt(i)) >>> 0;
       seedRef.current = seed || 1;
       setActive(true);
     };
-    const onEnd = () => setActive(false);
+    const onEnd: EventListener = () => setActive(false);
     window.addEventListener("morok-voice-start", onStart);
     window.addEventListener("morok-voice-end", onEnd);
     return () => {
