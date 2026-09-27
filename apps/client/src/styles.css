@@ -2002,3 +2002,107 @@ mix-blend-mode:screen;opacity:.65}
     0 96%,0 75%,var(--cl) calc(50% + (var(--f) - .5)*20%),0 25%,0 4%
   )!important;
 }
+
+
+/* CURVE ENGINE — visual surface uses clip-path + legacy clip() */
+.morokResizablePanel{
+  overflow:visible!important;
+  clip-path:none!important;
+  border-radius:0!important;
+}
+.morokResizablePanel > .panelSurface{
+  position:relative!important;
+  width:100%!important;
+  height:100%!important;
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+  clip:rect(0,100%,100%,0)!important;
+  clip-path:polygon(3% 0,97% 0,100% 4%,100% 96%,97% 100%,3% 100%,0 96%,0 4%)!important;
+  border-radius:0!important;
+  transition:clip-path .08s linear,border-radius .08s linear!important;
+}
+.morokResizablePanel > .panelSurface > .dashPanel,
+.morokResizablePanel > .panelSurface > .dashGoal,
+.morokResizablePanel > .panelSurface > .dashMiniStatus,
+.morokResizablePanel > .panelSurface > .assistantPanel,
+.morokResizablePanel > .panelSurface > .dashNav,
+.morokResizablePanel > .panelSurface > .dashSystems{
+  clip-path:none!important;
+}
+
+/* Ctrl + vertex: radius is applied to the real visible surface. */
+.morokResizablePanel[data-vertex-curve="1"] > .panelSurface{
+  clip:auto!important;
+  border-top-left-radius:var(--panel-curve-tl,0)!important;
+  border-top-right-radius:var(--panel-curve-tr,0)!important;
+  border-bottom-right-radius:var(--panel-curve-br,0)!important;
+  border-bottom-left-radius:var(--panel-curve-bl,0)!important;
+  clip-path:none!important;
+}
+
+/* Keep the polygonal silhouette while making the corner radius visible. */
+.morokResizablePanel[data-vertex-curve="1"] > .panelSurface:before{
+  content:""!important;
+  position:absolute!important;
+  inset:0!important;
+  pointer-events:none!important;
+  z-index:90!important;
+  border:1px solid rgba(91,140,255,.34)!important;
+  border-top-left-radius:var(--panel-curve-tl,0)!important;
+  border-top-right-radius:var(--panel-curve-tr,0)!important;
+  border-bottom-right-radius:var(--panel-curve-br,0)!important;
+  border-bottom-left-radius:var(--panel-curve-bl,0)!important;
+  clip-path:polygon(3% 0,97% 0,100% 4%,100% 96%,97% 100%,3% 100%,0 96%,0 4%)!important;
+}
+
+/* Ctrl + edge: bend only the selected edge with clip-path polygon. */
+.morokResizablePanel[data-edge-curve="1"]:not([data-vertex-curve="1"]) > .panelSurface{
+  --f:var(--panel-curve-focus,.5);
+  --ct:var(--panel-curve-top,0);
+  --cr:var(--panel-curve-right,0);
+  --cb:var(--panel-curve-bottom,0);
+  --cl:var(--panel-curve-left,0);
+  clip:rect(0,100%,100%,0)!important;
+  clip-path:polygon(
+    3% 0,
+    25% 0,
+    calc(50% + (var(--f) - .5)*20%) var(--ct),
+    75% 0,
+    97% 0,
+    100% 4%,
+    100% 25%,
+    calc(100% - var(--cr)) calc(50% + (var(--f) - .5)*20%),
+    100% 75%,
+    100% 96%,
+    97% 100%,
+    75% 100%,
+    calc(50% + (var(--f) - .5)*20%) calc(100% - var(--cb)),
+    25% 100%,
+    3% 100%,
+    0 96%,
+    0 75%,
+    var(--cl) calc(50% + (var(--f) - .5)*20%),
+    0 25%,
+    0 4%
+  )!important;
+}
+
+/* Ctrl edge focus marker stays inside the clipped surface. */
+.morokResizablePanel[data-edge-curve="1"] > .panelSurface:after{
+  content:""!important;
+  position:absolute!important;
+  pointer-events:none!important;
+  z-index:91!important;
+  left:calc(50% + (var(--panel-curve-focus,.5) - .5)*20%)!important;
+  top:calc(50% + (var(--panel-curve-focus,.5) - .5)*20%)!important;
+  width:4px!important;
+  height:4px!important;
+  border-radius:50%!important;
+  background:#b55cff!important;
+  box-shadow:0 0 9px #8a55ff!important;
+  opacity:.85!important;
+}
+
+.morokResizablePanel.is-interacting > .panelSurface{
+  transition:none!important;
+}
