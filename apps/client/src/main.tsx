@@ -286,7 +286,11 @@ function ResizablePanel({
     "--panel-curve-right": `${curve.right}px`,
     "--panel-curve-bottom": `${curve.bottom}px`,
     "--panel-curve-left": `${curve.left}px`,
-    "--panel-curve-focus": `${curve.focus}`,\n    "--panel-curve-tl": `${curve.topLeft}px`,\n    "--panel-curve-tr": `${curve.topRight}px`,\n    "--panel-curve-br": `${curve.bottomRight}px`,\n    "--panel-curve-bl": `${curve.bottomLeft}px`,
+    "--panel-curve-focus": `${curve.focus}`,
+    "--panel-curve-tl": `${curve.topLeft}px`,
+    "--panel-curve-tr": `${curve.topRight}px`,
+    "--panel-curve-br": `${curve.bottomRight}px`,
+    "--panel-curve-bl": `${curve.bottomLeft}px`,
   } as React.CSSProperties;
 
   return (
