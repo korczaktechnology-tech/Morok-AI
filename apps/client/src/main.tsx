@@ -394,16 +394,16 @@ function EarthGlobe(){
     };
 
     const up=(e:PointerEvent)=>{
+      const wasDragging=dragging;
+      const wasMoved=dragMoved;
       dragging=false;
+      dragMoved=false;
       if(mount.hasPointerCapture(e.pointerId))mount.releasePointerCapture(e.pointerId);
       mount.style.cursor="grab";
 
-      // No modo de rotação terrestre, o arrasto é temporário. Ao soltar,
-      // retorna suavemente ao eixo correto antes de continuar a rotação.
-      if(!earthLocationLock && dragMoved){
+      // O retorno só pode nascer de um gesto real: pressionar, mover e soltar.
+      if(!earthLocationLock && wasDragging && wasMoved){
         returningToAxis=true;
-      }else{
-        returningToAxis=false;
       }
     };
 
@@ -424,6 +424,8 @@ function EarthGlobe(){
       globeRotation.y=earthSystem.rotation.y;
       globeRotation.z=earthSystem.rotation.z;
       dragging=false;
+      dragMoved=false;
+      returningToAxis=false;
     };
     window.addEventListener("morok-reset-earth-axis",resetEarthAxis);
 
