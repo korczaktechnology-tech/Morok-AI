@@ -2325,3 +2325,52 @@ mix-blend-mode:screen;opacity:.65}
 .dashLeft .assistantPanel .wave{
   display:none!important;
 }
+
+
+/* MOROK // VOICE CORE DEBUG — 3 TIMBRE LEVELS + CORRECT BOX POSITION */
+.voiceCoreDebugLevel{
+  position:absolute;
+  left:50%;
+  bottom:-18px;
+  transform:translateX(-50%);
+  white-space:nowrap;
+  pointer-events:none;
+  font:700 7px/1 monospace;
+  letter-spacing:1.2px;
+  color:rgba(159,193,255,.82);
+  text-shadow:0 0 8px rgba(73,108,255,.55);
+}
+.morokVoiceCore.debug-level-1 .voiceCoreDebugLevel{color:rgba(105,178,255,.78)}
+.morokVoiceCore.debug-level-2 .voiceCoreDebugLevel{color:rgba(151,127,255,.86)}
+.morokVoiceCore.debug-level-3 .voiceCoreDebugLevel{color:rgba(255,113,151,.9)}
+.morokVoiceCore.debug-level-1 .voiceCoreCenter{transform:translate(-50%,-50%) scale(.86)}
+.morokVoiceCore.debug-level-2 .voiceCoreCenter{transform:translate(-50%,-50%) scale(1)}
+.morokVoiceCore.debug-level-3 .voiceCoreCenter{transform:translate(-50%,-50%) scale(1.18)}
+
+@media(min-width:1360px){
+  /* Voice Core/assistant box belongs to the bottom-left HUD rail. */
+  .dashLeft{
+    left:22px!important;
+    right:auto!important;
+    top:auto!important;
+    bottom:0!important;
+    width:302px!important;
+    height:calc(100vh - 112px)!important;
+  }
+  .dashLeft .assistantPanel{
+    position:absolute!important;
+    left:0!important;
+    right:auto!important;
+    bottom:0!important;
+    top:auto!important;
+    width:calc(100% + 176px)!important;
+    height:214px!important;
+    margin:0!important;
+    transform:none!important;
+  }
+  .dashLeft .assistantPanel .morokVoiceCore{
+    width:156px!important;
+    height:156px!important;
+    flex:0 0 156px!important;
+  }
+}
