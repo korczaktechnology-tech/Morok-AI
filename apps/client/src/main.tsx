@@ -92,8 +92,8 @@ function EarthGlobe(){
     const standaloneOrbitColor=0x9b5cff;
     const orbitPoints:THREE.Vector3[]=[];
     const predictionPoints:THREE.Vector3[]=[];
-    const semiMajor=1.82;
-    const semiMinor=1.48;
+    const semiMajor=2.15;
+    const semiMinor=1.75;
     const orbitTiltX=THREE.MathUtils.degToRad(58);
     const orbitTiltY=THREE.MathUtils.degToRad(12);
     const orbitTiltZ=THREE.MathUtils.degToRad(-18);
@@ -1171,7 +1171,7 @@ function App() {
 
       const controller=new AbortController();
       workflowRequestRef.current=controller;
-      const timeout=window.setTimeout(()=>controller.abort(),4700);
+      const timeout=window.setTimeout(()=>controller.abort(),10000);
 
       setWorkflowLoading(true);
       setWorkflowError(null);
@@ -1193,6 +1193,8 @@ function App() {
         if(disposed)return;
         if(error instanceof DOMException && error.name==="AbortError"){
           setWorkflowError("TEMPO LIMITE EXCEDIDO");
+        }else if(error instanceof Error && error.message.startsWith("HTTP_")){
+          setWorkflowError(`ERRO DO SERVIDOR (${error.message.slice(5)})`);
         }else{
           setWorkflowError("NÃO FOI POSSÍVEL CARREGAR OS WORKFLOWS");
         }
@@ -1207,7 +1209,7 @@ function App() {
 
     if(workflowMonitorOpen){
       void loadWorkflows();
-      refreshTimer=window.setInterval(()=>void loadWorkflows(),5000);
+      refreshTimer=window.setInterval(()=>void loadWorkflows(),10000);
     }else{
       workflowRequestRef.current?.abort();
     }
