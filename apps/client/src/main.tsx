@@ -205,22 +205,22 @@ function Dashboard() {
               <div className="resourceData"><b>{label}</b><strong>{value}</strong><span className="resourceBar"><i style={{width:i===0?"12%":i===1?"48%":i===2?"67%":"54%"}}/></span></div>
             </div>
           )}
-        </section>
-        <section className="dashPanel processPanel">
+        </ResizablePanel>
+        <ResizablePanel id="processes" className="dashPanel processPanel" minWidth={240} minHeight={170}>
           <h3>PROCESSOS ATIVOS</h3>
           {processes.map(([name,val],i)=><div className="processRow" key={name}><i className={"processDot p"+i}/><span>{name}</span><strong>{val}</strong></div>)}
-        </section>
-        <section className="assistantPanel">
+        </ResizablePanel>
+        <ResizablePanel id="assistant" className="assistantPanel" minWidth={260} minHeight={150}>
           <div className="miniRadar"><span/><i/><b/></div>
           <div><h3>MOROK</h3><small>ASSISTENTE VIRTUAL</small><p>Olá, Korczak.<br/>Todos os sistemas estão operando normalmente.</p><div className="wave">▁▃▅▂▆▃▇▂▅▁▃▆▂</div></div>
-        </section>
+        </ResizablePanel>
       </aside>
 
-      <aside className="dashSystems">
+      <ResizablePanel id="systems" className="dashSystems" minWidth={160} minHeight={300}>
         <div className="systemsEdge"/>
         <h2>SISTEMAS</h2>
         <ul>{systems.map((x,i)=><li key={x}><span className={"sysGlyph g"+i}>{["◉","♧","◌","◎","♧","□","▣","♧"][i]}</span>{x}</li>)}</ul>
-      </aside>
+      </ResizablePanel>
 
       <main className="dashCore">
         <div className="coreTopLabel"><b>KOS</b><span>CONNEX</span></div>
@@ -234,7 +234,7 @@ function Dashboard() {
       </main>
 
       <aside className="dashRight">
-        <section className="dashPanel notificationPanel"><h3>NOTIFICAÇÕES</h3>{notifications.map(([x,c])=><div className="noticeRow" key={x}><i className={c}>◉</i><span>{x}</span></div>)}</section>
+        <ResizablePanel id="notifications" className="dashPanel notificationPanel" minWidth={220} minHeight={140}><h3>NOTIFICAÇÕES</h3>{notifications.map(([x,c])=><div className="noticeRow" key={x}><i className={c}>◉</i><span>{x}</span></div>)}</section>
         <section className="dashPanel activityPanel"><h3>ATIVIDADE RECENTE</h3>{activity.map(([time,x])=><div className="activityRow" key={time}><b>{time}</b><span>{x}</span></div>)}</section>
       </aside>
 
@@ -242,18 +242,18 @@ function Dashboard() {
         {["⌂|INÍCIO","▦|SISTEMAS","▤|DOCUMENTOS","♙|PROCESSOS","♟|EQUIPES","▥|RELATÓRIOS","⚙|CONFIGURAÇÕES"].map((item,i)=>{
           const [icon,label]=item.split("|"); return <button className={i===0?"active":""} key={label}><span>{icon}</span>{label}</button>
         })}
-      </nav>
+      </ResizablePanel>
 
-      <section className="dashMiniStatus">
+      <ResizablePanel id="status" className="dashMiniStatus" minWidth={150} minHeight={100}>
         <div className="miniChart"><i/><i/><i/><i/><i/><i/><i/><i/></div>
         <span>OPERAÇÕES<br/><b>ESTÁVEIS</b></span>
         <span className="stable">✓ SEM ANOMALIAS</span>
-      </section>
+      </ResizablePanel>
 
-      <section className="dashGoal">
+      <ResizablePanel id="goal" className="dashGoal" minWidth={250} minHeight={150}>
         <h3>OBJETIVO ATUAL</h3><b>EVOLUÇÃO CONTÍNUA</b><div className="goalBar"><i/></div>
         <p>“Tecnologia não é o futuro.<br/>É o presente que você constrói<br/>o amanhã.”</p><strong>— KORCZAK TECHNOLOGIES</strong>
-      </section>
+      </ResizablePanel>
 
       <div className="dashActions">{actions.map(([icon,label],i)=><button className={i===2?"execute":""} key={label}><span>{icon}</span>{label}</button>)}</div>
       <footer className="dashFooter">KOS&nbsp; // &nbsp;KORCZAK OPERATIONS SYSTEM</footer>
