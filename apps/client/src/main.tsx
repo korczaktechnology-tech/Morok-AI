@@ -506,8 +506,11 @@ function OrbitalRings(){
         track.satrec=satrec;
 
         const now=new Date();
-        const period=Math.max(20,definition.periodMinutes);
-        const stepMinutes=Math.max(.25,period/360);
+        // Usa o movimento médio gravado no TLE para obter o período orbital
+        // real, em vez de depender de um valor aproximado fixo.
+        const tlePeriodMinutes=2*Math.PI/satrec.no;
+        const period=Math.max(20,tlePeriodMinutes);
+        const stepMinutes=Math.max(.25,period/720);
         const routePoints:THREE.Vector3[]=[];
         const predictionPoints:THREE.Vector3[]=[];
 
@@ -526,14 +529,20 @@ function OrbitalRings(){
           routePoints.push(sample.position);
         }
 
-        // A predição começa EXATAMENTE no mesmo estado usado pelo marcador.
+        // A predição é uma órbita completa fechada, começando no estado
+        // atual e retornando ao mesmo ponto ao completar exatamente um período.
+        // Assim ela aparece como uma elipse/círculo contínuo, e não como
+        // uma linha aberta de previsão.
         predictionPoints.push(currentPosition.clone());
-        for(let minute=stepMinutes;minute<=period;minute+=stepMinutes){
+        for(let index=1;index<=720;index++){
+          const minute=(period*index)/720;
           const date=new Date(now.getTime()+minute*60000);
           const sample=propagateToThree(satrec,date);
           if(!sample)continue;
           predictionPoints.push(sample.position);
         }
+        // Fecha geometricamente a curva no ponto inicial.
+        predictionPoints.push(currentPosition.clone());
 
         if(routePoints.length>1)setPoints(track.line,routePoints);
         if(predictionPoints.length>1)setPoints(track.prediction,predictionPoints);
