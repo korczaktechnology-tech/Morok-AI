@@ -339,7 +339,7 @@ function OrbitalRings(){
 
     type Track={
       definition:SatelliteDefinition;
-      satrec?:Parameters<typeof satellite.propagate>[0];
+      satrec?:ReturnType<typeof satellite.twoline2satrec>;
       line:THREE.Line;
       prediction:THREE.Line;
       marker:THREE.Mesh;
