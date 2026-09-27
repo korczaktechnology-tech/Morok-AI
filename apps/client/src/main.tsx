@@ -298,17 +298,17 @@ function ResizablePanel({
       ref={ref as RefObject<HTMLElement>}
       className={`morokResizablePanel ${className} ${interaction ? "is-interacting" : ""}`}
       data-vertex-curve={curve.topLeft || curve.topRight || curve.bottomRight || curve.bottomLeft ? "1" : "0"}
-      data-edge-curve={curve.top || curve.right || curve.bottom || curve.left ? "1" : "0"}
+      data-edge-curve="0"
       style={style}
     >
       <div className="panelSurface">
         <div className="panelMoveHandle" onPointerDown={startMove} title="Arrastar painel" aria-label={`Mover painel ${id}`} />
         {children}
       </div>
-      <div className="resizeHandle resizeHandleN" onPointerDown={e => e.ctrlKey ? startCurve(e, "n") : startResize(e, "n")} />
-      <div className="resizeHandle resizeHandleE" onPointerDown={e => e.ctrlKey ? startCurve(e, "e") : startResize(e, "e")} />
-      <div className="resizeHandle resizeHandleS" onPointerDown={e => e.ctrlKey ? startCurve(e, "s") : startResize(e, "s")} />
-      <div className="resizeHandle resizeHandleW" onPointerDown={e => e.ctrlKey ? startCurve(e, "w") : startResize(e, "w")} />
+      <div className="resizeHandle resizeHandleN" onPointerDown={e => startResize(e, "n")} />
+      <div className="resizeHandle resizeHandleE" onPointerDown={e => startResize(e, "e")} />
+      <div className="resizeHandle resizeHandleS" onPointerDown={e => startResize(e, "s")} />
+      <div className="resizeHandle resizeHandleW" onPointerDown={e => startResize(e, "w")} />
       <div className="resizeHandle resizeHandleNE" onPointerDown={e => e.ctrlKey ? startCurve(e, "ne") : startResize(e, "ne")} />
       <div className="resizeHandle resizeHandleNW" onPointerDown={e => e.ctrlKey ? startCurve(e, "nw") : startResize(e, "nw")} />
       <div className="resizeHandle resizeHandleSE" onPointerDown={e => e.ctrlKey ? startCurve(e, "se") : startResize(e, "se")} />
