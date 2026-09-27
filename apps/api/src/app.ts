@@ -38,6 +38,7 @@ export function buildApp(){
 
   app.get("/api/v1/github/workflows",async(_req,reply)=>{
     const now=Date.now();
+    const getCachedWorkflows=()=>githubWorkflowCache?.workflows??[];
     if(githubWorkflowCache && githubWorkflowCache.expiresAt>now){
       return reply.header("cache-control","no-store, no-cache, must-revalidate").send({workflows:githubWorkflowCache.workflows});
     }
@@ -70,7 +71,7 @@ export function buildApp(){
           });
         }
         return reply.header("cache-control","no-store, no-cache, must-revalidate").send({
-        workflows:githubWorkflowCache?.workflows??[],
+        workflows:getCachedWorkflows(),
         stale:true,
         error:"github_workflow_runs_unavailable"
       });
