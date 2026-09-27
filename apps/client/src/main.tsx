@@ -72,24 +72,26 @@ function Icon({ children }: { children: React.ReactNode }) {
 
 
 function MorokVoiceCore() {
-  const [debugMode, setDebugMode] = useState(false);
+  const [debugLevel, setDebugLevel] = useState<0 | 1 | 2 | 3>(0);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [active, setActive] = useState(false);
   const seedRef = useRef(1);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      // Ctrl+L is reserved by Chromium for the address bar and may never reach the page.
-      // Keep it supported when the browser delivers it, plus a reliable fallback.
-      if ((event.ctrlKey && event.key.toLowerCase() === "l") ||
-          (event.ctrlKey && event.altKey && event.key.toLowerCase() === "l")) {
+      const isDebugShortcut =
+        (event.ctrlKey && event.key.toLowerCase() === "l") ||
+        (event.ctrlKey && event.altKey && event.key.toLowerCase() === "l");
+
+      if (isDebugShortcut) {
         event.preventDefault();
         event.stopPropagation();
-        setDebugMode(v => !v);
+        setDebugLevel(level => (level === 0 ? 1 : level === 1 ? 2 : level === 2 ? 3 : 0));
       } else if (event.key === "Escape") {
-        setDebugMode(false);
+        setDebugLevel(0);
       }
     };
+
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
   }, []);
@@ -104,6 +106,7 @@ function MorokVoiceCore() {
       setActive(true);
     };
     const onEnd: EventListener = () => setActive(false);
+
     window.addEventListener("morok-voice-start", onStart);
     window.addEventListener("morok-voice-end", onEnd);
     return () => {
@@ -117,6 +120,7 @@ function MorokVoiceCore() {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+
     let frame = 0;
     let raf = 0;
 
@@ -127,22 +131,34 @@ function MorokVoiceCore() {
       canvas.height = Math.max(1, Math.floor(rect.height * dpr));
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
+
     resize();
     window.addEventListener("resize", resize);
 
     const draw = () => {
       frame += 0.016;
+
       const rect = canvas.getBoundingClientRect();
       const w = rect.width;
       const h = rect.height;
       const cx = w / 2;
       const cy = h / 2;
       const radius = Math.min(w, h) * 0.31;
-      const seed = debugMode ? Math.floor(frame * 19) + seedRef.current : seedRef.current;
+
+      const debugMode = debugLevel > 0;
+      const seed = debugMode
+        ? Math.floor(frame * (10 + debugLevel * 5)) + seedRef.current
+        : seedRef.current;
       const speakingNow = debugMode || active || window.speechSynthesis?.speaking === true;
-      const base = speakingNow ? 0.72 : 0.24;
-      const pulse = speakingNow ? (0.5 + 0.5 * Math.sin(frame * 8.5 + (seed % 17))) : 0.5;
-      const intensity = base + pulse * (speakingNow ? 0.45 : 0.12);
+
+      // Debug: 1 = timbre/volume baixo, 2 = médio, 3 = alto.
+      // O ganho controla diretamente o comprimento das barras.
+      const levelGain = debugLevel === 1 ? 0.48 : debugLevel === 2 ? 0.82 : debugLevel === 3 ? 1.28 : 0;
+      const base = speakingNow ? (debugMode ? levelGain : 0.72) : 0.24;
+      const pulse = speakingNow
+        ? (0.5 + 0.5 * Math.sin(frame * (debugMode ? 4.5 + debugLevel * 2.1 : 8.5) + (seed % 17)))
+        : 0.5;
+      const intensity = base + pulse * (speakingNow ? (debugMode ? 0.32 + debugLevel * 0.10 : 0.45) : 0.12);
 
       ctx.clearRect(0, 0, w, h);
       ctx.save();
@@ -153,23 +169,31 @@ function MorokVoiceCore() {
       for (let i = 0; i < bars; i++) {
         const a = (i / bars) * Math.PI * 2;
         const harmonic =
-          Math.abs(Math.sin(a * (4 + (seed % 4)) + frame * 3.2)) * 0.5 +
-          Math.abs(Math.sin(a * (9 + (seed % 6)) - frame * 5.1)) * 0.3 +
+          Math.abs(Math.sin(a * (4 + (seed % 4)) + frame * (2.4 + debugLevel * 0.8))) * 0.5 +
+          Math.abs(Math.sin(a * (9 + (seed % 6)) - frame * (3.8 + debugLevel * 0.9))) * 0.3 +
           Math.abs(Math.sin(a * 17 + frame * 2.3)) * 0.2;
+
         const idle = 3 + 5 * (0.5 + 0.5 * Math.sin(a * 8 - frame * 1.7));
-        const length = speakingNow ? 5 + harmonic * (13 + intensity * 22) : idle;
+        const debugLength = 3 + harmonic * (8 + levelGain * 28);
+        const length = debugMode
+          ? debugLength
+          : speakingNow
+            ? 5 + harmonic * (13 + intensity * 22)
+            : idle;
+
         const inner = radius * 1.03;
         const outer = inner + length;
         const x1 = Math.cos(a) * inner;
         const y1 = Math.sin(a) * inner * 0.72;
         const x2 = Math.cos(a) * outer;
         const y2 = Math.sin(a) * outer * 0.72;
+
         ctx.beginPath();
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
-        ctx.strokeStyle = `hsla(${195 + ((i + Math.floor(seed % 70)) % 130)}, 100%, 68%, ${speakingNow ? 0.88 + harmonic * 0.12 : 0.58})`;
-        ctx.lineWidth = speakingNow ? 1.9 : 1.05;
-        ctx.shadowBlur = speakingNow ? 8 : 4;
+        ctx.strokeStyle = `hsla(${195 + ((i + Math.floor(seed % 70)) % 130)}, 100%, 68%, ${debugMode ? 0.92 : speakingNow ? 0.88 + harmonic * 0.12 : 0.58})`;
+        ctx.lineWidth = debugMode ? (1.45 + debugLevel * 0.18) : speakingNow ? 1.9 : 1.05;
+        ctx.shadowBlur = debugMode ? (5 + debugLevel * 2) : speakingNow ? 8 : 4;
         ctx.shadowColor = ctx.strokeStyle;
         ctx.stroke();
       }
@@ -183,12 +207,25 @@ function MorokVoiceCore() {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", resize);
     };
-  }, [active, debugMode]);
+  }, [active, debugLevel]);
+
+  const debugLabel = debugLevel === 1
+    ? "DEBUG • NÍVEL 1 // BAIXO"
+    : debugLevel === 2
+      ? "DEBUG • NÍVEL 2 // MÉDIO"
+      : debugLevel === 3
+        ? "DEBUG • NÍVEL 3 // ALTO"
+        : "";
 
   return (
-    <div className={`morokVoiceCore ${active ? "is-speaking" : "is-idle"} ${debugMode ? "is-debugging" : ""}`} aria-label="Visualizador da voz do Morok" onDoubleClick={() => setDebugMode(v => !v)}>
+    <div
+      className={`morokVoiceCore ${active ? "is-speaking" : "is-idle"} ${debugLevel ? "is-debugging" : ""} debug-level-${debugLevel}`}
+      aria-label="Visualizador da voz do Morok"
+      onDoubleClick={() => setDebugLevel(level => (level === 0 ? 1 : level === 1 ? 2 : level === 2 ? 3 : 0))}
+    >
       <canvas ref={canvasRef} />
       <span className="voiceCoreCenter" aria-hidden="true" />
+      {debugLabel && <span className="voiceCoreDebugLevel">{debugLabel}</span>}
     </div>
   );
 }
