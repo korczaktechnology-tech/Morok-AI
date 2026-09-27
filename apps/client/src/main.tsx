@@ -128,12 +128,20 @@ function EarthGlobe(){
       camera.aspect=1;
       camera.updateProjectionMatrix();
       const canvas=renderer.domElement;
+      // O canvas físico e o viewport CSS são deliberadamente quadrados.
+      // A máscara circular garante que nenhum retângulo do canvas possa aparecer.
       canvas.style.position="absolute";
       canvas.style.width=`${size}px`;
       canvas.style.height=`${size}px`;
+      canvas.style.maxWidth="none";
+      canvas.style.maxHeight="none";
       canvas.style.left="50%";
       canvas.style.top="50%";
+      canvas.style.right="auto";
+      canvas.style.bottom="auto";
       canvas.style.transform="translate(-50%,-50%)";
+      canvas.style.aspectRatio="1 / 1";
+      canvas.style.clipPath="circle(50% at 50% 50%)";
     };
 
     const down=(e:PointerEvent)=>{
