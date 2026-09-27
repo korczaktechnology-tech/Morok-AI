@@ -894,9 +894,6 @@ function OrbitalRings(){
         });
       }
 
-      // A órbita visual acompanha a orientação atual do globo.
-      orbitalVisualGroup.rotation.set(globeRotation.x,globeRotation.y,globeRotation.z);
-
       if(
         orbitGroup.rotation.x!==globeRotation.x ||
         orbitGroup.rotation.y!==globeRotation.y ||
