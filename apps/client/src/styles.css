@@ -1452,9 +1452,15 @@ mix-blend-mode:screen;opacity:.65}
   .earthGlobe.realEarth:active{cursor:grabbing!important}
   .earthGlobe.realEarth canvas{
     position:absolute!important;
-    inset:0!important;
-    width:100%!important;
-    height:100%!important;
+    width:auto!important;
+    height:auto!important;
+    max-width:none!important;
+    max-height:none!important;
+    left:50%!important;
+    top:50%!important;
+    right:auto!important;
+    bottom:auto!important;
+    transform:translate(-50%,-50%)!important;
     display:block!important;
     background:transparent!important;
     filter:none!important;
