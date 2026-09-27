@@ -1968,3 +1968,16 @@ mix-blend-mode:screen;opacity:.65}
 .morokResizablePanel .resizeHandleNE{right:-7px;top:-7px;width:16px;height:16px;cursor:nesw-resize}
 .morokResizablePanel .resizeHandleSW{left:-7px;bottom:-7px;width:16px;height:16px;cursor:nesw-resize}
 .morokResizablePanel .resizeHandleSE{right:-7px;bottom:-7px;width:16px;height:16px;cursor:nwse-resize}
+
+
+/* CTRL + CLICK // CURVATURA LOCAL DOS PAINEIS */
+.morokResizablePanel{
+  border-top-left-radius:var(--panel-curve-tl,0px)!important;
+  border-top-right-radius:var(--panel-curve-tr,0px)!important;
+  border-bottom-right-radius:var(--panel-curve-br,0px)!important;
+  border-bottom-left-radius:var(--panel-curve-bl,0px)!important;
+  transition:border-radius .08s linear;
+}
+.morokResizablePanel.is-interacting{
+  transition:none!important;
+}
