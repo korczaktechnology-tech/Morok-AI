@@ -1813,3 +1813,184 @@ mix-blend-mode:screen;opacity:.65}
     transform:skewY(.7deg)!important;
   }
 }
+
+/* MOROK // SYSTEMS HUD — correspondência direta com a referência */
+.morokSystemsPanel{
+  left:calc(50% - 535px)!important;
+  top:50%!important;
+  width:292px!important;
+  height:500px!important;
+  min-height:500px!important;
+  box-sizing:border-box!important;
+  padding:34px 34px 28px 58px!important;
+  border:0!important;
+  border-radius:0!important;
+  overflow:hidden!important;
+  transform:translateY(-50%)!important;
+  clip-path:polygon(
+    0 8%,
+    5% 4%,
+    12% 0,
+    70% 0,
+    78% 2%,
+    86% 7%,
+    92% 15%,
+    96% 26%,
+    98% 39%,
+    97% 51%,
+    94% 62%,
+    90% 72%,
+    85% 81%,
+    78% 89%,
+    70% 96%,
+    61% 100%,
+    17% 100%,
+    9% 96%,
+    3% 91%,
+    0 84%
+  )!important;
+  background:
+    linear-gradient(105deg,
+      rgba(1,2,9,.995) 0%,
+      rgba(3,4,14,.985) 58%,
+      rgba(4,5,15,.90) 100%)!important;
+  box-shadow:
+    inset 24px 0 38px rgba(93,26,255,.07),
+    inset -18px 0 35px rgba(30,66,170,.06)!important;
+}
+
+/* Moldura externa — vermelho no topo, violeta à direita */
+.morokSystemsPanel:before{
+  content:""!important;
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  box-sizing:border-box!important;
+  border:1px solid transparent!important;
+  clip-path:inherit!important;
+  background:
+    linear-gradient(105deg,
+      transparent 0%,
+      transparent 7%,
+      #ff184f 12%,
+      #ff184f 34%,
+      #a72dff 62%,
+      #6b36ff 82%,
+      #2857ff 100%) border-box!important;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) padding-box,
+    linear-gradient(#fff 0 0)!important;
+  -webkit-mask-composite:xor!important;
+  mask-composite:exclude!important;
+  pointer-events:none!important;
+  z-index:5!important;
+}
+
+/* Linha neon independente na lateral esquerda */
+.morokSystemsPanel:after{
+  content:""!important;
+  position:absolute!important;
+  left:0!important;
+  top:8%!important;
+  width:4px!important;
+  height:76%!important;
+  border:0!important;
+  clip-path:none!important;
+  border-radius:0 4px 4px 0!important;
+  background:linear-gradient(
+    180deg,
+    #8b42ff 0%,
+    #d51cff 25%,
+    #ff21ee 50%,
+    #b51dff 75%,
+    #684dff 100%
+  )!important;
+  box-shadow:
+    0 0 7px #a22cff,
+    0 0 18px rgba(205,24,255,.8),
+    0 0 32px rgba(111,45,255,.35)!important;
+  pointer-events:none!important;
+  z-index:6!important;
+}
+
+/* Título */
+.morokSystemsPanel h2{
+  margin:0 0 24px!important;
+  padding:0 0 14px!important;
+  color:#e9efff!important;
+  text-align:left!important;
+  text-transform:uppercase!important;
+  letter-spacing:.08em!important;
+  font:500 20px/1 "Segoe UI",Arial,sans-serif!important;
+  text-shadow:0 0 10px rgba(184,207,255,.35)!important;
+  border-bottom:1px solid rgba(104,104,191,.17)!important;
+}
+.morokSystemsPanel h2:before{
+  display:none!important;
+}
+.morokSystemsPanel h2:after{
+  content:""!important;
+  position:absolute!important;
+  left:58px!important;
+  right:34px!important;
+  bottom:0!important;
+  height:1px!important;
+  background:linear-gradient(90deg,rgba(113,101,255,.36),rgba(113,101,255,.08),transparent)!important;
+}
+
+/* Lista exatamente compacta como a referência */
+.morokSystemsPanel li{
+  min-height:38px!important;
+  margin:0 0 7px!important;
+  padding:3px 0!important;
+  gap:18px!important;
+  color:#aeb9d8!important;
+  font:500 13px/1 "Segoe UI",Arial,sans-serif!important;
+  letter-spacing:.06em!important;
+}
+.morokSystemsPanel li:hover{
+  transform:translateX(3px)!important;
+  background:linear-gradient(90deg,rgba(100,72,255,.08),transparent 82%)!important;
+}
+
+/* Ícones mais finos e luminosos */
+.morokSystemsPanel .systemIcon{
+  width:19px!important;
+  height:19px!important;
+  flex:0 0 19px!important;
+  border-width:1.8px!important;
+  box-shadow:0 0 7px currentColor,0 0 12px color-mix(in srgb,currentColor 35%,transparent)!important;
+}
+
+/* Cores próximas às da referência */
+.morokSystemsPanel .systemErp{color:#7d70ff!important}
+.morokSystemsPanel .systemFlow{color:#5f91ff!important}
+.morokSystemsPanel .systemOps{color:#5bd4ff!important}
+.morokSystemsPanel .systemVision{color:#ff4e9f!important}
+.morokSystemsPanel .systemConnect{color:#ca5bff!important}
+.morokSystemsPanel .systemMobile{color:#a678ff!important}
+.morokSystemsPanel .systemDocs{color:#6f94ff!important}
+.morokSystemsPanel .systemAi{color:#b9c6e7!important}
+
+@media(max-width:1120px){
+  .morokSystemsPanel{
+    left:24px!important;
+    width:280px!important;
+  }
+}
+@media(max-width:700px){
+  .morokSystemsPanel{
+    left:14px!important;
+    top:auto!important;
+    bottom:18px!important;
+    width:245px!important;
+    height:420px!important;
+    min-height:420px!important;
+    padding:28px 25px 22px 48px!important;
+    transform:none!important;
+  }
+  .morokSystemsPanel h2{font-size:17px!important}
+  .morokSystemsPanel li{font-size:11px!important;min-height:31px!important}
+  .morokSystemsPanel h2:after{left:48px!important;right:25px!important}
+}
