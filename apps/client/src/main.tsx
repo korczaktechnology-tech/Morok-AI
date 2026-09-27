@@ -896,8 +896,8 @@ function StandaloneOrbit(){
     scene.add(group);
 
     const points:THREE.Vector3[]=[];
-    const semiMajor=1.85;
-    const semiMinor=1.50;
+    const semiMajor=1.68;
+    const semiMinor=1.36;
     for(let i=0;i<=720;i++){
       const a=(i/720)*Math.PI*2;
       points.push(new THREE.Vector3(semiMajor*Math.cos(a),0,semiMinor*Math.sin(a)));
