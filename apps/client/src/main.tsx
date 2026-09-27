@@ -91,7 +91,10 @@ function EarthGlobe(){
     scene.add(earthSystem);
 
     // Globo 3D real: esfera física com o mapa-múndi real aplicado como textura.
-    const geometry=new THREE.SphereGeometry(1,96,96);
+    // Escala visual absoluta: a Terra é a referência de 1 raio terrestre.
+    // Todas as posições orbitais são normalizadas pela mesma constante.
+    const earthVisualRadius=1;
+    const geometry=new THREE.SphereGeometry(earthVisualRadius,128,128);
     const textureLoader=new THREE.TextureLoader();
     const earthTexture=textureLoader.load(
       "https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg",
@@ -109,8 +112,8 @@ function EarthGlobe(){
 
     const material=new THREE.MeshPhongMaterial({
       map:earthTexture,
-      shininess:8,
-      specular:new THREE.Color(0x222222)
+      shininess:3,
+      specular:new THREE.Color(0x111111)
     });
     const earth=new THREE.Mesh(geometry,material);
     earthSystem.add(earth);
@@ -333,8 +336,9 @@ function OrbitalRings(){
     ];
 
     const earthRadiusKm=6378.137;
+    // O sistema orbital usa exatamente a mesma escala do globo:
+    // 1 unidade = 1 raio terrestre. Não aplicar escala extra aqui.
     const orbitGroup=new THREE.Group();
-    orbitGroup.scale.setScalar(1.18);
     scene.add(orbitGroup);
 
     type Track={
