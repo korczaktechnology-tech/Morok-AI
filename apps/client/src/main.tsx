@@ -332,6 +332,9 @@ function OrbitalRings(){
 
     const earthRadiusKm=6378.137;
     const orbitGroup=new THREE.Group();
+    // As órbitas ficam em uma camada visual maior que o globo. O fator é aplicado
+    // somente à representação, preservando os cálculos de trajetória/altitude.
+    orbitGroup.scale.setScalar(1.18);
     scene.add(orbitGroup);
 
     type Track={
@@ -450,6 +453,38 @@ function OrbitalRings(){
       return {line1,line2};
     };
 
+    const fallbackOrbit=(definition:SatelliteDefinition)=>{
+      const orbitalProfiles:Record<string,{altitude:number;inclination:number;eccentricity:number;raan:number;arg:number}>={
+        hubble:{altitude:540,inclination:28.5,eccentricity:.0003,raan:28,arg:0},
+        iss:{altitude:420,inclination:51.64,eccentricity:.0005,raan:15,arg:0},
+        gps:{altitude:20200,inclination:55,eccentricity:.01,raan:65,arg:0},
+        landsat1:{altitude:915,inclination:99.1,eccentricity:.001,raan:110,arg:0},
+        telstar1:{altitude:9550,inclination:44.8,eccentricity:.08,raan:140,arg:0},
+        tiros1:{altitude:697,inclination:48.4,eccentricity:.02,raan:190,arg:0}
+      };
+      const profile=orbitalProfiles[definition.key];
+      if(!profile)return;
+      const radius=earthRadiusKm+profile.altitude;
+      const i=THREE.MathUtils.degToRad(profile.inclination);
+      const raan=THREE.MathUtils.degToRad(profile.raan);
+      const arg=THREE.MathUtils.degToRad(profile.arg);
+      const e=profile.eccentricity;
+      const points:THREE.Vector3[]=[];
+      for(let step=0;step<=360;step++){
+        const nu=step/360*Math.PI*2;
+        const r=radius*(1-e*e)/(1+e*Math.cos(nu));
+        const xo=r*Math.cos(nu),yo=r*Math.sin(nu);
+        const co=Math.cos(raan),so=Math.sin(raan),ci=Math.cos(i),si=Math.sin(i),cw=Math.cos(arg),sw=Math.sin(arg);
+        const x=(co*cw-so*sw*ci)*xo+(-co*sw-so*cw*ci)*yo;
+        const y=(so*cw+co*sw*ci)*xo+(-so*sw+co*cw*ci)*yo;
+        const z=(sw*si)*xo+(cw*si)*yo;
+        points.push(eciToThree({x,y,z}));
+      }
+      const track=makeTrack(definition,false);
+      setLinePoints(track,points);
+      track.marker.visible=false;
+    };
+
     const refreshTleTrack=async(definition:SatelliteDefinition)=>{
       if(!definition.tleUrl||disposed)return;
       try{
@@ -474,6 +509,9 @@ function OrbitalRings(){
         }
         if(points.length>1)setLinePoints(track,points);
       }catch(error){
+        // Nunca deixa a camada orbital vazia: usa os elementos orbitais conhecidos
+        // como fallback visual até que o TLE atual possa ser obtido novamente.
+        if(!tracks.has(definition.key))fallbackOrbit(definition);
         console.warn(`Não foi possível atualizar a órbita de ${definition.label}.`,error);
       }
     };
@@ -529,6 +567,11 @@ function OrbitalRings(){
         console.warn(`Não foi possível atualizar a trajetória de ${definition.label}.`,error);
       }
     };
+
+    // Cria imediatamente as trajetórias conhecidas; os TLEs atuais as substituem quando chegarem.
+    for(const definition of definitions){
+      if(definition.key!=="sputnik1"&&definition.key!=="voyager1"&&definition.key!=="jwst")fallbackOrbit(definition);
+    }
 
     const refreshAll=()=>{
       for(const definition of definitions){
