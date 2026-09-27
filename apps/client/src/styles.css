@@ -1970,8 +1970,48 @@ mix-blend-mode:screen;opacity:.65}
 .morokResizablePanel .resizeHandleSE{right:-7px;bottom:-7px;width:16px;height:16px;cursor:nwse-resize}
 
 
-/* POLYGONAL PANELS + CTRL EDGE CURVE */
-.morokResizablePanel{clip-path:polygon(3% 0,97% 0,100% 4%,100% 96%,97% 100%,3% 100%,0 96%,0 4%)!important;border-radius:0!important;transition:clip-path .08s linear}
+/* POLYGONAL PANELS + CTRL CURVE */
+.morokResizablePanel{
+  clip-path:polygon(3% 0,97% 0,100% 4%,100% 96%,97% 100%,3% 100%,0 96%,0 4%)!important;
+  border-radius:0!important;
+  transition:clip-path .08s linear,border-radius .08s linear;
+}
 .morokResizablePanel.is-interacting{transition:none!important}
-.dashPanel,.dashGoal,.dashMiniStatus,.assistantPanel,.dashNav,.dashSystems{clip-path:polygon(3% 0,97% 0,100% 4%,100% 96%,97% 100%,3% 100%,0 96%,0 4%)!important}
-.morokResizablePanel[style*="--panel-curve-top"]{--f:var(--panel-curve-focus,.5);--ct:var(--panel-curve-top,0);--cr:var(--panel-curve-right,0);--cb:var(--panel-curve-bottom,0);--cl:var(--panel-curve-left,0);clip-path:polygon(3% 0,25% 0,calc(50% + (var(--f) - .5)*20%) var(--ct),75% 0,97% 0,100% 4%,100% 25%,calc(100% - var(--cr)) calc(50% + (var(--f) - .5)*20%),100% 75%,100% 96%,97% 100%,75% 100%,calc(50% + (var(--f) - .5)*20%) calc(100% - var(--cb)),25% 100%,3% 100%,0 96%,0 75%,var(--cl) calc(50% + (var(--f) - .5)*20%),0 25%,0 4%)!important}
+.dashPanel,.dashGoal,.dashMiniStatus,.assistantPanel,.dashNav,.dashSystems{
+  clip-path:polygon(3% 0,97% 0,100% 4%,100% 96%,97% 100%,3% 100%,0 96%,0 4%)!important
+}
+
+/* Ctrl + vertex: real border-radius, while the untouched state remains polygonal. */
+.morokResizablePanel[style*="--panel-curve-tl"]{
+  border-top-left-radius:var(--panel-curve-tl,0)!important;
+  border-top-right-radius:var(--panel-curve-tr,0)!important;
+  border-bottom-right-radius:var(--panel-curve-br,0)!important;
+  border-bottom-left-radius:var(--panel-curve-bl,0)!important;
+}
+.morokResizablePanel[style*="--panel-curve-tl"][style*="--panel-curve-tr"]{
+  clip-path:polygon(
+    3% 0,97% 0,100% 4%,100% 96%,
+    97% 100%,3% 100%,0 96%,0 4%
+  )!important;
+}
+
+/* When a vertex has been curved, remove clipping so the radius is actually visible. */
+.morokResizablePanel[style*="--panel-curve-tl"][style*="--panel-curve-tr"][style*="--panel-curve-br"][style*="--panel-curve-bl"]{
+  clip-path:polygon(
+    3% 0,97% 0,100% 4%,100% 96%,
+    97% 100%,3% 100%,0 96%,0 4%
+  )!important;
+}
+
+/* Ctrl + edge: bend the polygon itself. */
+.morokResizablePanel[style*="--panel-curve-top"]{
+  --f:var(--panel-curve-focus,.5);
+  --ct:var(--panel-curve-top,0);--cr:var(--panel-curve-right,0);
+  --cb:var(--panel-curve-bottom,0);--cl:var(--panel-curve-left,0);
+  clip-path:polygon(
+    3% 0,25% 0,calc(50% + (var(--f) - .5)*20%) var(--ct),75% 0,97% 0,
+    100% 4%,100% 25%,calc(100% - var(--cr)) calc(50% + (var(--f) - .5)*20%),100% 75%,100% 96%,
+    97% 100%,75% 100%,calc(50% + (var(--f) - .5)*20%) calc(100% - var(--cb)),25% 100%,3% 100%,
+    0 96%,0 75%,var(--cl) calc(50% + (var(--f) - .5)*20%),0 25%,0 4%
+  )!important;
+}
