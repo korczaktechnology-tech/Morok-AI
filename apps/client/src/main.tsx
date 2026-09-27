@@ -72,6 +72,7 @@ function Icon({ children }: { children: React.ReactNode }) {
 
 
 type ResizeDirection = "e" | "s" | "se";
+type PanelGeometry = { width?: number; height?: number; left?: number; top?: number };
 
 function ResizablePanel({
   id,
@@ -81,7 +82,6 @@ function ResizablePanel({
   minHeight = 90,
   maxWidth = 1200,
   maxHeight = 900,
-  direction = "se",
 }: {
   id: string;
   className: string;
@@ -90,71 +90,139 @@ function ResizablePanel({
   minHeight?: number;
   maxWidth?: number;
   maxHeight?: number;
-  direction?: ResizeDirection;
 }) {
   const ref = useRef<HTMLElement | null>(null);
-  const [size, setSize] = useState<{ width?: number; height?: number }>({});
-  const [resizing, setResizing] = useState(false);
+  const [geometry, setGeometry] = useState<PanelGeometry>({});
+  const [interaction, setInteraction] = useState<"resize" | "move" | null>(null);
 
   useEffect(() => {
-    const saved = localStorage.getItem("morok-dashboard-sizes");
+    const saved = localStorage.getItem("morok-dashboard-geometry");
     if (!saved) return;
     try {
-      const all = JSON.parse(saved) as Record<string, { width?: number; height?: number }>;
-      if (all[id]) setSize(all[id]);
+      const all = JSON.parse(saved) as Record<string, PanelGeometry>;
+      if (all[id]) setGeometry(all[id]);
     } catch {}
   }, [id]);
+
+  const saveGeometry = (next: PanelGeometry) => {
+    setGeometry(next);
+    try {
+      const saved = JSON.parse(localStorage.getItem("morok-dashboard-geometry") || "{}") as Record<string, PanelGeometry>;
+      saved[id] = next;
+      localStorage.setItem("morok-dashboard-geometry", JSON.stringify(saved));
+    } catch {}
+  };
+
+  const normalizeGeometry = (): PanelGeometry | null => {
+    const element = ref.current;
+    if (!element) return null;
+    const parent = element.offsetParent as HTMLElement | null;
+    if (!parent) return null;
+    const rect = element.getBoundingClientRect();
+    const parentRect = parent.getBoundingClientRect();
+    return {
+      width: rect.width,
+      height: rect.height,
+      left: rect.left - parentRect.left,
+      top: rect.top - parentRect.top,
+    };
+  };
 
   const startResize = (event: React.PointerEvent<HTMLDivElement>, direction: ResizeDirection) => {
     event.preventDefault();
     event.stopPropagation();
     const element = ref.current;
-    if (!element) return;
+    const base = normalizeGeometry();
+    if (!element || !base) return;
 
     const startX = event.clientX;
     const startY = event.clientY;
-    const start = element.getBoundingClientRect();
-    setResizing(true);
-    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+    const start = { ...base };
+    setInteraction("resize");
 
     const move = (e: PointerEvent) => {
-      const next: { width?: number; height?: number } = {};
+      const next: PanelGeometry = { ...start };
       if (direction.includes("e")) {
-        next.width = Math.max(minWidth, Math.min(maxWidth, start.width + e.clientX - startX));
+        next.width = Math.max(minWidth, Math.min(maxWidth, (start.width || 0) + e.clientX - startX));
       }
       if (direction.includes("s")) {
-        next.height = Math.max(minHeight, Math.min(maxHeight, start.height + e.clientY - startY));
+        next.height = Math.max(minHeight, Math.min(maxHeight, (start.height || 0) + e.clientY - startY));
       }
-      setSize(next);
+      setGeometry(next);
     };
 
     const end = () => {
-      setResizing(false);
-      setSize(current => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", end);
+      setInteraction(null);
+      setGeometry(current => {
         try {
-          const saved = JSON.parse(localStorage.getItem("morok-dashboard-sizes") || "{}") as Record<string, { width?: number; height?: number }>;
+          const saved = JSON.parse(localStorage.getItem("morok-dashboard-geometry") || "{}") as Record<string, PanelGeometry>;
           saved[id] = current;
-          localStorage.setItem("morok-dashboard-sizes", JSON.stringify(saved));
+          localStorage.setItem("morok-dashboard-geometry", JSON.stringify(saved));
         } catch {}
         return current;
       });
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", end);
     };
 
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", end, { once: true });
   };
 
+  const startMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const base = normalizeGeometry();
+    if (!base) return;
+
+    const startX = event.clientX;
+    const startY = event.clientY;
+    const start = { ...base };
+    setInteraction("move");
+    event.currentTarget.setPointerCapture(event.pointerId);
+
+    const move = (e: PointerEvent) => {
+      const parent = ref.current?.offsetParent as HTMLElement | null;
+      if (!parent) return;
+      const maxLeft = Math.max(0, parent.clientWidth - (start.width || 0));
+      const maxTop = Math.max(0, parent.clientHeight - (start.height || 0));
+      const left = Math.max(0, Math.min(maxLeft, (start.left || 0) + e.clientX - startX));
+      const top = Math.max(0, Math.min(maxTop, (start.top || 0) + e.clientY - startY));
+      setGeometry(current => ({ ...current, left, top, right: undefined, bottom: undefined }));
+    };
+
+    const end = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", end);
+      setInteraction(null);
+      setGeometry(current => {
+        try {
+          const saved = JSON.parse(localStorage.getItem("morok-dashboard-geometry") || "{}") as Record<string, PanelGeometry>;
+          saved[id] = current;
+          localStorage.setItem("morok-dashboard-geometry", JSON.stringify(saved));
+        } catch {}
+        return current;
+      });
+    };
+
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", end, { once: true });
+  };
+
+  const style = {
+    ...(geometry.width !== undefined ? { width: geometry.width } : {}),
+    ...(geometry.height !== undefined ? { height: geometry.height } : {}),
+    ...(geometry.left !== undefined ? { left: geometry.left, right: "auto" } : {}),
+    ...(geometry.top !== undefined ? { top: geometry.top, bottom: "auto" } : {}),
+  };
+
   return (
     <section
       ref={ref as RefObject<HTMLElement>}
-      className={`morokResizablePanel ${className} ${resizing ? "is-resizing" : ""}`}
-      style={{
-        ...(size.width ? { width: size.width } : {}),
-        ...(size.height ? { height: size.height } : {}),
-      }}
+      className={`morokResizablePanel ${className} ${interaction ? "is-interacting" : ""}`}
+      style={style}
     >
+      <div className="panelMoveHandle" onPointerDown={startMove} title="Arrastar painel" aria-label={`Mover painel ${id}`} />
       {children}
       <div className="resizeHandle resizeHandleE" onPointerDown={e => startResize(e, "e")} />
       <div className="resizeHandle resizeHandleS" onPointerDown={e => startResize(e, "s")} />
