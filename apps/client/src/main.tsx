@@ -882,12 +882,23 @@ function StandaloneOrbit(){
     const mount=mountRef.current;
     if(!mount)return;
 
+    // Sistema orbital independente da Terra e dos satélites.
+    // A Terra possui raio visual 1.0; as elipses são deliberadamente
+    // construídas muito próximas dessa referência para parecerem anéis
+    // tecnológicos ao redor do globo, e não uma segunda escala de órbita.
     const scene=new THREE.Scene();
-    const camera=new THREE.PerspectiveCamera(32,1,.1,100);
-    camera.position.set(0,0,5.2);
+    const camera=new THREE.PerspectiveCamera(34,1,.1,100);
+    camera.position.set(0,0,2.65);
 
-    const renderer=new THREE.WebGLRenderer({antialias:false,alpha:true,powerPreference:"high-performance",depth:true,stencil:false,preserveDrawingBuffer:false});
-    renderer.setPixelRatio(.8);
+    const renderer=new THREE.WebGLRenderer({
+      antialias:false,
+      alpha:true,
+      powerPreference:"high-performance",
+      depth:true,
+      stencil:false,
+      preserveDrawingBuffer:false
+    });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,.9));
     renderer.setClearColor(0x000000,0);
     renderer.outputColorSpace=THREE.SRGBColorSpace;
     mount.replaceChildren(renderer.domElement);
@@ -895,44 +906,56 @@ function StandaloneOrbit(){
     const group=new THREE.Group();
     scene.add(group);
 
-    const orbitDefinitions:Array<{
-      a:number;b:number;color:number;opacity:number;rot:[number,number,number];speed:number
-    }>= [
-      {a:1.05,b:.85,color:0x9b5cff,opacity:.50,rot:[58,12,-18],speed:.72},
-      {a:1.13,b:.72,color:0x5c8cff,opacity:.52,rot:[38,-28,31],speed:-.58},
-      {a:.94,b:.80,color:0xff3d68,opacity:.55,rot:[72,42,8],speed:.91},
-      {a:1.18,b:.66,color:0x35d7ff,opacity:.58,rot:[24,64,-36],speed:-.67},
-      {a:1.00,b:.68,color:0xff7a3d,opacity:.60,rot:[61,-52,47],speed:.81},
-      {a:1.10,b:.78,color:0xb76cff,opacity:.62,rot:[44,22,71],speed:-.76},
-      {a:.91,b:.74,color:0x65f0c2,opacity:.64,rot:[78,-18,-54],speed:.63},
-      {a:1.16,b:.58,color:0xffffff,opacity:.65,rot:[31,48,19],speed:-.87},
-      {a:.98,b:.63,color:0xffd45c,opacity:.57,rot:[67,-67,35],speed:.69}
+    type OrbitDefinition={
+      a:number;
+      b:number;
+      color:number;
+      opacity:number;
+      rot:[number,number,number];
+      speed:number;
+      phase:number;
+    };
+
+    // Nove órbitas independentes. Os raios ficam entre 1.035 e 1.12:
+    // apenas alguns milímetros visuais além do raio terrestre.
+    const orbitDefinitions:OrbitDefinition[]=[
+      {a:1.075,b:.965,color:0x9b5cff,opacity:.50,rot:[58,12,-18],speed:.72,phase:.00},
+      {a:1.095,b:.885,color:0x5c8cff,opacity:.52,rot:[38,-28,31],speed:-.58,phase:.70},
+      {a:1.055,b:.925,color:0xff3d68,opacity:.55,rot:[72,42,8],speed:.91,phase:1.40},
+      {a:1.115,b:.835,color:0x35d7ff,opacity:.58,rot:[24,64,-36],speed:-.67,phase:2.10},
+      {a:1.065,b:.855,color:0xff7a3d,opacity:.60,rot:[61,-52,47],speed:.81,phase:2.80},
+      {a:1.085,b:.905,color:0xb76cff,opacity:.62,rot:[44,22,71],speed:-.76,phase:3.50},
+      {a:1.045,b:.895,color:0x65f0c2,opacity:.64,rot:[78,-18,-54],speed:.63,phase:4.20},
+      {a:1.105,b:.815,color:0xffffff,opacity:.65,rot:[31,48,19],speed:-.87,phase:4.90},
+      {a:1.055,b:.845,color:0xffd45c,opacity:.57,rot:[67,-67,35],speed:.69,phase:5.60}
     ];
 
-    const getOrbitPoint=(orbit:(typeof orbitDefinitions)[number],t:number)=>{
-      const curvature=1+0.035*Math.sin(t*3+orbit.rot[0]);
+    const getOrbitPoint=(orbit:OrbitDefinition,t:number)=>{
       return new THREE.Vector3(
-        orbit.a*Math.cos(t)*curvature,
-        0.035*Math.sin(t*2+orbit.rot[1]),
+        orbit.a*Math.cos(t),
+        0,
         orbit.b*Math.sin(t)
       );
     };
 
-    const resources:{geometry:THREE.BufferGeometry;material:THREE.LineBasicMaterial}[]=[];
-    const particlePositions=new Float32Array(orbitDefinitions.length*3);
-    const particleColors=new Float32Array(orbitDefinitions.length*3);
-    const particlePhases=orbitDefinitions.map((_,index)=>(index/orbitDefinitions.length)*Math.PI*2);
-    const particlePoints=new THREE.Vector3();
+    const resources:Array<{geometry:THREE.BufferGeometry;material:THREE.Material}>=[];
 
-    for(const [index,orbit] of orbitDefinitions.entries()){
-      const points:THREE.Vector3[]=[];
-      const segments=128;
-      for(let i=0;i<segments;i++){
-        points.push(getOrbitPoint(orbit,(i/segments)*Math.PI*2));
-      }
+    // Tubos finos substituem LineBasicMaterial: no WebGL a espessura de
+    // LineBasicMaterial não é consistente entre plataformas. TubeGeometry
+    // mantém a curva contínua e permite uma espessura visual controlada.
+    for(const orbit of orbitDefinitions){
+      const curve=new THREE.Curve<THREE.Vector3>();
+      curve.getPoint=(t:number,target=new THREE.Vector3())=>{
+        const point=getOrbitPoint(orbit,t*Math.PI*2);
+        return target.copy(point);
+      };
+      curve.getPointAt=(u:number,target=new THREE.Vector3())=>{
+        const point=getOrbitPoint(orbit,u*Math.PI*2);
+        return target.copy(point);
+      };
 
-      const geometry=new THREE.BufferGeometry().setFromPoints(points);
-      const material=new THREE.LineBasicMaterial({
+      const geometry=new THREE.TubeGeometry(curve,160,.0065,5,false);
+      const material=new THREE.MeshBasicMaterial({
         color:orbit.color,
         transparent:true,
         opacity:orbit.opacity,
@@ -940,26 +963,22 @@ function StandaloneOrbit(){
         depthWrite:false,
         toneMapped:false
       });
-      const line=new THREE.LineLoop(geometry,material);
-      line.renderOrder=10;
-      line.rotation.set(
+      const tube=new THREE.Mesh(geometry,material);
+      tube.rotation.set(
         THREE.MathUtils.degToRad(orbit.rot[0]),
         THREE.MathUtils.degToRad(orbit.rot[1]),
         THREE.MathUtils.degToRad(orbit.rot[2])
       );
-      group.add(line);
+      tube.renderOrder=10;
+      tube.frustumCulled=false;
+      group.add(tube);
       resources.push({geometry,material});
-
-      const color=new THREE.Color(orbit.color);
-      particlePositions[index*3]=0;
-      particlePositions[index*3+1]=0;
-      particlePositions[index*3+2]=0;
-      particleColors[index*3]=color.r;
-      particleColors[index*3+1]=color.g;
-      particleColors[index*3+2]=color.b;
     }
 
-    const depthGeometry=new THREE.SphereGeometry(1,24,16);
+    // Máscara de profundidade com exatamente o mesmo raio visual da Terra.
+    // Assim somente a metade posterior das elipses desaparece atrás do globo;
+    // nenhuma parte frontal é cortada artificialmente.
+    const depthGeometry=new THREE.SphereGeometry(1.001,48,32);
     const depthMaterial=new THREE.MeshBasicMaterial({
       color:0xffffff,
       colorWrite:false,
@@ -970,13 +989,35 @@ function StandaloneOrbit(){
     depthGlobe.renderOrder=0;
     scene.add(depthGlobe);
 
+    // Uma única geometria de pontos mantém os nove marcadores leves.
+    const particlePositions=new Float32Array(orbitDefinitions.length*3);
+    const particleColors=new Float32Array(orbitDefinitions.length*3);
+    const particlePhases=orbitDefinitions.map(orbit=>orbit.phase);
+    const particlePoint=new THREE.Vector3();
+
+    for(const [index,orbit] of orbitDefinitions.entries()){
+      const color=new THREE.Color(orbit.color);
+      const base=index*3;
+      particleColors[base]=color.r;
+      particleColors[base+1]=color.g;
+      particleColors[base+2]=color.b;
+      particlePoint.copy(getOrbitPoint(orbit,orbit.phase));
+      particlePositions[base]=particlePoint.x;
+      particlePositions[base+1]=particlePoint.y;
+      particlePositions[base+2]=particlePoint.z;
+    }
+
     const particleGeometry=new THREE.BufferGeometry();
     const particlePositionAttribute=new THREE.BufferAttribute(particlePositions,3);
     particlePositionAttribute.setUsage(THREE.DynamicDrawUsage);
     particleGeometry.setAttribute("position",particlePositionAttribute);
-    particleGeometry.setAttribute("color",new THREE.Float32BufferAttribute(particleColors,3));
+    particleGeometry.setAttribute(
+      "color",
+      new THREE.Float32BufferAttribute(particleColors,3)
+    );
+
     const particleMaterial=new THREE.PointsMaterial({
-      size:.014,
+      size:.010,
       sizeAttenuation:true,
       vertexColors:true,
       transparent:false,
@@ -990,54 +1031,65 @@ function StandaloneOrbit(){
     group.add(particles);
 
     let disposed=false;
+    let raf=0;
     let lastTime=performance.now();
-    let renderAccumulator=0;
+    let updateAccumulator=0;
+
     const resize=()=>{
-      const w=Math.max(1,mount.clientWidth);
-      const h=Math.max(1,mount.clientHeight);
-      camera.aspect=w/h;
+      const width=Math.max(1,mount.clientWidth);
+      const height=Math.max(1,mount.clientHeight);
+      camera.aspect=width/height;
       camera.updateProjectionMatrix();
-      renderer.setSize(w,h,false);
+      renderer.setSize(width,height,false);
     };
+
     const observer=new ResizeObserver(resize);
     observer.observe(mount);
     resize();
 
-    let raf=0;
     const animate=(now:number)=>{
       if(disposed)return;
       raf=requestAnimationFrame(animate);
-      const delta=Math.min((now-lastTime)/1000,.05);
-      lastTime=now;
-      renderAccumulator+=delta;
-      if(renderAccumulator<1/30)return;
-      const step=renderAccumulator;
-      renderAccumulator=0;
 
-      for(const [index,orbit] of orbitDefinitions.entries()){
-        let phase=particlePhases[index] ?? 0;
-        phase=(phase+orbit.speed*step)%(Math.PI*2);
-        if(phase<0)phase+=Math.PI*2;
-        particlePhases[index]=phase;
-        particlePoints.copy(getOrbitPoint(orbit,phase));
-        const base=index*3;
-        particlePositions[base]=particlePoints.x;
-        particlePositions[base+1]=particlePoints.y;
-        particlePositions[base+2]=particlePoints.z;
+      const delta=Math.min(.05,Math.max(0,(now-lastTime)/1000));
+      lastTime=now;
+      updateAccumulator+=delta;
+
+      if(updateAccumulator>=1/30){
+        const step=updateAccumulator;
+        updateAccumulator=0;
+
+        for(const [index,orbit] of orbitDefinitions.entries()){
+          let phase=particlePhases[index]??0;
+          phase=(phase+orbit.speed*step)%(Math.PI*2);
+          if(phase<0)phase+=Math.PI*2;
+          particlePhases[index]=phase;
+
+          particlePoint.copy(getOrbitPoint(orbit,phase));
+          const base=index*3;
+          particlePositions[base]=particlePoint.x;
+          particlePositions[base+1]=particlePoint.y;
+          particlePositions[base+2]=particlePoint.z;
+        }
+
+        particlePositionAttribute.needsUpdate=true;
       }
-      particlePositionAttribute.needsUpdate=true;
+
       renderer.render(scene,camera);
     };
+
     raf=requestAnimationFrame(animate);
 
     return()=>{
       disposed=true;
       cancelAnimationFrame(raf);
       observer.disconnect();
+
       for(const resource of resources){
         resource.geometry.dispose();
         resource.material.dispose();
       }
+
       depthGeometry.dispose();
       depthMaterial.dispose();
       particleGeometry.dispose();
@@ -1049,6 +1101,7 @@ function StandaloneOrbit(){
 
   return <div className="standaloneOrbitLayer" ref={mountRef} aria-hidden="true" />;
 }
+
 function Dashboard() {
   return (
     <div className="dashboard cleanCommandCenter">
