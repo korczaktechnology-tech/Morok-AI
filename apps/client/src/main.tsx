@@ -70,7 +70,15 @@ function Icon({ children }: { children: React.ReactNode }) {
 }
 
 function Dashboard() {
-  return <div className="dashboard cleanCommandCenter" />;
+  return (
+    <div className="dashboard cleanCommandCenter">
+      <img
+        className="morokCenterSymbol"
+        src={MOROK_SUB_ICON}
+        alt="Símbolo Morok"
+      />
+    </div>
+  );
 }
 
 function MobileDashboard({onOpenChat}:{onOpenChat:()=>void}){
