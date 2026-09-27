@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client";
-import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Capacitor } from "@capacitor/core";
 import "./styles.css";
 
@@ -71,252 +71,6 @@ function Icon({ children }: { children: React.ReactNode }) {
 }
 
 
-type ResizeDirection = "n" | "e" | "s" | "w" | "ne" | "nw" | "se" | "sw";
-type PanelGeometry = { width?: number; height?: number; left?: number; top?: number };
-type PanelCurve = { top:number; right:number; bottom:number; left:number; topLeft:number; topRight:number; bottomRight:number; bottomLeft:number; focus:number };
-
-function ResizablePanel({
-  id,
-  className,
-  children,
-  minWidth = 120,
-  minHeight = 90,
-  maxWidth = 1200,
-  maxHeight = 900,
-}: {
-  id: string;
-  className: string;
-  children: ReactNode;
-  minWidth?: number;
-  minHeight?: number;
-  maxWidth?: number;
-  maxHeight?: number;
-}) {
-  const ref = useRef<HTMLElement | null>(null);
-  const [geometry, setGeometry] = useState<PanelGeometry>({});
-  const [interaction, setInteraction] = useState<"resize" | "move" | "curve" | null>(null);
-  const [curve, setCurve] = useState<PanelCurve>({ top:0, right:0, bottom:0, left:0, topLeft:0, topRight:0, bottomRight:0, bottomLeft:0, focus:.5 });
-
-  useEffect(() => {
-    const saved = localStorage.getItem("morok-dashboard-geometry");
-    if (saved) {
-      try {
-        const all = JSON.parse(saved) as Record<string, PanelGeometry>;
-        if (all[id]) setGeometry(all[id]);
-      } catch {}
-    }
-    const savedCurves = localStorage.getItem("morok-dashboard-curves");
-    if (savedCurves) {
-      try {
-        const all = JSON.parse(savedCurves) as Record<string, PanelCurve>;
-        if (all[id]) setCurve(all[id]);
-      } catch {}
-    }
-  }, [id]);
-
-  const normalizeGeometry = (): PanelGeometry | null => {
-    const element = ref.current;
-    if (!element) return null;
-    const parent = element.offsetParent as HTMLElement | null;
-    if (!parent) return null;
-    const rect = element.getBoundingClientRect();
-    const parentRect = parent.getBoundingClientRect();
-    return {
-      width: rect.width,
-      height: rect.height,
-      left: rect.left - parentRect.left,
-      top: rect.top - parentRect.top,
-    };
-  };
-
-  const startResize = (event: React.PointerEvent<HTMLDivElement>, direction: ResizeDirection) => {
-    event.preventDefault();
-    event.stopPropagation();
-    const element = ref.current;
-    const base = normalizeGeometry();
-    if (!element || !base) return;
-
-    const startX = event.clientX;
-    const startY = event.clientY;
-    const start = { ...base };
-    setInteraction("resize");
-
-    const move = (e: PointerEvent) => {
-      const next: PanelGeometry = { ...start };
-      const dx = e.clientX - startX;
-      const dy = e.clientY - startY;
-      if (direction.includes("e")) {
-        next.width = Math.max(minWidth, Math.min(maxWidth, (start.width || 0) + dx));
-      }
-      if (direction.includes("s")) {
-        next.height = Math.max(minHeight, Math.min(maxHeight, (start.height || 0) + dy));
-      }
-      if (direction.includes("w")) {
-        const width = Math.max(minWidth, Math.min(maxWidth, (start.width || 0) - dx));
-        next.width = width;
-        next.left = (start.left || 0) + (start.width || 0) - width;
-      }
-      if (direction.includes("n")) {
-        const height = Math.max(minHeight, Math.min(maxHeight, (start.height || 0) - dy));
-        next.height = height;
-        next.top = (start.top || 0) + (start.height || 0) - height;
-      }
-      setGeometry(next);
-    };
-
-    const end = () => {
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", end);
-      setInteraction(null);
-      setGeometry(current => {
-        try {
-          const saved = JSON.parse(localStorage.getItem("morok-dashboard-geometry") || "{}") as Record<string, PanelGeometry>;
-          saved[id] = current;
-          localStorage.setItem("morok-dashboard-geometry", JSON.stringify(saved));
-        } catch {}
-        return current;
-      });
-    };
-
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", end, { once: true });
-  };
-
-  const startCurve = (event: React.PointerEvent<HTMLDivElement>, direction: ResizeDirection) => {
-    event.preventDefault();
-    event.stopPropagation();
-    const element = ref.current;
-    if (!element) return;
-    const rect = element.getBoundingClientRect();
-    const startX = event.clientX;
-    const startY = event.clientY;
-    const start = { ...curve };
-    const localX = Math.max(0, Math.min(rect.width, startX - rect.left));
-    const localY = Math.max(0, Math.min(rect.height, startY - rect.top));
-    const focus = direction === "n" || direction === "s"
-      ? (rect.width ? localX / rect.width : .5)
-      : (rect.height ? localY / rect.height : .5);
-    const maxRadius = Math.min(180, Math.max(24, Math.min(rect.width, rect.height) * .45));
-    setInteraction("curve");
-
-    const move = (e: PointerEvent) => {
-      const amount = Math.min(maxRadius, Math.max(4, Math.max(
-        Math.abs(e.clientX - startX),
-        Math.abs(e.clientY - startY)
-      ) * 1.15));
-      const next = { ...start, focus };
-
-      if (direction === "n") next.top = amount;
-      if (direction === "e") next.right = amount;
-      if (direction === "s") next.bottom = amount;
-      if (direction === "w") next.left = amount;
-
-      if (direction === "nw") next.topLeft = amount;
-      if (direction === "ne") next.topRight = amount;
-      if (direction === "se") next.bottomRight = amount;
-      if (direction === "sw") next.bottomLeft = amount;
-
-      setCurve(next);
-    };
-
-    const end = () => {
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", end);
-      setInteraction(null);
-      setCurve(current => {
-        try {
-          const saved = JSON.parse(localStorage.getItem("morok-dashboard-curves") || "{}") as Record<string, PanelCurve>;
-          saved[id] = current;
-          localStorage.setItem("morok-dashboard-curves", JSON.stringify(saved));
-        } catch {}
-        return current;
-      });
-    };
-
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", end, { once: true });
-  };
-
-  const startMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-    const base = normalizeGeometry();
-    if (!base) return;
-
-    const startX = event.clientX;
-    const startY = event.clientY;
-    const start = { ...base };
-    setInteraction("move");
-    event.currentTarget.setPointerCapture(event.pointerId);
-
-    const move = (e: PointerEvent) => {
-      const parent = ref.current?.offsetParent as HTMLElement | null;
-      if (!parent) return;
-      // Panels are intentionally allowed to leave their original side column.
-      // The dashboard itself is the workspace; the parent column is not a movement barrier.
-      const left = (start.left || 0) + e.clientX - startX;
-      const top = (start.top || 0) + e.clientY - startY;
-      setGeometry(current => ({ ...current, left, top }));
-    };
-
-    const end = () => {
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", end);
-      setInteraction(null);
-      setGeometry(current => {
-        try {
-          const saved = JSON.parse(localStorage.getItem("morok-dashboard-geometry") || "{}") as Record<string, PanelGeometry>;
-          saved[id] = current;
-          localStorage.setItem("morok-dashboard-geometry", JSON.stringify(saved));
-        } catch {}
-        return current;
-      });
-    };
-
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", end, { once: true });
-  };
-
-  const style = {
-    ...(geometry.width !== undefined ? { "--panel-width": `${geometry.width}px` } : {}),
-    ...(geometry.height !== undefined ? { "--panel-height": `${geometry.height}px` } : {}),
-    ...(geometry.left !== undefined ? { "--panel-left": `${geometry.left}px` } : {}),
-    ...(geometry.top !== undefined ? { "--panel-top": `${geometry.top}px` } : {}),
-    "--panel-curve-top": `${curve.top}px`,
-    "--panel-curve-right": `${curve.right}px`,
-    "--panel-curve-bottom": `${curve.bottom}px`,
-    "--panel-curve-left": `${curve.left}px`,
-    "--panel-curve-focus": `${curve.focus}`,
-    "--panel-curve-tl": `${curve.topLeft}px`,
-    "--panel-curve-tr": `${curve.topRight}px`,
-    "--panel-curve-br": `${curve.bottomRight}px`,
-    "--panel-curve-bl": `${curve.bottomLeft}px`,
-  } as React.CSSProperties;
-
-  return (
-    <section
-      ref={ref as RefObject<HTMLElement>}
-      className={`morokResizablePanel ${className} ${interaction ? "is-interacting" : ""}`}
-      data-vertex-curve={curve.topLeft || curve.topRight || curve.bottomRight || curve.bottomLeft ? "1" : "0"}
-      data-edge-curve="0"
-      style={style}
-    >
-      <div className="panelSurface">
-        <div className="panelMoveHandle" onPointerDown={startMove} title="Arrastar painel" aria-label={`Mover painel ${id}`} />
-        {children}
-      </div>
-      <div className="resizeHandle resizeHandleN" onPointerDown={e => startResize(e, "n")} />
-      <div className="resizeHandle resizeHandleE" onPointerDown={e => startResize(e, "e")} />
-      <div className="resizeHandle resizeHandleS" onPointerDown={e => startResize(e, "s")} />
-      <div className="resizeHandle resizeHandleW" onPointerDown={e => startResize(e, "w")} />
-      <div className="resizeHandle resizeHandleNE" onPointerDown={e => e.ctrlKey ? startCurve(e, "ne") : startResize(e, "ne")} />
-      <div className="resizeHandle resizeHandleNW" onPointerDown={e => e.ctrlKey ? startCurve(e, "nw") : startResize(e, "nw")} />
-      <div className="resizeHandle resizeHandleSE" onPointerDown={e => e.ctrlKey ? startCurve(e, "se") : startResize(e, "se")} />
-      <div className="resizeHandle resizeHandleSW" onPointerDown={e => e.ctrlKey ? startCurve(e, "sw") : startResize(e, "sw")} />
-    </section>
-  );
-}
-
 function Dashboard() {
   const systems = ["ERP","FLOW","OPS","VISION","CONNECT","MOBILE","DOCUMENTS","AI"];
   const processes = [
@@ -350,7 +104,7 @@ function Dashboard() {
       </header>
 
       <aside className="dashLeft">
-        <ResizablePanel id="resources" className="dashPanel resourcePanel" minWidth={250} minHeight={220}>
+        <div className="dashPanel resourcePanel">
           {[
             ["CPU","12%"],["MEMÓRIA RAM","48%"],["ARMAZENAMENTO","67%"],["REDE","1.2 Gbps"]
           ].map(([label,value],i)=>
@@ -359,22 +113,22 @@ function Dashboard() {
               <div className="resourceData"><b>{label}</b><strong>{value}</strong><span className="resourceBar"><i style={{width:i===0?"12%":i===1?"48%":i===2?"67%":"54%"}}/></span></div>
             </div>
           )}
-        </ResizablePanel>
-        <ResizablePanel id="processes" className="dashPanel processPanel" minWidth={240} minHeight={170}>
+        </div>
+        <div className="dashPanel processPanel">
           <h3>PROCESSOS ATIVOS</h3>
           {processes.map(([name,val],i)=><div className="processRow" key={name}><i className={"processDot p"+i}/><span>{name}</span><strong>{val}</strong></div>)}
-        </ResizablePanel>
-        <ResizablePanel id="assistant" className="assistantPanel" minWidth={260} minHeight={150}>
+        </div>
+        <div className="assistantPanel">
           <div className="miniRadar"><span/><i/><b/></div>
           <div><h3>MOROK</h3><small>ASSISTENTE VIRTUAL</small><p>Olá, Korczak.<br/>Todos os sistemas estão operando normalmente.</p><div className="wave">▁▃▅▂▆▃▇▂▅▁▃▆▂</div></div>
-        </ResizablePanel>
+        </div>
       </aside>
 
-      <ResizablePanel id="systems" className="dashSystems" minWidth={160} minHeight={300}>
+      <div className="dashSystems">
         <div className="systemsEdge"/>
         <h2>SISTEMAS</h2>
         <ul>{systems.map((x,i)=><li key={x}><span className={"sysGlyph g"+i}>{["◉","♧","◌","◎","♧","□","▣","♧"][i]}</span>{x}</li>)}</ul>
-      </ResizablePanel>
+      </div>
 
       <main className="dashCore">
         <div className="coreTopLabel"><b>KOS</b><span>CONNEX</span></div>
@@ -388,34 +142,34 @@ function Dashboard() {
       </main>
 
       <aside className="dashRight">
-        <ResizablePanel id="notifications" className="dashPanel notificationPanel" minWidth={220} minHeight={140}>
+        <div className="dashPanel notificationPanel">
           <h3>NOTIFICAÇÕES</h3>
           {notifications.map(([x,c])=><div className="noticeRow" key={x}><i className={c}>◉</i><span>{x}</span></div>)}
-        </ResizablePanel>
-        <ResizablePanel id="activity" className="dashPanel activityPanel" minWidth={220} minHeight={140}>
+        </div>
+        <div className="dashPanel activityPanel">
           <h3>ATIVIDADE RECENTE</h3>
           {activity.map(([time,x])=><div className="activityRow" key={time}><b>{time}</b><span>{x}</span></div>)}
-        </ResizablePanel>
+        </div>
       </aside>
 
-      <ResizablePanel id="navigation" className="dashNav" minWidth={220} minHeight={260}>
+      <div className="dashNav">
         <nav className="dashNavInner">
           {["⌂|INÍCIO","▦|SISTEMAS","▤|DOCUMENTOS","♙|PROCESSOS","♟|EQUIPES","▥|RELATÓRIOS","⚙|CONFIGURAÇÕES"].map((item,i)=>{
             const [icon,label]=item.split("|"); return <button className={i===0?"active":""} key={label}><span>{icon}</span>{label}</button>
           })}
         </nav>
-      </ResizablePanel>
+      </div>
 
-      <ResizablePanel id="status" className="dashMiniStatus" minWidth={150} minHeight={100}>
+      <div className="dashMiniStatus">
         <div className="miniChart"><i/><i/><i/><i/><i/><i/><i/><i/></div>
         <span>OPERAÇÕES<br/><b>ESTÁVEIS</b></span>
         <span className="stable">✓ SEM ANOMALIAS</span>
-      </ResizablePanel>
+      </div>
 
-      <ResizablePanel id="goal" className="dashGoal" minWidth={250} minHeight={150}>
+      <div className="dashGoal">
         <h3>OBJETIVO ATUAL</h3><b>EVOLUÇÃO CONTÍNUA</b><div className="goalBar"><i/></div>
         <p>“Tecnologia não é o futuro.<br/>É o presente que você constrói<br/>o amanhã.”</p><strong>— KORCZAK TECHNOLOGIES</strong>
-      </ResizablePanel>
+      </div>
 
       <div className="dashActions">{actions.map(([icon,label],i)=><button className={i===2?"execute":""} key={label}><span>{icon}</span>{label}</button>)}</div>
       <footer className="dashFooter">KOS&nbsp; // &nbsp;KORCZAK OPERATIONS SYSTEM</footer>
