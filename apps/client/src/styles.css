@@ -342,6 +342,44 @@ mix-blend-mode:screen;opacity:.65}
   .appShell:after{animation:none}
 }
 
+/* MOROK // CENTRAL SYMBOL ONLY */
+.cleanCommandCenter{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  margin:0!important;
+  padding:0!important;
+  display:grid!important;
+  place-items:center!important;
+  overflow:hidden!important;
+  background:transparent!important;
+}
+.cleanCommandCenter:before,
+.cleanCommandCenter:after{
+  display:none!important;
+}
+.morokCenterSymbol{
+  display:block!important;
+  width:min(300px,34vw,34vh)!important;
+  height:auto!important;
+  max-width:300px!important;
+  max-height:300px!important;
+  object-fit:contain!important;
+  margin:0!important;
+  padding:0!important;
+  filter:drop-shadow(0 0 16px rgba(111,55,255,.42)) drop-shadow(9px 0 14px rgba(0,140,255,.22))!important;
+  user-select:none!important;
+  pointer-events:none!important;
+}
+@media(max-width:700px){
+  .morokCenterSymbol{
+    width:min(240px,58vw,58vh)!important;
+    max-width:240px!important;
+    max-height:240px!important;
+  }
+}
+
 /* MOROK // MINIMAL COMMAND CENTER */
 .cleanCommandCenter{
   position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
