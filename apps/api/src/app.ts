@@ -33,38 +33,38 @@ export function buildApp(){
   app.get("/api/v1/status",async()=>({status:"ok",identity:MOROK_IDENTITY,phase:1,capabilities:{commands:coreCommands.length,permissions:corePermissions.length,tools:createCoreToolRegistry(await connectDatabase()).list().length,modelGateway:Boolean(config.modelApiUrl),voice:true,web:true,files:true,automation:true,organizer:true}}));
   app.get("/api/v1/github/workflows",async(_req,reply)=>{
     try{
-      const response=await fetch("https://api.github.com/repos/korczaktechnology-tech/Morok-AI/actions/runs?per_page=100",{
-        headers:{
-          "accept":"application/vnd.github+json",
-          "user-agent":"Morok-AI/1.0"
-        },
-        cache:"no-store"
-      });
-      if(!response.ok)return reply.code(response.status).send({error:"github_workflows_unavailable"});
-      const data=await response.json() as {workflow_runs?:Array<{
-        id:number;name:string;run_number:number;status:string;conclusion:string|null;
-        head_sha:string;head_commit?:{message?:string}|null;created_at:string;updated_at:string;
-      }>};
-      type WorkflowRun=NonNullable<typeof data.workflow_runs>[number];
-      const latestByWorkflow=new Map<string,WorkflowRun>();
-      for(const run of data.workflow_runs??[]){
-        const key=run.name;
-        if(!latestByWorkflow.has(key))latestByWorkflow.set(key,run);
-      }
-      return reply.header("cache-control","no-store").send({
-        workflows:Array.from(latestByWorkflow.values()).map(run=>({
-          id:run.id,
-          name:run.name,
-          runNumber:run.run_number,
-          commit:run.head_commit?.message?.split("\n")[0]??run.head_sha.slice(0,7),
-          sha:run.head_sha,
-          status:run.status,
-          conclusion:run.conclusion,
-          updatedAt:run.updated_at
-        }))
-      });
+      const headers={
+        "accept":"application/vnd.github+json",
+        "user-agent":"Morok-AI/1.0"
+      };
+      const workflowsResponse=await fetch("https://api.github.com/repos/korczaktechnology-tech/Morok-AI/actions/workflows?per_page=100",{headers,cache:"no-store"});
+      if(!workflowsResponse.ok)return reply.code(workflowsResponse.status).send({error:"github_workflows_unavailable"});
+      const workflowsData=await workflowsResponse.json() as {workflows?:Array<{id:number;name:string;path:string;state:string}>};
+      const workflows=await Promise.all((workflowsData.workflows??[]).map(async workflow=>{
+        const runsResponse=await fetch(`https://api.github.com/repos/korczaktechnology-tech/Morok-AI/actions/workflows/${workflow.id}/runs?per_page=1`,{headers,cache:"no-store"});
+        if(!runsResponse.ok)throw new Error(`github_workflow_runs_unavailable:${workflow.id}`);
+        const runsData=await runsResponse.json() as {workflow_runs?:Array<{
+          id:number;name:string;run_number:number;status:string;conclusion:string|null;
+          head_sha:string;head_commit?:{message?:string}|null;updated_at:string;
+        }>};
+        const run=runsData.workflow_runs?.[0];
+        return {
+          id:run?.id??workflow.id,
+          workflowId:workflow.id,
+          name:workflow.name,
+          runNumber:run?.run_number??0,
+          commit:run?.head_commit?.message?.split("\\n")[0]??"SEM EXECUÇÃO",
+          sha:run?.head_sha??"",
+          status:run?.status??"completed",
+          conclusion:run?.conclusion??(workflow.state==="disabled_manually"?"failure":null),
+          updatedAt:run?.updated_at??new Date(0).toISOString(),
+          workflowState:workflow.state
+        };
+      }));
+      workflows.sort((a,b)=>a.name.localeCompare(b.name));
+      return reply.header("cache-control","no-store").send({workflows});
     }catch(error){
-      app.log.warn({error},"Falha ao obter workflows do GitHub");
+      app.log.warn({error},"Falha ao obter estado dos workflows do GitHub");
       return reply.code(502).send({error:"github_workflows_fetch_failed"});
     }
   });
