@@ -1970,27 +1970,8 @@ mix-blend-mode:screen;opacity:.65}
 .morokResizablePanel .resizeHandleSE{right:-7px;bottom:-7px;width:16px;height:16px;cursor:nwse-resize}
 
 
-/* CTRL + CLICK // CURVATURA LOCAL DOS PAINEIS */
-.morokResizablePanel{
-  border-top-left-radius:var(--panel-curve-tl,0px)!important;
-  border-top-right-radius:var(--panel-curve-tr,0px)!important;
-  border-bottom-right-radius:var(--panel-curve-br,0px)!important;
-  border-bottom-left-radius:var(--panel-curve-bl,0px)!important;
-  transition:border-radius .08s linear;
-}
-.morokResizablePanel.is-interacting{
-  transition:none!important;
-}
-
-
-/* CURVATURE VISUAL FEEDBACK */
-.morokResizablePanel[style*="--panel-curve-tl"]{
-  border-radius:
-    var(--panel-curve-tl) var(--panel-curve-tr)
-    var(--panel-curve-br) var(--panel-curve-bl)!important;
-  overflow:hidden!important;
-}
-.morokResizablePanel.is-interacting{
-  outline:1px solid rgba(123,91,255,.28);
-  outline-offset:1px;
-}
+/* POLYGONAL PANELS + CTRL EDGE CURVE */
+.morokResizablePanel{clip-path:polygon(3% 0,97% 0,100% 4%,100% 96%,97% 100%,3% 100%,0 96%,0 4%)!important;border-radius:0!important;transition:clip-path .08s linear}
+.morokResizablePanel.is-interacting{transition:none!important}
+.dashPanel,.dashGoal,.dashMiniStatus,.assistantPanel,.dashNav,.dashSystems{clip-path:polygon(3% 0,97% 0,100% 4%,100% 96%,97% 100%,3% 100%,0 96%,0 4%)!important}
+.morokResizablePanel[style*="--panel-curve-top"]{--f:var(--panel-curve-focus,.5);--ct:var(--panel-curve-top,0);--cr:var(--panel-curve-right,0);--cb:var(--panel-curve-bottom,0);--cl:var(--panel-curve-left,0);clip-path:polygon(3% 0,25% 0,calc(50% + (var(--f) - .5)*20%) var(--ct),75% 0,97% 0,100% 4%,100% 25%,calc(100% - var(--cr)) calc(50% + (var(--f) - .5)*20%),100% 75%,100% 96%,97% 100%,75% 100%,calc(50% + (var(--f) - .5)*20%) calc(100% - var(--cb)),25% 100%,3% 100%,0 96%,0 75%,var(--cl) calc(50% + (var(--f) - .5)*20%),0 25%,0 4%)!important}
