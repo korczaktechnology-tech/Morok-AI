@@ -1597,62 +1597,111 @@ mix-blend-mode:screen;opacity:.65}
 
 .workflowMonitor{
   position:fixed;
-  top:18px;
-  left:18px;
   z-index:1000;
-  width:min(360px,calc(100vw - 36px));
-  max-height:min(70vh,520px);
+  width:min(390px,calc(100vw - 20px));
+  max-height:min(78vh,560px);
   overflow:hidden;
-  padding:12px;
-  border:1px solid rgba(155,92,255,.28);
-  border-radius:6px;
-  background:rgba(3,3,8,.82);
-  box-shadow:0 10px 40px rgba(0,0,0,.45),0 0 30px rgba(155,92,255,.08);
-  backdrop-filter:blur(14px);
-  -webkit-backdrop-filter:blur(14px);
+  padding:13px;
+  border:0;
+  clip-path:polygon(8% 0,92% 0,100% 12%,100% 88%,92% 100%,8% 100%,0 88%,0 12%);
+  background:
+    linear-gradient(rgba(4,4,11,.94),rgba(4,4,11,.94)) padding-box,
+    linear-gradient(135deg,#9b5cff 0%,#fff 24%,#ff3d68 52%,#3d7cff 76%,#050508 100%) border-box;
+  box-shadow:0 0 24px rgba(155,92,255,.14),0 18px 48px rgba(0,0,0,.55);
   color:#fff;
   font-family:Arial,sans-serif;
+  touch-action:none;
 }
 .workflowMonitorHeader{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding:2px 2px 9px;
+  min-height:27px;
+  padding:1px 13px 9px;
   border-bottom:1px solid rgba(255,255,255,.08);
   font-size:9px;
   font-weight:700;
   letter-spacing:.14em;
 }
+.workflowMonitorDragHandle{
+  cursor:grab;
+  user-select:none;
+  touch-action:none;
+}
+.workflowMonitorDragHandle:active{cursor:grabbing}
 .workflowMonitorHint{
-  color:rgba(255,255,255,.35);
-  font-size:7px;
-  letter-spacing:.08em;
+  color:rgba(255,255,255,.38);
+  font-size:6px;
+  letter-spacing:.09em;
 }
 .workflowMonitorList{
-  max-height:calc(min(70vh,520px) - 45px);
+  max-height:calc(min(78vh,560px) - 48px);
   overflow-y:auto;
   scrollbar-width:thin;
+  padding:2px 7px 3px;
 }
 .workflowMonitorItem{
+  position:relative;
   display:flex;
   gap:10px;
-  align-items:flex-start;
-  padding:10px 3px;
-  border-bottom:1px solid rgba(255,255,255,.055);
+  align-items:center;
+  min-height:35px;
+  margin:2px 0;
+  padding:8px 8px 10px;
+  border-bottom:1px solid rgba(255,255,255,.06);
 }
-.workflowMonitorItem:last-child{border-bottom:0}
+.workflowMonitorItem::after{
+  content:"";
+  position:absolute;
+  left:7px;
+  right:7px;
+  bottom:3px;
+  height:1px;
+  background:transparent;
+  box-shadow:none;
+}
+.workflowMonitorItem.success::after{
+  background:rgba(50,232,117,.9);
+  box-shadow:0 0 7px rgba(50,232,117,.75);
+}
+.workflowMonitorItem.failure::after{
+  background:rgba(255,63,95,.9);
+  box-shadow:0 0 7px rgba(255,63,95,.72);
+}
+.workflowMonitorItem.queued::after{
+  background:rgba(255,212,71,.9);
+  box-shadow:0 0 7px rgba(255,212,71,.72);
+}
 .workflowStatusDot{
-  flex:0 0 7px;
-  width:7px;
-  height:7px;
-  margin-top:4px;
+  position:relative;
+  flex:0 0 8px;
+  width:8px;
+  height:8px;
   border-radius:50%;
   box-shadow:0 0 9px currentColor;
 }
+.workflowStatusDot::after{
+  content:"";
+  position:absolute;
+  inset:-5px;
+  border-radius:50%;
+  border:1px solid transparent;
+}
 .workflowStatusDot.success{background:#32e875;color:#32e875}
-.workflowStatusDot.queued{background:#ffd447;color:#ffd447}
 .workflowStatusDot.failure{background:#ff3f5f;color:#ff3f5f}
-.workflowMonitorInfo{min-width:0}
+.workflowStatusDot.queued{background:#ffd447;color:#ffd447}
+.workflowStatusDot.queued::after{
+  border-color:transparent;
+  border-top-color:#ffd447;
+  border-right-color:#ffd447;
+  animation:workflowQueuedSpin .8s linear infinite;
+  box-shadow:0 0 7px rgba(255,212,71,.7);
+}
+.workflowMonitorInfo{
+  position:relative;
+  min-width:0;
+  flex:1;
+}
 .workflowMonitorName{
   overflow:hidden;
   text-overflow:ellipsis;
@@ -1666,15 +1715,29 @@ mix-blend-mode:screen;opacity:.65}
   flex-wrap:wrap;
   gap:5px 12px;
   margin-top:4px;
-  color:rgba(255,255,255,.45);
+  color:rgba(255,255,255,.42);
   font-size:7px;
   letter-spacing:.08em;
 }
 .workflowMonitorEmpty{
-  padding:18px 3px;
-  color:rgba(255,255,255,.42);
+  padding:20px 8px;
+  color:rgba(255,255,255,.48);
   font-size:8px;
   letter-spacing:.1em;
+}
+.workflowMonitorRetry{
+  display:block;
+  margin-top:10px;
+  padding:7px 10px;
+  border:1px solid rgba(155,92,255,.45);
+  background:rgba(155,92,255,.08);
+  color:#fff;
+  font-size:7px;
+  letter-spacing:.1em;
+  cursor:pointer;
+}
+@keyframes workflowQueuedSpin{
+  to{transform:rotate(360deg)}
 }
 @media(max-width:700px){
   .workflowMonitor{top:10px;left:10px;width:calc(100vw - 20px)}
