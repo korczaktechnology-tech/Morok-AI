@@ -554,7 +554,7 @@ mix-blend-mode:screen;opacity:.65}
   height:100%!important;
   margin:0!important;
   padding:0!important;
-  z-index:6!important;
+  z-index:9!important;
   pointer-events:none!important;
 }
 .cleanCommandCenter .orbitalLayer canvas{
