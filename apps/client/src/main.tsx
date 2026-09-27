@@ -896,8 +896,8 @@ function StandaloneOrbit(){
     scene.add(group);
 
     const points:THREE.Vector3[]=[];
-    const semiMajor=1.68;
-    const semiMinor=1.36;
+    const semiMajor=1.52;
+    const semiMinor=1.23;
     for(let i=0;i<=720;i++){
       const a=(i/720)*Math.PI*2;
       points.push(new THREE.Vector3(semiMajor*Math.cos(a),0,semiMinor*Math.sin(a)));
@@ -1203,60 +1203,19 @@ function App() {
       setWorkflowError(null);
 
       try{
-        const response=await fetch(`https://api.github.com/repos/korczaktechnology-tech/Morok-AI/actions/runs?per_page=100&ts=${Date.now()}`,{
+        const response=await fetch(API + "/api/v1/github/workflows?ts=" + Date.now(),{
           cache:"no-store",
           signal:controller.signal,
           headers:{
-            Accept:"application/vnd.github+json",
-            "X-GitHub-Api-Version":"2022-11-28",
+            Accept:"application/json",
             "Cache-Control":"no-cache"
           }
         });
         if(!response.ok)throw new Error(`HTTP_${response.status}`);
         const data=await response.json() as {
-          workflow_runs?:Array<{
-            id:number;workflow_id:number;name:string;run_number:number;status:string;conclusion:string|null;
-            head_sha:string;head_commit?:{message?:string}|null;updated_at:string;
-          }>
+          workflows?:GithubWorkflow[]
         };
-        const latestByWorkflow=new Map<number,NonNullable<typeof data.workflow_runs>[number]>();
-        for(const run of data.workflow_runs??[]){
-          const current=latestByWorkflow.get(run.workflow_id);
-          if(!current){
-            latestByWorkflow.set(run.workflow_id,run);
-            continue;
-          }
-
-          const currentNumber=Number(current.run_number)||0;
-          const runNumber=Number(run.run_number)||0;
-          const currentUpdated=Date.parse(current.updated_at)||0;
-          const runUpdated=Date.parse(run.updated_at)||0;
-
-          if(runNumber>currentNumber || (runNumber===currentNumber && runUpdated>currentUpdated)){
-            latestByWorkflow.set(run.workflow_id,run);
-          }
-        }
-        const workflows=[...latestByWorkflow.values()].map(run=>({
-          id:run.id,
-          workflowId:run.workflow_id,
-          name:run.name,
-          runNumber:run.run_number,
-          commit:run.head_commit?.message?.split("\n")[0]??"SEM COMMIT",
-          sha:run.head_sha,
-          status:run.status,
-          conclusion:run.conclusion,
-          updatedAt:run.updated_at,
-          workflowState:
-            run.status==="queued" ||
-            run.status==="in_progress" ||
-            run.status==="waiting" ||
-            run.status==="requested" ||
-            run.status==="pending"
-              ? "queued"
-              : run.conclusion==="success"
-                ? "success"
-                : "failure"
-        })).sort((a,b)=>a.name.localeCompare(b.name));
+        const workflows=data.workflows??[];
         if(!disposed){
           setGithubWorkflows(workflows);
           if(workflows.length===0)setWorkflowError("NENHUM WORKFLOW ENCONTRADO");
