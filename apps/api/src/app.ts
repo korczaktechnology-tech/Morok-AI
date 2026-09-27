@@ -129,9 +129,6 @@ export function buildApp(){
     }
   });
 
-  app.get("/api/v1/orbital/tle/:norad",async(req,reply)=>{
-    const {norad}=req.params as {norad?:string};
-    if(!norad||!/^\d{1,9}$/.test(norad))return reply.code(400).send({error:"invalid_norad"});
     const url=new URL("https://celestrak.org/NORAD/elements/gp.php");
     url.searchParams.set("CATNR",norad);
     url.searchParams.set("FORMAT","TLE");
