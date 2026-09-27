@@ -2029,3 +2029,65 @@ mix-blend-mode:screen;opacity:.65}
     height:214px!important;
   }
 }
+
+
+/* MOROK // DESKTOP FINAL LAYOUT — systems beside core, navigation to settings end */
+@media(min-width:1360px){
+  /* Systems sits immediately to the left of the Morok core, with no overlap. */
+  .dashSystems{
+    left:calc(50% - 515px)!important;
+    top:50%!important;
+    transform:translateY(-50%)!important;
+    width:214px!important;
+    height:430px!important;
+    bottom:auto!important;
+    z-index:12!important;
+  }
+
+  /* Keep the static-operations box directly beside the Voice Core. */
+  .dashMiniStatus{
+    left:calc(22px + 302px + 176px + 18px)!important;
+    bottom:0!important;
+    top:auto!important;
+    width:188px!important;
+    height:214px!important;
+    z-index:13!important;
+  }
+
+  /* Voice Core: remove every decorative field except the frequency bars. */
+  .morokVoiceCore canvas{
+    filter:none!important;
+  }
+
+  /* Remove the old blue side bars/decoration attached to the assistant box. */
+  .dashLeft .assistantPanel{
+    overflow:visible!important;
+  }
+  .dashLeft .assistantPanel:before,
+  .dashLeft .assistantPanel:after{
+    display:none!important;
+  }
+
+  /* Navigation ends exactly after CONFIGURAÇÕES, instead of extending to the bottom. */
+  .dashNav{
+    top:112px!important;
+    bottom:auto!important;
+    height:483px!important;
+    width:244px!important;
+    right:0!important;
+    overflow:hidden!important;
+  }
+  .dashNavInner{
+    height:auto!important;
+    min-height:0!important;
+  }
+  .dashNav button{
+    height:69px!important;
+    min-height:69px!important;
+  }
+}
+
+/* The Voice Core is intentionally only a circular frequency-bar field. */
+.morokVoiceCore:before{
+  display:none!important;
+}
