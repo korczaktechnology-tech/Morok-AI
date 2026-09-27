@@ -125,6 +125,19 @@ function EarthGlobe(){
       shininess:3,
       specular:new THREE.Color(0x111111)
     });
+
+    // Corrige somente o pequeno artefato da borda da projeção equiretangular
+    // no Polo Norte. A máscara cobre apenas os 1.5 graus mais próximos do
+    // polo (região oceânica), ficando bem abaixo da latitude da Groenlândia
+    // e sem remover ou alterar qualquer continente ou fronteira.
+    material.onBeforeCompile=(shader)=>{
+      shader.fragmentShader=shader.fragmentShader.replace(
+        "#include <map_fragment>",
+        `#include <map_fragment>
+        float northPoleMask=smoothstep(0.0,0.0042,vMapUv.y);
+        diffuseColor.rgb=mix(vec3(0.012,0.018,0.026),diffuseColor.rgb,northPoleMask);`
+      );
+    };
     const earth=new THREE.Mesh(geometry,material);
     earthSystem.add(earth);
 
