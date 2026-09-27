@@ -1538,3 +1538,41 @@ mix-blend-mode:screen;opacity:.65}
     min-width:auto!important;
   }
 }
+
+
+.earthReturnLocationButton{
+  position:fixed!important;
+  right:28px!important;
+  top:calc(50% - 56px)!important;
+  transform:translateY(-50%)!important;
+  z-index:30!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:9px!important;
+  min-width:168px!important;
+  padding:9px 13px!important;
+  border:1px solid rgba(255,255,255,.16)!important;
+  border-radius:4px!important;
+  background:rgba(5,5,10,.62)!important;
+  color:rgba(255,255,255,.72)!important;
+  font:600 9px/1.1 Arial,sans-serif!important;
+  letter-spacing:.12em!important;
+  cursor:pointer!important;
+  backdrop-filter:blur(8px)!important;
+  -webkit-backdrop-filter:blur(8px)!important;
+}
+.earthReturnLocationButton:hover{
+  border-color:rgba(255,255,255,.42)!important;
+  background:rgba(12,12,20,.82)!important;
+  color:#fff!important;
+}
+.earthReturnLocationIcon{font-size:13px!important;line-height:1!important;}
+@media (max-width:700px){
+  .earthReturnLocationButton{
+    right:14px!important;
+    top:auto!important;
+    bottom:67px!important;
+    transform:none!important;
+    min-width:auto!important;
+  }
+}
