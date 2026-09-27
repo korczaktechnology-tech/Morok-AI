@@ -310,25 +310,45 @@ function App() {
 
       const controller=new AbortController();
       workflowRequestRef.current=controller;
-      const timeout=window.setTimeout(()=>controller.abort(),10000);
+      const timeout=window.setTimeout(()=>controller.abort(),12000);
 
-      setWorkflowLoading(true);
-      setWorkflowError(null);
+      const mapGithubData=(workflowData:any,runData:any):GithubWorkflow[]=>{
+        const latest=new Map<number,any>();
+        for(const run of runData?.workflow_runs??[]){
+          const current=latest.get(run.workflow_id);
+          if(!current || Date.parse(run.updated_at)>Date.parse(current.updated_at))latest.set(run.workflow_id,run);
+        }
+        return (workflowData?.workflows??[]).map((workflow:any)=>{
+          const run=latest.get(workflow.id);
+          return {
+            id:run?.id??workflow.id,
+            workflowId:workflow.id,
+            name:workflow.name,
+            runNumber:run?.run_number??0,
+            commit:run?.head_commit?.message?.split("\n")[0]??"SEM EXECUÇÃO",
+            sha:run?.head_sha??"",
+            status:run?.status??"idle",
+            conclusion:run?.conclusion??null,
+            updatedAt:run?.updated_at??"",
+            workflowState:workflow.state
+          };
+        }).sort((a:GithubWorkflow,b:GithubWorkflow)=>a.name.localeCompare(b.name));
+      };
 
       try{
-        const response=await fetch(API + "/api/v1/github/workflows?ts=" + Date.now(),{
+        setWorkflowLoading(true);
+        setWorkflowError(null);
+
+        const response=await fetch(API+"/api/v1/github/workflows?ts="+Date.now(),{
           cache:"no-store",
           signal:controller.signal,
-          headers:{
-            Accept:"application/json",
-            "Cache-Control":"no-cache"
-          }
+          headers:{Accept:"application/json","Cache-Control":"no-cache"}
         });
         if(!response.ok)throw new Error(`HTTP_${response.status}`);
-        const data=await response.json() as {
-          workflows?:GithubWorkflow[]
-        };
+        const data=await response.json() as {workflows?:GithubWorkflow[];error?:string};
         const workflows=data.workflows??[];
+        if(!workflows.length && data.error)throw new Error(data.error);
+
         if(!disposed){
           setGithubWorkflows(workflows);
           if(workflows.length===0)setWorkflowError("NENHUM WORKFLOW ENCONTRADO");
@@ -337,10 +357,23 @@ function App() {
         if(disposed)return;
         if(error instanceof DOMException && error.name==="AbortError"){
           setWorkflowError("TEMPO LIMITE EXCEDIDO");
-        }else if(error instanceof Error && error.message.startsWith("HTTP_")){
-          setWorkflowError(`ERRO DO SERVIDOR (${error.message.slice(5)})`);
         }else{
-          setWorkflowError("NÃO FOI POSSÍVEL CARREGAR OS WORKFLOWS");
+          try{
+            const [workflowResponse,runsResponse]=await Promise.all([
+              fetch("https://api.github.com/repos/korczaktechnology-tech/Morok-AI/actions/workflows?per_page=100",{cache:"no-store"}),
+              fetch("https://api.github.com/repos/korczaktechnology-tech/Morok-AI/actions/runs?per_page=100&sort=created&direction=desc",{cache:"no-store"})
+            ]);
+            if(!workflowResponse.ok||!runsResponse.ok)throw new Error("github_direct_failed");
+            const [workflowData,runData]=await Promise.all([workflowResponse.json(),runsResponse.json()]);
+            const workflows=mapGithubData(workflowData,runData);
+            if(!disposed){
+              setGithubWorkflows(workflows);
+              if(workflows.length===0)setWorkflowError("NENHUM WORKFLOW ENCONTRADO");
+              else setWorkflowError(null);
+            }
+          }catch{
+            if(!disposed)setWorkflowError(error instanceof Error&&error.message.startsWith("HTTP_")?`ERRO DO SERVIDOR (${error.message.slice(5)})`:"NÃO FOI POSSÍVEL CARREGAR OS WORKFLOWS");
+          }
         }
       }finally{
         window.clearTimeout(timeout);
