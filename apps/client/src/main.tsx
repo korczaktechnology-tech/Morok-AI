@@ -122,7 +122,9 @@ function EarthGlobe(){
 
     const addBorderRing=(coordinates:number[][])=>{
       if(coordinates.length<2)return;
-      const points=coordinates.map(([longitude,latitude])=>{
+      const points=coordinates.map((coordinate)=>{
+        const longitude=coordinate[0] ?? 0;
+        const latitude=coordinate[1] ?? 0;
         const lon=THREE.MathUtils.degToRad(longitude);
         const lat=THREE.MathUtils.degToRad(latitude);
         const radius=1.006;
