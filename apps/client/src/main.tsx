@@ -542,9 +542,9 @@ function OrbitalRings(){
         // A metade futura fica exclusivamente na linha de predição.
         for(let minute=-period/2;minute<=0;minute+=stepMinutes){
           const date=new Date(now.getTime()+minute*60000);
-          const sample=propagateToThree(satrec,date);
-          if(!sample)continue;
-          routePoints.push(sample.position);
+          const sample=propagateEci(satrec,date);
+          if(!sample?.position)continue;
+          routePoints.push(eciToThreeAtReferenceEarth(sample.position,now));
         }
 
         // A predição é uma órbita completa fechada, começando no estado
@@ -555,9 +555,9 @@ function OrbitalRings(){
         for(let index=1;index<=720;index++){
           const minute=(period*index)/720;
           const date=new Date(now.getTime()+minute*60000);
-          const sample=propagateToThree(satrec,date);
-          if(!sample)continue;
-          predictionPoints.push(sample.position);
+          const sample=propagateEci(satrec,date);
+          if(!sample?.position)continue;
+          predictionPoints.push(eciToThreeAtReferenceEarth(sample.position,now));
         }
         // Fecha geometricamente a curva no ponto inicial.
         predictionPoints.push(currentPosition.clone());
