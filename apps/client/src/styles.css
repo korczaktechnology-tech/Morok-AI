@@ -1970,16 +1970,15 @@ mix-blend-mode:screen;opacity:.65}
 .morokResizablePanel .resizeHandleSE{right:-7px;bottom:-7px;width:16px;height:16px;cursor:nwse-resize}
 
 
-/* POLYGONAL PANELS + CTRL CURVE */
+/* PANEL HIT AREA — the outer shell must never clip its resize handles.
+   The visual polygon belongs to .panelSurface below. */
 .morokResizablePanel{
-  clip-path:polygon(3% 0,97% 0,100% 4%,100% 96%,97% 100%,3% 100%,0 96%,0 4%)!important;
+  clip-path:none!important;
   border-radius:0!important;
-  transition:clip-path .08s linear,border-radius .08s linear;
+  overflow:visible!important;
+  transition:none;
 }
 .morokResizablePanel.is-interacting{transition:none!important}
-.dashPanel,.dashGoal,.dashMiniStatus,.assistantPanel,.dashNav,.dashSystems{
-  clip-path:polygon(3% 0,97% 0,100% 4%,100% 96%,97% 100%,3% 100%,0 96%,0 4%)!important
-}
 
 /* Ctrl + vertex = real border-radius. */
 .morokResizablePanel[data-vertex-curve="1"]{
