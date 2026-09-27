@@ -86,7 +86,7 @@ function EarthGlobe(){
     camera.position.z=2.65;
 
     const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:"high-performance"});
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio,1.25));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio,1));
     renderer.setClearColor(0x000000,0);
     renderer.outputColorSpace=THREE.SRGBColorSpace;
     mount.replaceChildren(renderer.domElement);
@@ -103,7 +103,7 @@ function EarthGlobe(){
     // Escala visual absoluta: a Terra é a referência de 1 raio terrestre.
     // Todas as posições orbitais são normalizadas pela mesma constante.
     const earthVisualRadius=1;
-    const geometry=new THREE.SphereGeometry(earthVisualRadius,128,128);
+    const geometry=new THREE.SphereGeometry(earthVisualRadius,96,96);
     const textureLoader=new THREE.TextureLoader();
     // NASA Blue Marble: textura global oficial da NASA em projeção
     // equiretangular 2:1 (5400x2700), adequada para aplicação direta
@@ -341,10 +341,6 @@ function EarthGlobe(){
       applyLocationLock();
     };
 
-    returnToUserLocationRef.current=()=>{
-      applyLocationLock();
-    };
-
     const resize=()=>{
       const width=Math.max(1,mount.clientWidth);
       const height=Math.max(1,mount.clientHeight);
@@ -425,7 +421,7 @@ function EarthGlobe(){
       frame=requestAnimationFrame(animate);
 
       const now=performance.now();
-      const deltaSeconds=Math.min(.1,Math.max(0,(now-lastFrameTime)/1000));
+      const deltaSeconds=Math.min(.05,Math.max(0,(now-lastFrameTime)/1000));
       lastFrameTime=now;
 
       // Rotação sideral real da Terra: uma volta em 23h 56min 4.0905s.
