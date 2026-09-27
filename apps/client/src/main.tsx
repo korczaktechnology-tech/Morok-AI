@@ -79,13 +79,19 @@ function MorokVoiceCore() {
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.ctrlKey && event.key.toLowerCase() === "l") {
+      // Ctrl+L is reserved by Chromium for the address bar and may never reach the page.
+      // Keep it supported when the browser delivers it, plus a reliable fallback.
+      if ((event.ctrlKey && event.key.toLowerCase() === "l") ||
+          (event.ctrlKey && event.altKey && event.key.toLowerCase() === "l")) {
         event.preventDefault();
+        event.stopPropagation();
         setDebugMode(v => !v);
+      } else if (event.key === "Escape") {
+        setDebugMode(false);
       }
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
   }, []);
 
   useEffect(() => {
@@ -180,7 +186,7 @@ function MorokVoiceCore() {
   }, [active, debugMode]);
 
   return (
-    <div className={`morokVoiceCore ${active ? "is-speaking" : "is-idle"} ${debugMode ? "is-debugging" : ""}`} aria-label="Visualizador da voz do Morok">
+    <div className={`morokVoiceCore ${active ? "is-speaking" : "is-idle"} ${debugMode ? "is-debugging" : ""}`} aria-label="Visualizador da voz do Morok" onDoubleClick={() => setDebugMode(v => !v)}>
       <canvas ref={canvasRef} />
       <span className="voiceCoreCenter" aria-hidden="true" />
     </div>
@@ -229,6 +235,7 @@ function useMicrophoneDebug() {
   };
 
   const start=()=> {
+    if (recognitionRef.current) return;
     const Recognition=window.SpeechRecognition || window.webkitSpeechRecognition;
     if(!Recognition){ setState(s=>({...s,open:true,supported:false,listening:false})); return; }
     try {
@@ -253,9 +260,14 @@ function useMicrophoneDebug() {
   };
 
   const toggle=()=>state.listening ? stop() : start();
+  const close=()=> {
+    try { recognitionRef.current?.stop?.(); } catch {}
+    recognitionRef.current=null;
+    setState(s=>({...s,open:false,listening:false}));
+  };
 
   useEffect(()=>()=>stop(),[]);
-  return {state,start,stop,toggle,setState};
+  return {state,start,stop,toggle,close,setState};
 }
 
 function Dashboard() {
@@ -371,9 +383,13 @@ function Dashboard() {
 
       <div className="dashActions">{actions.map(([icon,label],i)=><button className={i===2?"execute":""} key={label}><span>{icon}</span>{label}</button>)}</div>
       <footer className="dashFooter">KOS&nbsp; // &nbsp;KORCZAK OPERATIONS SYSTEM</footer>
+      <MicrophoneDebugWindow
+        state={microphoneDebug.state}
+        onClose={microphoneDebug.close}
+        onToggle={microphoneDebug.toggle}
+      />
     </div>
   );
-      <MicrophoneDebugWindow state={microphoneDebug.state} onClose={()=>microphoneDebug.setState(s=>({...s,open:false}))} onToggle={microphoneDebug.toggle} />
 }
 
 function MobileDashboard({onOpenChat}:{onOpenChat:()=>void}){
