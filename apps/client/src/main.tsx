@@ -896,8 +896,8 @@ function StandaloneOrbit(){
     scene.add(group);
 
     const points:THREE.Vector3[]=[];
-    const semiMajor=2.15;
-    const semiMinor=1.75;
+    const semiMajor=1.85;
+    const semiMinor=1.50;
     for(let i=0;i<=720;i++){
       const a=(i/720)*Math.PI*2;
       points.push(new THREE.Vector3(semiMajor*Math.cos(a),0,semiMinor*Math.sin(a)));
@@ -907,7 +907,7 @@ function StandaloneOrbit(){
     const material=new THREE.LineBasicMaterial({
       color:0x9b5cff,
       transparent:true,
-      opacity:0.95,
+      opacity:0.20,
       depthTest:false,
       depthWrite:false,
       toneMapped:false
@@ -915,20 +915,6 @@ function StandaloneOrbit(){
     const line=new THREE.LineLoop(geometry,material);
     line.renderOrder=100;
     group.add(line);
-
-    const glowGeometry=new THREE.BufferGeometry().setFromPoints(points);
-    const glowMaterial=new THREE.LineBasicMaterial({
-      color:0x9b5cff,
-      transparent:true,
-      opacity:0.20,
-      depthTest:false,
-      depthWrite:false,
-      toneMapped:false
-    });
-    const glow=new THREE.LineLoop(glowGeometry,glowMaterial);
-    glow.scale.set(1.025,1.025,1.025);
-    glow.renderOrder=99;
-    group.add(glow);
 
     group.rotation.set(
       THREE.MathUtils.degToRad(58),
@@ -962,8 +948,6 @@ function StandaloneOrbit(){
       observer.disconnect();
       geometry.dispose();
       material.dispose();
-      glowGeometry.dispose();
-      glowMaterial.dispose();
       renderer.dispose();
       renderer.domElement.remove();
     };
@@ -1236,7 +1220,20 @@ function App() {
         };
         const latestByWorkflow=new Map<number,NonNullable<typeof data.workflow_runs>[number]>();
         for(const run of data.workflow_runs??[]){
-          if(!latestByWorkflow.has(run.workflow_id))latestByWorkflow.set(run.workflow_id,run);
+          const current=latestByWorkflow.get(run.workflow_id);
+          if(!current){
+            latestByWorkflow.set(run.workflow_id,run);
+            continue;
+          }
+
+          const currentNumber=Number(current.run_number)||0;
+          const runNumber=Number(run.run_number)||0;
+          const currentUpdated=Date.parse(current.updated_at)||0;
+          const runUpdated=Date.parse(run.updated_at)||0;
+
+          if(runNumber>currentNumber || (runNumber===currentNumber && runUpdated>currentUpdated)){
+            latestByWorkflow.set(run.workflow_id,run);
+          }
         }
         const workflows=[...latestByWorkflow.values()].map(run=>({
           id:run.id,
@@ -1248,7 +1245,12 @@ function App() {
           status:run.status,
           conclusion:run.conclusion,
           updatedAt:run.updated_at,
-          workflowState:"active"
+          workflowState:
+            run.status==="queued"||run.status==="in_progress"
+              ? "queued"
+              : run.conclusion==="success"
+                ? "success"
+                : "failure"
         })).sort((a,b)=>a.name.localeCompare(b.name));
         if(!disposed){
           setGithubWorkflows(workflows);
@@ -1566,7 +1568,16 @@ function App() {
             ) : githubWorkflows.length===0 ? (
               <div className="workflowMonitorEmpty">NENHUM WORKFLOW DISPONÍVEL</div>
             ) : githubWorkflows.map(workflow=>{
-              const state=workflow.status==="queued"||workflow.status==="in_progress" ? "queued" : workflow.conclusion==="success" ? "success" : "failure";
+              const state=
+                workflow.status==="queued" ||
+                workflow.status==="in_progress" ||
+                workflow.status==="waiting" ||
+                workflow.status==="requested" ||
+                workflow.status==="pending"
+                  ? "queued"
+                  : workflow.conclusion==="success"
+                    ? "success"
+                    : "failure";
               return (
                 <div className="workflowMonitorItem" key={workflow.id}>
                   <span className={`workflowStatusDot ${state}`} aria-label={state}/>
