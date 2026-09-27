@@ -293,6 +293,8 @@ function ResizablePanel({
     <section
       ref={ref as RefObject<HTMLElement>}
       className={`morokResizablePanel ${className} ${interaction ? "is-interacting" : ""}`}
+      data-vertex-curve={curve.topLeft || curve.topRight || curve.bottomRight || curve.bottomLeft ? "1" : "0"}
+      data-edge-curve={curve.top || curve.right || curve.bottom || curve.left ? "1" : "0"}
       style={style}
     >
       <div className="panelMoveHandle" onPointerDown={startMove} title="Arrastar painel" aria-label={`Mover painel ${id}`} />
