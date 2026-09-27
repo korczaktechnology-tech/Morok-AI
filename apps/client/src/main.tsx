@@ -252,10 +252,10 @@ function ResizablePanel({
     const move = (e: PointerEvent) => {
       const parent = ref.current?.offsetParent as HTMLElement | null;
       if (!parent) return;
-      const maxLeft = Math.max(0, parent.clientWidth - (start.width || 0));
-      const maxTop = Math.max(0, parent.clientHeight - (start.height || 0));
-      const left = Math.max(0, Math.min(maxLeft, (start.left || 0) + e.clientX - startX));
-      const top = Math.max(0, Math.min(maxTop, (start.top || 0) + e.clientY - startY));
+      // Panels are intentionally allowed to leave their original side column.
+      // The dashboard itself is the workspace; the parent column is not a movement barrier.
+      const left = (start.left || 0) + e.clientX - startX;
+      const top = (start.top || 0) + e.clientY - startY;
       setGeometry(current => ({ ...current, left, top }));
     };
 
