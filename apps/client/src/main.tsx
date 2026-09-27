@@ -121,9 +121,19 @@ function EarthGlobe(){
     const resize=()=>{
       const width=Math.max(1,mount.clientWidth);
       const height=Math.max(1,mount.clientHeight);
-      renderer.setSize(width,height,false);
-      camera.aspect=width/height;
+      // O viewport do globo é sempre quadrado. Isso impede que a esfera seja
+      // esticada visualmente quando a área disponível for mais larga que alta.
+      const size=Math.max(1,Math.min(width,height));
+      renderer.setSize(size,size,false);
+      camera.aspect=1;
       camera.updateProjectionMatrix();
+      const canvas=renderer.domElement;
+      canvas.style.position="absolute";
+      canvas.style.width=`${size}px`;
+      canvas.style.height=`${size}px`;
+      canvas.style.left="50%";
+      canvas.style.top="50%";
+      canvas.style.transform="translate(-50%,-50%)";
     };
 
     const down=(e:PointerEvent)=>{
