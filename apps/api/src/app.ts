@@ -39,7 +39,7 @@ export function buildApp(){
   app.get("/api/v1/github/workflows",async(_req,reply)=>{
     const now=Date.now();
     if(githubWorkflowCache && githubWorkflowCache.expiresAt>now){
-      return reply.header("cache-control","public, max-age=90").send({workflows:githubWorkflowCache.workflows});
+      return reply.header("cache-control","no-store, no-cache, must-revalidate").send({workflows:githubWorkflowCache.workflows});
     }
 
     const controller=new AbortController();
@@ -64,7 +64,7 @@ export function buildApp(){
       );
       if(!response.ok){
         if(githubWorkflowCache){
-          return reply.header("cache-control","public, max-age=5").send({
+          return reply.header("cache-control","no-store, no-cache, must-revalidate").send({
             workflows:githubWorkflowCache.workflows,
             stale:true
           });
@@ -99,12 +99,12 @@ export function buildApp(){
         }))
         .sort((a,b)=>a.name.localeCompare(b.name));
 
-      githubWorkflowCache={expiresAt:Date.now()+90000,workflows};
-      return reply.header("cache-control","public, max-age=5").send({workflows});
+      githubWorkflowCache={expiresAt:Date.now()+2500,workflows};
+      return reply.header("cache-control","no-store, no-cache, must-revalidate").send({workflows});
     }catch(error){
       app.log.warn({error},"Falha ao obter estado dos workflows do GitHub");
       if(githubWorkflowCache){
-        return reply.header("cache-control","public, max-age=5").send({
+        return reply.header("cache-control","no-store, no-cache, must-revalidate").send({
           workflows:githubWorkflowCache.workflows,
           stale:true
         });
