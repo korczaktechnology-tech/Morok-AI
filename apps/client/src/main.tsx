@@ -887,7 +887,7 @@ function StandaloneOrbit(){
     camera.position.set(0,0,5.2);
 
     const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:"high-performance"});
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.25));
+    renderer.setPixelRatio(1);
     renderer.setClearColor(0x000000,0);
     renderer.outputColorSpace=THREE.SRGBColorSpace;
     mount.replaceChildren(renderer.domElement);
@@ -896,17 +896,17 @@ function StandaloneOrbit(){
     scene.add(group);
 
     const orbitDefinitions:Array<{
-      a:number;b:number;color:number;rot:[number,number,number];speed:number
+      a:number;b:number;color:number;opacity:number;rot:[number,number,number];speed:number
     }>= [
-      {a:1.05,b:.85,color:0x9b5cff,rot:[58,12,-18],speed:.72},
-      {a:1.13,b:.72,color:0x5c8cff,rot:[38,-28,31],speed:-.58},
-      {a:.94,b:.80,color:0xff3d68,rot:[72,42,8],speed:.91},
-      {a:1.18,b:.66,color:0x35d7ff,rot:[24,64,-36],speed:-.67},
-      {a:1.00,b:.68,color:0xff7a3d,rot:[61,-52,47],speed:.81},
-      {a:1.10,b:.78,color:0xb76cff,rot:[44,22,71],speed:-.76},
-      {a:.91,b:.74,color:0x65f0c2,rot:[78,-18,-54],speed:.63},
-      {a:1.16,b:.58,color:0xffffff,rot:[31,48,19],speed:-.87},
-      {a:.98,b:.63,color:0xffd45c,rot:[67,-67,35],speed:.69}
+      {a:1.05,b:.85,color:0x9b5cff,opacity:.50,rot:[58,12,-18],speed:.72},
+      {a:1.13,b:.72,color:0x5c8cff,opacity:.52,rot:[38,-28,31],speed:-.58},
+      {a:.94,b:.80,color:0xff3d68,opacity:.55,rot:[72,42,8],speed:.91},
+      {a:1.18,b:.66,color:0x35d7ff,opacity:.58,rot:[24,64,-36],speed:-.67},
+      {a:1.00,b:.68,color:0xff7a3d,opacity:.60,rot:[61,-52,47],speed:.81},
+      {a:1.10,b:.78,color:0xb76cff,opacity:.62,rot:[44,22,71],speed:-.76},
+      {a:.91,b:.74,color:0x65f0c2,opacity:.64,rot:[78,-18,-54],speed:.63},
+      {a:1.16,b:.58,color:0xffffff,opacity:.65,rot:[31,48,19],speed:-.87},
+      {a:.98,b:.63,color:0xffd45c,opacity:.57,rot:[67,-67,35],speed:.69}
     ];
 
     const resources:{
@@ -932,7 +932,7 @@ function StandaloneOrbit(){
 
     for(const [index,orbit] of orbitDefinitions.entries()){
       const points:THREE.Vector3[]=[];
-      const segments=720;
+      const segments=180;
       for(let i=0;i<=segments;i++){
         points.push(getOrbitPoint(orbit,(i/segments)*Math.PI*2));
       }
@@ -941,7 +941,7 @@ function StandaloneOrbit(){
       const material=new THREE.LineBasicMaterial({
         color:orbit.color,
         transparent:true,
-        opacity:.70,
+        opacity:orbit.opacity,
         depthTest:false,
         depthWrite:false,
         toneMapped:false
@@ -954,7 +954,7 @@ function StandaloneOrbit(){
         THREE.MathUtils.degToRad(orbit.rot[2])
       );
 
-      const particleGeometry=new THREE.SphereGeometry(.035,12,12);
+      const particleGeometry=new THREE.SphereGeometry(.022,8,8);
       const particleMaterial=new THREE.MeshBasicMaterial({
         color:orbit.color,
         transparent:false,
@@ -987,7 +987,7 @@ function StandaloneOrbit(){
     resize();
 
     let raf=0;
-    const animate=(now:number)=>{
+    let animationAccumulator=0;\n    const animate=(now:number)=>{
       if(disposed)return;
       raf=requestAnimationFrame(animate);
       const delta=Math.min((now-lastTime)/1000,.05);
