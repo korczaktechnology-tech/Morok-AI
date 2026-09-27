@@ -1164,7 +1164,7 @@ function App() {
       }catch{}
     };
     loadWorkflows();
-    const interval=window.setInterval(loadWorkflows,30000);
+    const interval=window.setInterval(loadWorkflows,5000);
     return()=>{disposed=true;window.clearInterval(interval);};
   }, []);
 
