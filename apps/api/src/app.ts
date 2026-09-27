@@ -39,7 +39,7 @@ export function buildApp(){
   app.get("/api/v1/github/workflows",async(_req,reply)=>{
     const now=Date.now();
     if(githubWorkflowCache && githubWorkflowCache.expiresAt>now){
-      return reply.header("cache-control","public, max-age=30").send({workflows:githubWorkflowCache.workflows});
+      return reply.header("cache-control","public, max-age=90").send({workflows:githubWorkflowCache.workflows});
     }
 
     const controller=new AbortController();
@@ -62,7 +62,15 @@ export function buildApp(){
           cache:"no-store"
         }
       );
-      if(!response.ok)return reply.code(502).send({error:"github_workflow_runs_unavailable"});
+      if(!response.ok){
+        if(githubWorkflowCache){
+          return reply.header("cache-control","public, max-age=5").send({
+            workflows:githubWorkflowCache.workflows,
+            stale:true
+          });
+        }
+        return reply.code(502).send({error:"github_workflow_runs_unavailable"});
+      }
 
       const data=await response.json() as {
         workflow_runs?:Array<{
@@ -91,7 +99,7 @@ export function buildApp(){
         }))
         .sort((a,b)=>a.name.localeCompare(b.name));
 
-      githubWorkflowCache={expiresAt:Date.now()+30000,workflows};
+      githubWorkflowCache={expiresAt:Date.now()+90000,workflows};
       return reply.header("cache-control","public, max-age=5").send({workflows});
     }catch(error){
       app.log.warn({error},"Falha ao obter estado dos workflows do GitHub");
