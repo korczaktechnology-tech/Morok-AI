@@ -31,6 +31,42 @@ export function buildApp(){
 
   app.get("/health",async()=>({status:"ok",service:"morok-api",environment:config.nodeEnv}));
   app.get("/api/v1/status",async()=>({status:"ok",identity:MOROK_IDENTITY,phase:1,capabilities:{commands:coreCommands.length,permissions:corePermissions.length,tools:createCoreToolRegistry(await connectDatabase()).list().length,modelGateway:Boolean(config.modelApiUrl),voice:true,web:true,files:true,automation:true,organizer:true}}));
+  app.get("/api/v1/github/workflows",async(_req,reply)=>{
+    try{
+      const response=await fetch("https://api.github.com/repos/korczaktechnology-tech/Morok-AI/actions/runs?per_page=100",{
+        headers:{
+          "accept":"application/vnd.github+json",
+          "user-agent":"Morok-AI/1.0"
+        },
+        cache:"no-store"
+      });
+      if(!response.ok)return reply.code(response.status).send({error:"github_workflows_unavailable"});
+      const data=await response.json() as {workflow_runs?:Array<{
+        id:number;name:string;run_number:number;status:string;conclusion:string|null;
+        head_sha:string;head_commit?:{message?:string}|null;created_at:string;updated_at:string;
+      }>};
+      const latestByWorkflow=new Map<string,typeof data.workflow_runs[number]>();
+      for(const run of data.workflow_runs??[]){
+        const key=run.name;
+        if(!latestByWorkflow.has(key))latestByWorkflow.set(key,run);
+      }
+      return reply.header("cache-control","no-store").send({
+        workflows:Array.from(latestByWorkflow.values()).map(run=>({
+          id:run.id,
+          name:run.name,
+          runNumber:run.run_number,
+          commit:run.head_commit?.message?.split("\n")[0]??run.head_sha.slice(0,7),
+          sha:run.head_sha,
+          status:run.status,
+          conclusion:run.conclusion,
+          updatedAt:run.updated_at
+        }))
+      });
+    }catch(error){
+      app.log.warn({error},"Falha ao obter workflows do GitHub");
+      return reply.code(502).send({error:"github_workflows_fetch_failed"});
+    }
+  });
   app.get("/api/v1/orbital/tle/:norad",async(req,reply)=>{
     const {norad}=req.params as {norad?:string};
     if(!norad||!/^\d{1,9}$/.test(norad))return reply.code(400).send({error:"invalid_norad"});
