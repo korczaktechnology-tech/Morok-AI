@@ -73,6 +73,7 @@ function Icon({ children }: { children: React.ReactNode }) {
 
 type ResizeDirection = "n" | "e" | "s" | "w" | "ne" | "nw" | "se" | "sw";
 type PanelGeometry = { width?: number; height?: number; left?: number; top?: number };
+type PanelCurve = { topLeft: number; topRight: number; bottomRight: number; bottomLeft: number };
 
 function ResizablePanel({
   id,
@@ -93,15 +94,24 @@ function ResizablePanel({
 }) {
   const ref = useRef<HTMLElement | null>(null);
   const [geometry, setGeometry] = useState<PanelGeometry>({});
-  const [interaction, setInteraction] = useState<"resize" | "move" | null>(null);
+  const [interaction, setInteraction] = useState<"resize" | "move" | "curve" | null>(null);
+  const [curve, setCurve] = useState<PanelCurve>({ topLeft: 0, topRight: 0, bottomRight: 0, bottomLeft: 0 });
 
   useEffect(() => {
     const saved = localStorage.getItem("morok-dashboard-geometry");
-    if (!saved) return;
-    try {
-      const all = JSON.parse(saved) as Record<string, PanelGeometry>;
-      if (all[id]) setGeometry(all[id]);
-    } catch {}
+    if (saved) {
+      try {
+        const all = JSON.parse(saved) as Record<string, PanelGeometry>;
+        if (all[id]) setGeometry(all[id]);
+      } catch {}
+    }
+    const savedCurves = localStorage.getItem("morok-dashboard-curves");
+    if (savedCurves) {
+      try {
+        const all = JSON.parse(savedCurves) as Record<string, PanelCurve>;
+        if (all[id]) setCurve(all[id]);
+      } catch {}
+    }
   }, [id]);
 
   const normalizeGeometry = (): PanelGeometry | null => {
@@ -172,6 +182,66 @@ function ResizablePanel({
     window.addEventListener("pointerup", end, { once: true });
   };
 
+  const startCurve = (event: React.PointerEvent<HTMLDivElement>, direction: ResizeDirection) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const element = ref.current;
+    if (!element) return;
+    const rect = element.getBoundingClientRect();
+    const startX = event.clientX;
+    const startY = event.clientY;
+    const start = { ...curve };
+    const localX = Math.max(0, Math.min(rect.width, startX - rect.left));
+    const localY = Math.max(0, Math.min(rect.height, startY - rect.top));
+    const xRatio = rect.width ? localX / rect.width : 0.5;
+    const yRatio = rect.height ? localY / rect.height : 0.5;
+    const maxRadius = Math.min(180, Math.max(24, Math.min(rect.width, rect.height) * 0.45));
+    setInteraction("curve");
+
+    const move = (e: PointerEvent) => {
+      const dx = Math.abs(e.clientX - startX);
+      const dy = Math.abs(e.clientY - startY);
+      const amount = Math.min(maxRadius, Math.max(dx, dy) * 1.15);
+      const next = { ...start };
+      if (direction === "n") {
+        next.topLeft = Math.max(0, Math.min(maxRadius, amount * (1 - xRatio)));
+        next.topRight = Math.max(0, Math.min(maxRadius, amount * xRatio));
+      } else if (direction === "s") {
+        next.bottomLeft = Math.max(0, Math.min(maxRadius, amount * (1 - xRatio)));
+        next.bottomRight = Math.max(0, Math.min(maxRadius, amount * xRatio));
+      } else if (direction === "w") {
+        next.topLeft = Math.max(0, Math.min(maxRadius, amount * (1 - yRatio)));
+        next.bottomLeft = Math.max(0, Math.min(maxRadius, amount * yRatio));
+      } else if (direction === "e") {
+        next.topRight = Math.max(0, Math.min(maxRadius, amount * (1 - yRatio)));
+        next.bottomRight = Math.max(0, Math.min(maxRadius, amount * yRatio));
+      } else {
+        if (direction.includes("n")) next.topLeft = next.topRight = amount;
+        if (direction.includes("e")) next.topRight = next.bottomRight = amount;
+        if (direction.includes("s")) next.bottomLeft = next.bottomRight = amount;
+        if (direction.includes("w")) next.topLeft = next.bottomLeft = amount;
+      }
+      setCurve(next);
+    };
+
+    const end = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", end);
+      setInteraction(null);
+      setCurve(current => {
+        try {
+          const saved = JSON.parse(localStorage.getItem("morok-dashboard-curves") || "{}") as Record<string, PanelCurve>;
+          saved[id] = current;
+          localStorage.setItem("morok-dashboard-curves", JSON.stringify(saved));
+        } catch {}
+        return current;
+      });
+    };
+
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", end, { once: true });
+  };
+
   const startMove = (event: React.PointerEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.stopPropagation();
@@ -217,6 +287,10 @@ function ResizablePanel({
     ...(geometry.height !== undefined ? { "--panel-height": `${geometry.height}px` } : {}),
     ...(geometry.left !== undefined ? { "--panel-left": `${geometry.left}px` } : {}),
     ...(geometry.top !== undefined ? { "--panel-top": `${geometry.top}px` } : {}),
+    "--panel-curve-tl": `${curve.topLeft}px`,
+    "--panel-curve-tr": `${curve.topRight}px`,
+    "--panel-curve-br": `${curve.bottomRight}px`,
+    "--panel-curve-bl": `${curve.bottomLeft}px`,
   } as React.CSSProperties;
 
   return (
@@ -227,14 +301,14 @@ function ResizablePanel({
     >
       <div className="panelMoveHandle" onPointerDown={startMove} title="Arrastar painel" aria-label={`Mover painel ${id}`} />
       {children}
-      <div className="resizeHandle resizeHandleN" onPointerDown={e => startResize(e, "n")} />
-      <div className="resizeHandle resizeHandleE" onPointerDown={e => startResize(e, "e")} />
-      <div className="resizeHandle resizeHandleS" onPointerDown={e => startResize(e, "s")} />
-      <div className="resizeHandle resizeHandleW" onPointerDown={e => startResize(e, "w")} />
-      <div className="resizeHandle resizeHandleNE" onPointerDown={e => startResize(e, "ne")} />
-      <div className="resizeHandle resizeHandleNW" onPointerDown={e => startResize(e, "nw")} />
-      <div className="resizeHandle resizeHandleSE" onPointerDown={e => startResize(e, "se")} />
-      <div className="resizeHandle resizeHandleSW" onPointerDown={e => startResize(e, "sw")} />
+      <div className="resizeHandle resizeHandleN" onPointerDown={e => e.ctrlKey ? startCurve(e, "n") : startResize(e, "n")} />
+      <div className="resizeHandle resizeHandleE" onPointerDown={e => e.ctrlKey ? startCurve(e, "e") : startResize(e, "e")} />
+      <div className="resizeHandle resizeHandleS" onPointerDown={e => e.ctrlKey ? startCurve(e, "s") : startResize(e, "s")} />
+      <div className="resizeHandle resizeHandleW" onPointerDown={e => e.ctrlKey ? startCurve(e, "w") : startResize(e, "w")} />
+      <div className="resizeHandle resizeHandleNE" onPointerDown={e => e.ctrlKey ? startCurve(e, "ne") : startResize(e, "ne")} />
+      <div className="resizeHandle resizeHandleNW" onPointerDown={e => e.ctrlKey ? startCurve(e, "nw") : startResize(e, "nw")} />
+      <div className="resizeHandle resizeHandleSE" onPointerDown={e => e.ctrlKey ? startCurve(e, "se") : startResize(e, "se")} />
+      <div className="resizeHandle resizeHandleSW" onPointerDown={e => e.ctrlKey ? startCurve(e, "sw") : startResize(e, "sw")} />
     </section>
   );
 }
