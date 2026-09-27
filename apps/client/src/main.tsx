@@ -70,6 +70,99 @@ function Icon({ children }: { children: React.ReactNode }) {
   return <span className="navIcon" aria-hidden="true">{children}</span>;
 }
 
+
+type ResizeDirection = "e" | "s" | "se";
+
+function ResizablePanel({
+  id,
+  className,
+  children,
+  minWidth = 120,
+  minHeight = 90,
+  maxWidth = 1200,
+  maxHeight = 900,
+  direction = "se",
+}: {
+  id: string;
+  className: string;
+  children: React.ReactNode;
+  minWidth?: number;
+  minHeight?: number;
+  maxWidth?: number;
+  maxHeight?: number;
+  direction?: ResizeDirection;
+}) {
+  const ref = useRef<HTMLElement | null>(null);
+  const [size, setSize] = useState<{ width?: number; height?: number }>({});
+  const [resizing, setResizing] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("morok-dashboard-sizes");
+    if (!saved) return;
+    try {
+      const all = JSON.parse(saved) as Record<string, { width?: number; height?: number }>;
+      if (all[id]) setSize(all[id]);
+    } catch {}
+  }, [id]);
+
+  const startResize = (event: React.PointerEvent<HTMLDivElement>, direction: ResizeDirection) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const element = ref.current;
+    if (!element) return;
+
+    const startX = event.clientX;
+    const startY = event.clientY;
+    const start = element.getBoundingClientRect();
+    setResizing(true);
+    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+
+    const move = (e: PointerEvent) => {
+      const next: { width?: number; height?: number } = {};
+      if (direction.includes("e")) {
+        next.width = Math.max(minWidth, Math.min(maxWidth, start.width + e.clientX - startX));
+      }
+      if (direction.includes("s")) {
+        next.height = Math.max(minHeight, Math.min(maxHeight, start.height + e.clientY - startY));
+      }
+      setSize(next);
+    };
+
+    const end = () => {
+      setResizing(false);
+      setSize(current => {
+        try {
+          const saved = JSON.parse(localStorage.getItem("morok-dashboard-sizes") || "{}") as Record<string, { width?: number; height?: number }>;
+          saved[id] = current;
+          localStorage.setItem("morok-dashboard-sizes", JSON.stringify(saved));
+        } catch {}
+        return current;
+      });
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", end);
+    };
+
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", end, { once: true });
+  };
+
+  return (
+    <section
+      ref={ref as React.RefObject<HTMLElement>}
+      className={`morokResizablePanel ${className} ${resizing ? "is-resizing" : ""}`}
+      style={{
+        ...(size.width ? { width: size.width } : {}),
+        ...(size.height ? { height: size.height } : {}),
+      }}
+    >
+      {children}
+      <div className="resizeHandle resizeHandleE" onPointerDown={e => startResize(e, "e")} />
+      <div className="resizeHandle resizeHandleS" onPointerDown={e => startResize(e, "s")} />
+      <div className="resizeHandle resizeHandleSE" onPointerDown={e => startResize(e, "se")} />
+    </section>
+  );
+}
+
 function Dashboard() {
   const systems = ["ERP","FLOW","OPS","VISION","CONNECT","MOBILE","DOCUMENTS","AI"];
   const processes = [
@@ -103,7 +196,7 @@ function Dashboard() {
       </header>
 
       <aside className="dashLeft">
-        <section className="dashPanel resourcePanel">
+        <ResizablePanel id="resources" className="dashPanel resourcePanel" minWidth={250} minHeight={220}>
           {[
             ["CPU","12%"],["MEMÓRIA RAM","48%"],["ARMAZENAMENTO","67%"],["REDE","1.2 Gbps"]
           ].map(([label,value],i)=>
