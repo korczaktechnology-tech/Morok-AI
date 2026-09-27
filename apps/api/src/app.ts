@@ -31,23 +31,53 @@ export function buildApp(){
 
   app.get("/health",async()=>({status:"ok",service:"morok-api",environment:config.nodeEnv}));
   app.get("/api/v1/status",async()=>({status:"ok",identity:MOROK_IDENTITY,phase:1,capabilities:{commands:coreCommands.length,permissions:corePermissions.length,tools:createCoreToolRegistry(await connectDatabase()).list().length,modelGateway:Boolean(config.modelApiUrl),voice:true,web:true,files:true,automation:true,organizer:true}}));
+  let githubWorkflowCache:{expiresAt:number;workflows:Array<{
+    id:number;workflowId:number;name:string;runNumber:number;commit:string;sha:string;
+    status:string;conclusion:string|null;updatedAt:string;workflowState:string;
+  }>}|null=null;
+
   app.get("/api/v1/github/workflows",async(_req,reply)=>{
+    const now=Date.now();
+    if(githubWorkflowCache && githubWorkflowCache.expiresAt>now){
+      return reply.header("cache-control","public, max-age=2").send({workflows:githubWorkflowCache.workflows});
+    }
+
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),3500);
+
     try{
       const headers={
         "accept":"application/vnd.github+json",
         "user-agent":"Morok-AI/1.0"
       };
-      const workflowsResponse=await fetch("https://api.github.com/repos/korczaktechnology-tech/Morok-AI/actions/workflows?per_page=100",{headers,cache:"no-store"});
-      if(!workflowsResponse.ok)return reply.code(workflowsResponse.status).send({error:"github_workflows_unavailable"});
-      const workflowsData=await workflowsResponse.json() as {workflows?:Array<{id:number;name:string;path:string;state:string}>};
-      const workflows=await Promise.all((workflowsData.workflows??[]).map(async workflow=>{
-        const runsResponse=await fetch(`https://api.github.com/repos/korczaktechnology-tech/Morok-AI/actions/workflows/${workflow.id}/runs?per_page=1`,{headers,cache:"no-store"});
-        if(!runsResponse.ok)throw new Error(`github_workflow_runs_unavailable:${workflow.id}`);
-        const runsData=await runsResponse.json() as {workflow_runs?:Array<{
-          id:number;name:string;run_number:number;status:string;conclusion:string|null;
+
+      // Duas chamadas paralelas substituem o antigo N+1: uma para os workflows
+      // e outra para os runs mais recentes do repositório inteiro.
+      const [workflowsResponse,runsResponse]=await Promise.all([
+        fetch("https://api.github.com/repos/korczaktechnology-tech/Morok-AI/actions/workflows?per_page=100",{headers,signal:controller.signal,cache:"no-store"}),
+        fetch("https://api.github.com/repos/korczaktechnology-tech/Morok-AI/actions/runs?per_page=100",{headers,signal:controller.signal,cache:"no-store"})
+      ]);
+
+      if(!workflowsResponse.ok)return reply.code(502).send({error:"github_workflows_unavailable"});
+      if(!runsResponse.ok)return reply.code(502).send({error:"github_workflow_runs_unavailable"});
+
+      const workflowsData=await workflowsResponse.json() as {
+        workflows?:Array<{id:number;name:string;path:string;state:string}>
+      };
+      const runsData=await runsResponse.json() as {
+        workflow_runs?:Array<{
+          id:number;workflow_id:number;name:string;run_number:number;status:string;conclusion:string|null;
           head_sha:string;head_commit?:{message?:string}|null;updated_at:string;
-        }>};
-        const run=runsData.workflow_runs?.[0];
+        }>
+      };
+
+      const latestRunByWorkflow=new Map<number,NonNullable<typeof runsData.workflow_runs>[number]>();
+      for(const run of runsData.workflow_runs??[]){
+        if(!latestRunByWorkflow.has(run.workflow_id))latestRunByWorkflow.set(run.workflow_id,run);
+      }
+
+      const workflows=(workflowsData.workflows??[]).map(workflow=>{
+        const run=latestRunByWorkflow.get(workflow.id);
         return {
           id:run?.id??workflow.id,
           workflowId:workflow.id,
@@ -60,12 +90,15 @@ export function buildApp(){
           updatedAt:run?.updated_at??new Date(0).toISOString(),
           workflowState:workflow.state
         };
-      }));
-      workflows.sort((a,b)=>a.name.localeCompare(b.name));
-      return reply.header("cache-control","no-store").send({workflows});
+      }).sort((a,b)=>a.name.localeCompare(b.name));
+
+      githubWorkflowCache={expiresAt:Date.now()+2000,workflows};
+      return reply.header("cache-control","public, max-age=2").send({workflows});
     }catch(error){
       app.log.warn({error},"Falha ao obter estado dos workflows do GitHub");
-      return reply.code(502).send({error:"github_workflows_fetch_failed"});
+      return reply.code(502).send({error:error instanceof DOMException&&error.name==="AbortError"?"github_workflows_timeout":"github_workflows_fetch_failed"});
+    }finally{
+      clearTimeout(timeout);
     }
   });
   app.get("/api/v1/orbital/tle/:norad",async(req,reply)=>{
