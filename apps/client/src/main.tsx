@@ -406,9 +406,9 @@ function OrbitalRings(){
     const makeLineMaterial=(color:number,opacity:number)=>{
       return new THREE.LineBasicMaterial({
         color,
-        transparent:true,
-        opacity,
-        blending:THREE.AdditiveBlending,
+        transparent:false,
+        opacity:1,
+        blending:THREE.NormalBlending,
         depthWrite:false,
         depthTest:false,
         toneMapped:false
@@ -420,28 +420,32 @@ function OrbitalRings(){
         new THREE.BufferGeometry(),
         makeLineMaterial(definition.color,.58)
       );
-      line.renderOrder=30;
+      line.renderOrder=1000;
+      line.frustumCulled=false;
 
       const prediction=new THREE.Line(
         new THREE.BufferGeometry(),
         makeLineMaterial(definition.color,.42)
       );
-      prediction.renderOrder=40;
+      prediction.renderOrder=1001;
+      prediction.frustumCulled=false;
 
       // A predição é ~25% mais transparente que a trajetória principal.
       const marker=new THREE.Mesh(
-        new THREE.SphereGeometry(.032,14,14),
+        new THREE.SphereGeometry(.055,20,20),
         new THREE.MeshBasicMaterial({
           color:definition.color,
-          transparent:true,
+          transparent:false,
           opacity:1,
-          blending:THREE.AdditiveBlending,
+          blending:THREE.NormalBlending,
           depthWrite:false,
           depthTest:false,
           toneMapped:false
         })
       );
-      marker.renderOrder=35;marker.visible=false;
+      marker.renderOrder=1002;
+      marker.frustumCulled=false;
+      marker.visible=false;
 
       orbitGroup.add(line,prediction,marker);
       const track={definition,line,prediction,marker};
