@@ -1194,6 +1194,14 @@ function App() {
   const [githubWorkflows, setGithubWorkflows] = useState<GithubWorkflow[]>([]);
   const [workflowLoading, setWorkflowLoading] = useState(false);
   const [workflowError, setWorkflowError] = useState<string | null>(null);
+  const [workflowMonitorPosition, setWorkflowMonitorPosition] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("morok_workflow_monitor_position") ?? "");
+      if (Number.isFinite(saved?.x) && Number.isFinite(saved?.y)) return { x: saved.x, y: saved.y };
+    } catch {}
+    return { x: 18, y: 18 };
+  });
+  const workflowDragRef = useRef<{ pointerId:number; offsetX:number; offsetY:number } | null>(null);
   const workflowRequestRef = useRef<AbortController | null>(null);
 
   const speech = useMemo(() => {
@@ -1263,7 +1271,7 @@ function App() {
 
     if(workflowMonitorOpen){
       void loadWorkflows();
-      refreshTimer=window.setInterval(()=>void loadWorkflows(),3000);
+      refreshTimer=window.setInterval(()=>void loadWorkflows(),2000);
     }else{
       workflowRequestRef.current?.abort();
     }
@@ -1275,6 +1283,22 @@ function App() {
       workflowRequestRef.current=null;
     };
   }, [workflowMonitorOpen]);
+
+  useEffect(()=>{
+    const onPointerMove=(event:PointerEvent)=>{
+      const drag=workflowDragRef.current;
+      if(!drag)return;
+      const width=Math.min(390,window.innerWidth-20);
+      const height=Math.min(window.innerHeight*.78,560);
+      const x=Math.max(8,Math.min(window.innerWidth-width-8,event.clientX-drag.offsetX));
+      const y=Math.max(8,Math.min(window.innerHeight-height-8,event.clientY-drag.offsetY));
+      setWorkflowMonitorPosition({x,y});
+    };
+    const onPointerUp=()=>{ workflowDragRef.current=null; };
+    window.addEventListener("pointermove",onPointerMove);
+    window.addEventListener("pointerup",onPointerUp);
+    return()=>{ window.removeEventListener("pointermove",onPointerMove); window.removeEventListener("pointerup",onPointerUp); };
+  }, []);
 
   useEffect(()=>{
     const onKeyDown=(event:KeyboardEvent)=>{
@@ -1542,10 +1566,28 @@ function App() {
   return (
     <>
       {workflowMonitorOpen && (
-        <div className="workflowMonitor" role="status" aria-label="Status dos workflows do GitHub">
-          <div className="workflowMonitorHeader">
+        <div
+          className="workflowMonitor"
+          style={{left:workflowMonitorPosition.x,top:workflowMonitorPosition.y}}
+          role="status"
+          aria-label="Status dos workflows do GitHub"
+        >
+          <div
+            className="workflowMonitorHeader workflowMonitorDragHandle"
+            onPointerDown={(event)=>{
+              workflowDragRef.current={
+                pointerId:event.pointerId,
+                offsetX:event.clientX-workflowMonitorPosition.x,
+                offsetY:event.clientY-workflowMonitorPosition.y
+              };
+              event.currentTarget.setPointerCapture?.(event.pointerId);
+            }}
+            onPointerUp={()=>{
+              localStorage.setItem("morok_workflow_monitor_position",JSON.stringify(workflowMonitorPosition));
+            }}
+          >
             <span>GITHUB ACTIONS</span>
-            <span className="workflowMonitorHint">CTRL + ALT + K</span>
+            <span className="workflowMonitorHint">ARRASTE · CTRL + ALT + K</span>
           </div>
           <div className="workflowMonitorList">
             {workflowLoading && githubWorkflows.length===0 ? (
@@ -1566,7 +1608,7 @@ function App() {
                     ? "success"
                     : "failure";
               return (
-                <div className="workflowMonitorItem" key={workflow.id}>
+                <div className={`workflowMonitorItem ${state}`} key={workflow.id}>
                   <span className={`workflowStatusDot ${state}`} aria-label={state}/>
                   <div className="workflowMonitorInfo">
                     <div className="workflowMonitorName">{workflow.name}</div>
