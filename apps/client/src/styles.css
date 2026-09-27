@@ -1865,3 +1865,36 @@ mix-blend-mode:screen;opacity:.65}
     box-shadow:0 0 7px currentColor!important;
   }
 }
+
+/* MOROK // REFERENCE MATCH 03 — ASSISTANT CORE */
+@media(min-width:1360px){
+  .dashLeft .assistantPanel{
+    width:calc(100% + 176px)!important;
+    height:214px!important;
+    bottom:0!important;
+    padding:16px 20px!important;
+    gap:18px!important;
+    background:linear-gradient(90deg,rgba(2,4,16,.72),rgba(3,5,20,.42),transparent)!important;
+    border-color:rgba(72,91,194,.38)!important;
+  }
+  .dashLeft .miniRadar{
+    width:156px!important;
+    height:156px!important;
+    flex-basis:156px!important;
+  }
+  .dashLeft .assistantPanel h3{
+    font-size:19px!important;
+    letter-spacing:.6px!important;
+  }
+  .dashLeft .assistantPanel small{
+    font-size:9px!important;
+  }
+  .dashLeft .assistantPanel p{
+    font-size:11px!important;
+    line-height:1.5!important;
+    margin:12px 0!important;
+  }
+  .dashLeft .wave{
+    font-size:16px!important;
+  }
+}
