@@ -76,194 +76,227 @@ function EarthGlobe(){
     const mount=mountRef.current;
     if(!mount)return;
 
-    const svg=mount.querySelector("svg") as SVGSVGElement|null;
-    if(!svg)return;
+    const scene=new THREE.Scene();
+    const camera=new THREE.PerspectiveCamera(28,1,.1,100);
+    camera.position.set(0,0,5.4);
+
+    const renderer=new THREE.WebGLRenderer({
+      antialias:true,
+      alpha:true,
+      powerPreference:"high-performance"
+    });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
+    renderer.outputColorSpace=THREE.SRGBColorSpace;
+    renderer.setClearColor(0x000000,0);
+    mount.appendChild(renderer.domElement);
+
+    const globe=new THREE.Group();
+    scene.add(globe);
+
+    const textureLoader=new THREE.TextureLoader();
+    const earthTexture=textureLoader.load(
+      "https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg"
+    );
+    earthTexture.colorSpace=THREE.SRGBColorSpace;
+    earthTexture.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
+
+    const material=new THREE.ShaderMaterial({
+      uniforms:{
+        uMap:{value:earthTexture},
+        uTime:{value:0},
+        uOpacity:{value:.88}
+      },
+      vertexShader:
+        `varying vec2 vUv;
+         varying vec3 vNormal;
+         varying vec3 vViewDir;
+         void main(){
+           vUv=uv;
+           vec4 worldPosition=modelMatrix*vec4(position,1.0);
+           vNormal=normalize(normalMatrix*normal);
+           vViewDir=normalize(cameraPosition-worldPosition.xyz);
+           gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);
+         }`,
+      fragmentShader:
+        `uniform sampler2D uMap;
+         uniform float uTime;
+         uniform float uOpacity;
+         varying vec2 vUv;
+         varying vec3 vNormal;
+         varying vec3 vViewDir;
+
+         void main(){
+           vec3 tex=texture2D(uMap,vUv).rgb;
+
+           // Extrai a geografia real da textura, mas remove a aparência fotográfica.
+           float land=smoothstep(-.035,.18,tex.r-tex.b);
+           float luminance=dot(tex,vec3(.299,.587,.114));
+           float geography=mix(.10,.95,land);
+           geography*=.72+.28*smoothstep(.08,.65,luminance);
+
+           // Paleta de projeção: não são cores de planeta; são sinais de holograma.
+           vec3 violet=vec3(.34,.08,1.0);
+           vec3 magenta=vec3(1.0,.04,.62);
+           vec3 cyan=vec3(.02,.82,1.0);
+           vec3 holo=mix(violet,cyan,smoothstep(.15,.88,vUv.x));
+           holo=mix(holo,magenta,smoothstep(.38,.72,vUv.y)*.22);
+
+           float fresnel=pow(1.0-max(dot(normalize(vNormal),normalize(vViewDir)),0.0),2.7);
+           float scanWave=sin(vUv.y*240.0-uTime*5.5)*.5+.5;
+           float scanlines=.78+.22*scanWave;
+           float beam=exp(-pow((vUv.y-mod(uTime*.045,1.0))/.035,2.0));
+           float signal=geography*scanlines+(fresnel*.42)+(beam*.55);
+
+           // Interferência digital muito sutil para dar aspecto de projeção.
+           float glitch=step(.992,sin(vUv.y*910.0+uTime*8.0)*.5+.5)*.16;
+           signal+=glitch;
+
+           float alpha=clamp(signal*uOpacity,0.0,1.0);
+           alpha*=.86+.14*fresnel;
+           gl_FragColor=vec4(holo*signal,alpha);
+         }`,
+      transparent:true,
+      depthWrite:false,
+      blending:THREE.AdditiveBlending,
+      side:THREE.DoubleSide
+    });
+
+    const sphere=new THREE.Mesh(
+      new THREE.SphereGeometry(1.38,96,64),
+      material
+    );
+    globe.add(sphere);
+
+    // Malha de projeção sobre o mapa real.
+    const wireMaterial=new THREE.MeshBasicMaterial({
+      color:0x63dfff,
+      transparent:true,
+      opacity:.10,
+      wireframe:true,
+      depthWrite:false,
+      blending:THREE.AdditiveBlending
+    });
+    const wire=new THREE.Mesh(
+      new THREE.SphereGeometry(1.395,32,20),
+      wireMaterial
+    );
+    globe.add(wire);
+
+    // Anel de varredura e contorno de emissão.
+    const rimMaterial=new THREE.MeshBasicMaterial({
+      color:0x6d45ff,
+      transparent:true,
+      opacity:.30,
+      side:THREE.BackSide,
+      blending:THREE.AdditiveBlending,
+      depthWrite:false
+    });
+    const rim=new THREE.Mesh(
+      new THREE.SphereGeometry(1.43,64,48),
+      rimMaterial
+    );
+    globe.add(rim);
+
+    const scanMaterial=new THREE.MeshBasicMaterial({
+      color:0x19dfff,
+      transparent:true,
+      opacity:.16,
+      blending:THREE.AdditiveBlending,
+      depthWrite:false
+    });
+    const scanRing=new THREE.Mesh(
+      new THREE.TorusGeometry(1.48,.004,6,128),
+      scanMaterial
+    );
+    scanRing.rotation.x=Math.PI/2;
+    globe.add(scanRing);
 
     let dragging=false;
     let lastPointer={x:0,y:0};
-    let rotX=-4;
-    let rotY=-10;
+    let rotX=-.16;
+    let rotY=-.42;
 
-    const render=()=>{
-      svg.style.transform=`perspective(1100px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+    const renderRotation=()=>{
+      globe.rotation.x=rotX;
+      globe.rotation.y=rotY;
     };
 
     const onPointerDown=(e:PointerEvent)=>{
       dragging=true;
       lastPointer={x:e.clientX,y:e.clientY};
       mount.setPointerCapture(e.pointerId);
+      mount.style.cursor="grabbing";
     };
-
     const onPointerMove=(e:PointerEvent)=>{
       if(!dragging)return;
       const dx=e.clientX-lastPointer.x;
       const dy=e.clientY-lastPointer.y;
       lastPointer={x:e.clientX,y:e.clientY};
-      rotY+=dx*.22;
-      rotX-=dy*.16;
-      rotX=Math.max(-38,Math.min(38,rotX));
-      rotY=Math.max(-55,Math.min(55,rotY));
-      render();
+      rotY+=dx*.006;
+      rotX+=dy*.0045;
+      rotX=Math.max(-1.15,Math.min(1.15,rotX));
+      renderRotation();
     };
-
     const onPointerUp=(e:PointerEvent)=>{
       dragging=false;
       if(mount.hasPointerCapture(e.pointerId))mount.releasePointerCapture(e.pointerId);
+      mount.style.cursor="grab";
     };
 
     mount.addEventListener("pointerdown",onPointerDown);
     mount.addEventListener("pointermove",onPointerMove);
     mount.addEventListener("pointerup",onPointerUp);
     mount.addEventListener("pointercancel",onPointerUp);
-    render();
+
+    const resize=()=>{
+      const w=Math.max(1,mount.clientWidth);
+      const h=Math.max(1,mount.clientHeight);
+      camera.aspect=w/h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w,h,false);
+    };
+    const observer=new ResizeObserver(resize);
+    observer.observe(mount);
+    resize();
+    renderRotation();
+
+    let raf=0;
+    const animate=(now:number)=>{
+      material.uniforms.uTime.value=now*.001;
+      // O globo não gira sozinho: somente a varredura holográfica se move.
+      scanRing.rotation.z=now*.00012;
+      renderer.render(scene,camera);
+      raf=requestAnimationFrame(animate);
+    };
+    raf=requestAnimationFrame(animate);
 
     return()=>{
+      cancelAnimationFrame(raf);
+      observer.disconnect();
       mount.removeEventListener("pointerdown",onPointerDown);
       mount.removeEventListener("pointermove",onPointerMove);
       mount.removeEventListener("pointerup",onPointerUp);
       mount.removeEventListener("pointercancel",onPointerUp);
+      earthTexture.dispose();
+      material.dispose();
+      sphere.geometry.dispose();
+      wire.geometry.dispose();
+      wireMaterial.dispose();
+      rim.geometry.dispose();
+      rimMaterial.dispose();
+      scanRing.geometry.dispose();
+      scanMaterial.dispose();
+      renderer.dispose();
+      if(renderer.domElement.parentElement===mount)mount.removeChild(renderer.domElement);
     };
   },[]);
 
   return (
-    <div className="earthGlobe holographicEarth" ref={mountRef} aria-label="Globo holográfico tecnológico da Terra interativo">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="100%" height="100%" role="img">
-        <defs>
-          <radialGradient id="relevoReal" cx="40%" cy="40%" r="70%">
-            <stop offset="0%" stopColor="#2A4365"/>
-            <stop offset="60%" stopColor="#1A365D"/>
-            <stop offset="95%" stopColor="#0F172A"/>
-          </radialGradient>
-
-          <linearGradient id="altimetria" x1="0%" y1="100%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#1A365D" stopOpacity="0"/>
-            <stop offset="40%" stopColor="#319795" stopOpacity=".4"/>
-            <stop offset="85%" stopColor="#4FD1C5" stopOpacity=".8"/>
-            <stop offset="100%" stopColor="#E2E8F0" stopOpacity=".9"/>
-          </linearGradient>
-
-          <radialGradient id="atmosferaLimpa" cx="50%" cy="50%" r="50%">
-            <stop offset="92%" stopColor="#00FFFF" stopOpacity="0"/>
-            <stop offset="97%" stopColor="#00FFFF" stopOpacity=".2"/>
-            <stop offset="100%" stopColor="#00FFFF" stopOpacity=".5"/>
-          </radialGradient>
-
-          <linearGradient id="holoSpectrum" x1="0%" y1="100%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#FF1744"/>
-            <stop offset="28%" stopColor="#FF00C8"/>
-            <stop offset="52%" stopColor="#7B2CFF"/>
-            <stop offset="76%" stopColor="#168BFF"/>
-            <stop offset="100%" stopColor="#00FFFF"/>
-          </linearGradient>
-
-          <pattern id="scanlines" width="1000" height="12" patternUnits="userSpaceOnUse">
-            <rect width="1000" height="2" fill="#00FFFF" opacity=".26"/>
-          </pattern>
-
-          <filter id="holoGlow" x="-40%" y="-40%" width="180%" height="180%">
-            <feGaussianBlur stdDeviation="5" result="blur"/>
-            <feMerge>
-              <feMergeNode in="blur"/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
-
-          <clipPath id="earthClip">
-            <circle cx="500" cy="500" r="420"/>
-          </clipPath>
-        </defs>
-
-        <!-- Base de projeção: transparente, técnica, sem aparência de planeta real -->
-        <circle cx="500" cy="500" r="420" fill="#020812" fillOpacity=".76" stroke="#00FFFF" strokeWidth="2"/>
-
-        <!-- Campo de varredura holográfico -->
-        <circle cx="500" cy="500" r="420" fill="url(#scanlines)" opacity=".34"/>
-
-        <!-- Malha geodésica -->
-        <g stroke="#00FFFF" strokeWidth=".5" fill="none" opacity=".20">
-          <line x1="80" y1="500" x2="920" y2="500" strokeWidth="1.2"/>
-          <line x1="500" y1="80" x2="500" y2="920" strokeWidth="1.2"/>
-          <circle cx="500" cy="500" r="105"/>
-          <circle cx="500" cy="500" r="210"/>
-          <circle cx="500" cy="500" r="315"/>
-          <path d="M500,80 C320,200 320,800 500,920"/>
-          <path d="M500,80 C140,250 140,750 500,920"/>
-          <path d="M500,80 C680,200 680,800 500,920"/>
-          <path d="M500,80 C860,250 860,750 500,920"/>
-        </g>
-
-        <!-- Continentes -->
-        <g fill="url(#relevoReal)" stroke="none">
-          <path d="M260,180 L290,170 L340,140 L380,130 L400,160 L460,150 L480,180 L440,210 L410,190 L420,240 L450,260 L410,290 L390,340 L380,395 L345,440 L350,460 L335,460 L320,420 L300,410 L250,390 L210,380 L180,340 L210,310 L200,260 L240,230 L220,210 Z"/>
-          <path d="M440,110 L490,120 L510,150 L460,170 L430,140 Z"/>
-          <path d="M335,460 C360,455 390,465 410,480 C440,500 480,515 505,550 C520,575 515,620 485,670 C460,710 420,770 385,820 L365,825 C365,790 350,730 335,680 C320,630 300,560 310,520 C315,500 325,480 335,460 Z"/>
-          <path d="M500,440 C530,410 580,415 620,430 C655,445 690,470 695,510 C700,560 670,620 640,660 C615,700 590,740 575,760 L565,740 C565,700 550,650 540,610 C530,580 500,530 495,500 C490,475 490,455 500,440 Z"/>
-          <path d="M660,640 L685,670 L675,700 L650,660 Z"/>
-          <path d="M480,290 C510,260 540,240 560,250 C580,230 600,210 630,220 C670,180 730,190 800,210 C840,230 850,270 820,310 C790,340 810,380 770,410 C740,430 710,410 680,440 C650,450 620,430 580,410 L540,420 L530,370 L500,360 Z"/>
-          <path d="M465,230 L485,220 L480,245 L460,250 Z"/>
-          <path d="M830,270 L850,290 L840,320 L825,300 Z"/>
-          <path d="M760,600 L820,590 L850,630 L830,690 L770,680 L740,640 Z M770,550 L820,560 L800,580 Z"/>
-        </g>
-
-        <!-- Relevo/altimetria -->
-        <g fill="url(#altimetria)" stroke="none" opacity=".9">
-          <path d="M340,470 C330,510 315,560 320,620 C325,670 340,720 370,800 L360,805 C330,725 315,670 310,615 C305,550 320,505 330,470 Z"/>
-          <path d="M240,240 Q270,300 310,380 L295,385 Q255,305 225,245 Z"/>
-          <path d="M660,310 Q730,315 780,340 L775,355 Q725,330 655,325 Z"/>
-          <path d="M530,265 Q555,265 570,275 L565,285 Q550,275 525,275 Z"/>
-        </g>
-
-        <!-- Regiões polares -->
-        <g fill="#FFFFFF" fillOpacity=".72">
-          <path d="M320,135 C380,115 540,115 600,135 C540,150 380,150 320,135 Z"/>
-          <path d="M340,845 C400,835 520,835 580,845 C520,860 400,860 340,845 Z"/>
-          <path d="M445,120 L485,128 L495,145 L465,160 L440,140 Z"/>
-        </g>
-
-        <!-- Fronteiras internacionais -->
-        <g stroke="#00FFFF" strokeWidth="1.2" fill="none" opacity=".78">
-          <path d="M245,230 L395,240 M280,310 L415,315 M322,420 L345,415"/>
-          <path d="M525,480 L575,485 M540,530 L625,510 M580,610 L645,595 M610,650 L635,655"/>
-          <path d="M520,290 L560,310 M575,260 L590,320 M680,290 L710,350 M760,340 L790,410"/>
-        </g>
-
-        <!-- Brasil: divisão estadual estilizada -->
-        <g stroke="#D1FFFA" strokeWidth=".8" fill="none" opacity=".92">
-          <path d="M340,495 L355,490 L380,500 L395,490 L415,510 L430,505"/>
-          <path d="M375,475 L380,500 M415,510 L420,490"/>
-          <path d="M322,525 L340,515 L355,490"/>
-          <path d="M340,515 L355,535 L375,530 L380,500"/>
-          <path d="M430,505 L450,515 L475,510 L500,535 L490,560 L460,575 L435,540 Z"/>
-          <path d="M450,515 L455,545 L460,575"/>
-          <path d="M465,513 L470,538 L485,540"/>
-          <path d="M485,515 L485,530 M495,520 L480,530"/>
-          <path d="M495,535 L485,540 M490,545 L480,542"/>
-          <path d="M380,500 L410,525 L435,540 L425,580 L395,585 L375,530 Z"/>
-          <path d="M410,525 L405,565 L395,585"/>
-          <path d="M410,550 L430,555 L425,580"/>
-          <path d="M435,540 L455,550 L465,570 L445,600 L425,580 Z"/>
-          <path d="M435,540 L435,570 L445,600"/>
-          <path d="M450,555 L445,575 L460,573"/>
-          <path d="M425,580 L435,600 L425,620 L410,640 L395,620 L400,595 Z"/>
-          <path d="M415,595 L430,605 M410,610 L428,615"/>
-        </g>
-
-        <!-- Camada de interferência holográfica -->
-        <g clipPath="url(#earthClip)" opacity=".32" filter="url(#holoGlow)">
-          <rect x="80" y="80" width="840" height="840" fill="url(#holoSpectrum)" opacity=".28"/>
-          <rect x="80" y="80" width="840" height="840" fill="url(#scanlines)" opacity=".65"/>
-          <path d="M80 315 H920 M80 570 H920" stroke="#FFFFFF" strokeWidth="2" opacity=".20">
-            <animate attributeName="opacity" values=".05;.32;.05" dur="2.8s" repeatCount="indefinite"/>
-          </path>
-        </g>
-
-        <!-- Borda de projeção -->
-        <circle cx="500" cy="500" r="420" fill="url(#atmosferaLimpa)" pointerEvents="none"/>
-        <circle cx="500" cy="500" r="423" fill="none" stroke="url(#holoSpectrum)" strokeWidth="2.5" opacity=".82"/>
-        <circle cx="500" cy="500" r="430" fill="none" stroke="#00FFFF" strokeWidth=".8" strokeDasharray="3 15" opacity=".48"/>
-        <circle cx="500" cy="500" r="437" fill="none" stroke="#7B2CFF" strokeWidth=".7" strokeDasharray="1 23" opacity=".38"/>
-      </svg>
-    </div>
+    <div
+      className="earthGlobe holographicEarth"
+      ref={mountRef}
+      aria-label="Globo holográfico tecnológico da Terra interativo"
+    />
   );
 }
 
