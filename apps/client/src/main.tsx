@@ -89,6 +89,7 @@ function EarthGlobe(){
     const earthSystem=new THREE.Group();
     scene.add(earthSystem);
 
+    // Globo 3D real: esfera física com o mapa-múndi real aplicado como textura.
     const geometry=new THREE.SphereGeometry(1,96,96);
     const textureLoader=new THREE.TextureLoader();
     const earthTexture=textureLoader.load(
@@ -98,8 +99,17 @@ function EarthGlobe(){
         texture.anisotropy=Math.min(renderer.capabilities.getMaxAnisotropy(),8);
       }
     );
-    const material=new THREE.MeshBasicMaterial({
-      map:earthTexture
+
+    // Iluminação simples para preservar a percepção de volume da esfera.
+    const ambientLight=new THREE.AmbientLight(0xffffff,1.35);
+    const keyLight=new THREE.DirectionalLight(0xffffff,1.15);
+    keyLight.position.set(4,2.5,5);
+    scene.add(ambientLight,keyLight);
+
+    const material=new THREE.MeshPhongMaterial({
+      map:earthTexture,
+      shininess:8,
+      specular:new THREE.Color(0x222222)
     });
     const earth=new THREE.Mesh(geometry,material);
     earthSystem.add(earth);
@@ -169,6 +179,7 @@ function EarthGlobe(){
       geometry.dispose();
       material.dispose();
       earthTexture.dispose();
+      scene.remove(ambientLight,keyLight);
       renderer.dispose();
       renderer.domElement.remove();
     };
