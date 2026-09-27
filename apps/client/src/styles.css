@@ -2019,3 +2019,13 @@ mix-blend-mode:screen;opacity:.65}
   border-radius:0!important;
   clip-path:none!important;
 }
+/* MOROK // STATIC OPERATIONS NEXT TO VOICE CORE */
+@media(min-width:1360px){
+  .dashMiniStatus{
+    left:calc(22px + 302px + 176px + 18px)!important;
+    bottom:0!important;
+    top:auto!important;
+    width:188px!important;
+    height:214px!important;
+  }
+}
