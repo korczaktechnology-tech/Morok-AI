@@ -562,6 +562,9 @@ function OrbitalRings(){
         let basisY=normal.clone().cross(basisX).normalize();
         if(basisY.lengthSq()<0.5)throw new Error("invalid_orbital_basis");
 
+        // A elipse é definida em unidades de raio terrestre visual e depois
+        // convertida para quilômetros. Assim ela não é esmagada pela função
+        // compressOrbitPosition(), que recebe coordenadas em quilômetros.
         const visualSemiMajor=1.12;
         const visualEccentricity=Math.min(Math.max(Number(satrec.ecco)||0,0),0.35);
         const visualSemiMinor=visualSemiMajor*Math.sqrt(1-visualEccentricity*visualEccentricity);
@@ -571,12 +574,13 @@ function OrbitalRings(){
           const theta=(index/720)*Math.PI*2;
           const x=visualSemiMajor*Math.cos(theta)-visualCenterOffset;
           const y=visualSemiMinor*Math.sin(theta);
-          const orbitalPoint=rEci.clone().set(0,0,0)
-            .add(basisX.clone().multiplyScalar(x))
+
+          const visualPoint=basisX.clone().multiplyScalar(x)
             .add(basisY.clone().multiplyScalar(y));
 
-          // Converte o plano orbital ECI para o mesmo referencial terrestre
-          // usado pelo globo, sempre usando o GMST do instante atual.
+          // A função de conversão orbital trabalha em quilômetros.
+          const orbitalPoint=visualPoint.multiplyScalar(earthRadiusKm);
+
           predictionPoints.push(
             eciToThreeAtReferenceEarth(
               {x:orbitalPoint.x,y:orbitalPoint.y,z:orbitalPoint.z},
