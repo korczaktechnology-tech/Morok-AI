@@ -82,6 +82,58 @@ function EarthGlobe(){
     if(!mount)return;
 
     const scene=new THREE.Scene();
+    const orbitalVisualGroup=new THREE.Group();
+    scene.add(orbitalVisualGroup);
+
+    // Órbita visual independente dos satélites reais.
+    const orbitalColor=0x9b5cff;
+    const orbitPoints:THREE.Vector3[]=[];
+    const predictionPointsVisual:THREE.Vector3[]=[];
+    const semiMajor=1.28;
+    const semiMinor=.82;
+    const tiltX=THREE.MathUtils.degToRad(58);
+    const tiltZ=THREE.MathUtils.degToRad(-18);
+
+    for(let i=0;i<=360;i++){
+      const angle=(i/360)*Math.PI*2;
+      const point=new THREE.Vector3(
+        semiMajor*Math.cos(angle),
+        0,
+        semiMinor*Math.sin(angle)
+      );
+      point.applyAxisAngle(new THREE.Vector3(1,0,0),tiltX);
+      point.applyAxisAngle(new THREE.Vector3(0,0,1),tiltZ);
+      orbitPoints.push(point);
+
+      const predictionPoint=point.clone().multiplyScalar(1.001);
+      predictionPointsVisual.push(predictionPoint);
+    }
+
+    const orbitGeometry=new THREE.BufferGeometry().setFromPoints(orbitPoints);
+    const orbitMaterial=new THREE.LineBasicMaterial({
+      color:orbitalColor,
+      transparent:true,
+      opacity:.95,
+      depthTest:false,
+      depthWrite:false
+    });
+    const orbitLine=new THREE.LineLoop(orbitGeometry,orbitMaterial);
+    orbitLine.renderOrder=20;
+    orbitalVisualGroup.add(orbitLine);
+
+    const predictionGeometry=new THREE.BufferGeometry().setFromPoints(predictionPointsVisual);
+    const predictionMaterial=new THREE.LineBasicMaterial({
+      color:orbitalColor,
+      transparent:true,
+      opacity:.28,
+      depthTest:false,
+      depthWrite:false
+    });
+    const predictionLine=new THREE.LineLoop(predictionGeometry,predictionMaterial);
+    predictionLine.renderOrder=19;
+    orbitalVisualGroup.add(predictionLine);
+
+
     const camera=new THREE.PerspectiveCamera(34,1,.1,100);
     camera.position.z=2.65;
 
@@ -841,7 +893,9 @@ function OrbitalRings(){
         });
       }
 
-      // Só sincroniza a rotação orbital quando ela realmente mudou.
+      // A órbita visual acompanha a orientação atual do globo.
+      orbitalVisualGroup.rotation.set(globeRotation.x,globeRotation.y,globeRotation.z);
+
       if(
         orbitGroup.rotation.x!==globeRotation.x ||
         orbitGroup.rotation.y!==globeRotation.y ||
