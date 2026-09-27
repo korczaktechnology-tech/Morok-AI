@@ -341,6 +341,10 @@ function EarthGlobe(){
       applyLocationLock();
     };
 
+    returnToUserLocationRef.current=()=>{
+      applyLocationLock();
+    };
+
     const resize=()=>{
       const width=Math.max(1,mount.clientWidth);
       const height=Math.max(1,mount.clientHeight);
