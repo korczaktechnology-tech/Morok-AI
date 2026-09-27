@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 768 768">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-20 -20 808 808">
 <defs>
  <clipPath id="circleClip"><circle cx="384" cy="384" r="400"/></clipPath>
 
@@ -7,7 +7,6 @@
  <linearGradient id="right" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#b7ffff"/><stop offset=".35" stop-color="#008cff"/><stop offset="1" stop-color="#0df"/></linearGradient>
  <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="9" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
 </defs>
-<circle cx="384" cy="384" r="400" fill="none" stroke="url(#mid)" stroke-width="5" opacity=".9" filter="url(#glow)"/>
 <g clip-path="url(#circleClip)" fill="none" stroke-linejoin="round" stroke-linecap="round" filter="url(#glow)">
  <path d="M116 158 L384 326 L652 158 L652 620 L541 541 L541 335 L384 431 L227 335 L227 541 L116 620 Z" stroke="url(#mid)" stroke-width="4"/>
  <path d="M116 158 L384 326 L384 431 L227 335 L227 541 L116 620 Z" fill="url(#left)" stroke="#ff63ff" stroke-width="3"/>
@@ -20,5 +19,5 @@
 <g opacity=".32" stroke="#fff" stroke-width="1.5">
  <path d="M116 158 L227 335 L384 326 L227 541"/><path d="M652 158 L541 335 L384 326 L541 541"/>
  <path d="M116 390 L227 493 L227 335"/><path d="M652 390 L541 493 L541 335"/>
-</g>
+<circle cx="384" cy="384" r="400" fill="none" stroke="url(#mid)" stroke-width="5" opacity=".9" filter="url(#glow)"/>
 </svg>
