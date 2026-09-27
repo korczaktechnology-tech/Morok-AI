@@ -234,14 +234,22 @@ function Dashboard() {
       </main>
 
       <aside className="dashRight">
-        <ResizablePanel id="notifications" className="dashPanel notificationPanel" minWidth={220} minHeight={140}><h3>NOTIFICAÇÕES</h3>{notifications.map(([x,c])=><div className="noticeRow" key={x}><i className={c}>◉</i><span>{x}</span></div>)}</section>
-        <section className="dashPanel activityPanel"><h3>ATIVIDADE RECENTE</h3>{activity.map(([time,x])=><div className="activityRow" key={time}><b>{time}</b><span>{x}</span></div>)}</section>
+        <ResizablePanel id="notifications" className="dashPanel notificationPanel" minWidth={220} minHeight={140}>
+          <h3>NOTIFICAÇÕES</h3>
+          {notifications.map(([x,c])=><div className="noticeRow" key={x}><i className={c}>◉</i><span>{x}</span></div>)}
+        </ResizablePanel>
+        <ResizablePanel id="activity" className="dashPanel activityPanel" minWidth={220} minHeight={140}>
+          <h3>ATIVIDADE RECENTE</h3>
+          {activity.map(([time,x])=><div className="activityRow" key={time}><b>{time}</b><span>{x}</span></div>)}
+        </ResizablePanel>
       </aside>
 
-      <nav className="dashNav">
-        {["⌂|INÍCIO","▦|SISTEMAS","▤|DOCUMENTOS","♙|PROCESSOS","♟|EQUIPES","▥|RELATÓRIOS","⚙|CONFIGURAÇÕES"].map((item,i)=>{
-          const [icon,label]=item.split("|"); return <button className={i===0?"active":""} key={label}><span>{icon}</span>{label}</button>
-        })}
+      <ResizablePanel id="navigation" className="dashNav" minWidth={220} minHeight={260}>
+        <nav className="dashNavInner">
+          {["⌂|INÍCIO","▦|SISTEMAS","▤|DOCUMENTOS","♙|PROCESSOS","♟|EQUIPES","▥|RELATÓRIOS","⚙|CONFIGURAÇÕES"].map((item,i)=>{
+            const [icon,label]=item.split("|"); return <button className={i===0?"active":""} key={label}><span>{icon}</span>{label}</button>
+          })}
+        </nav>
       </ResizablePanel>
 
       <ResizablePanel id="status" className="dashMiniStatus" minWidth={150} minHeight={100}>
