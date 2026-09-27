@@ -15,6 +15,7 @@ type Task = { id: string; title: string; status: string; dueAt?: string };
 type Memory = { id: string; content: string };
 type Doc = { id: string; name: string; format: string; content?: string };
 type Event = { id: string; title: string; startsAt: string; endsAt?: string; notes?: string };
+type GithubWorkflow = { id: number; name: string; runNumber: number; commit: string; sha: string; status: string; conclusion: string | null; updatedAt: string };
 type ModuleKey =
   | "home"
   | "systems"
@@ -567,6 +568,34 @@ function EarthGlobe(){
 
   return (
     <>
+      {workflowMonitorOpen && (
+        <div className="workflowMonitor" role="status" aria-label="Status dos workflows do GitHub">
+          <div className="workflowMonitorHeader">
+            <span>GITHUB ACTIONS</span>
+            <span className="workflowMonitorHint">CTRL + ALT + K</span>
+          </div>
+          <div className="workflowMonitorList">
+            {githubWorkflows.length===0 ? (
+              <div className="workflowMonitorEmpty">CARREGANDO WORKFLOWS...</div>
+            ) : githubWorkflows.map(workflow=>{
+              const state=workflow.status==="queued"||workflow.status==="in_progress" ? "queued" : workflow.conclusion==="success" ? "success" : "failure";
+              return (
+                <div className="workflowMonitorItem" key={workflow.id}>
+                  <span className={`workflowStatusDot ${state}`} aria-label={state}/>
+                  <div className="workflowMonitorInfo">
+                    <div className="workflowMonitorName">{workflow.name}</div>
+                    <div className="workflowMonitorMeta">
+                      <span>WORKFLOW #{workflow.runNumber}</span>
+                      <span>{workflow.commit}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {locationLocked && (
         <button
           type="button"
@@ -1138,6 +1167,8 @@ function App() {
   const [temperature, setTemperature] = useState<string | null>(null);
   const [weatherPlace, setWeatherPlace] = useState("LOCALIZAÇÃO NÃO DISPONÍVEL");
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
+  const [workflowMonitorOpen, setWorkflowMonitorOpen] = useState(false);
+  const [githubWorkflows, setGithubWorkflows] = useState<GithubWorkflow[]>([]);
 
   const speech = useMemo(() => {
     const C = window.SpeechRecognition ?? window.webkitSpeechRecognition;
@@ -1151,6 +1182,32 @@ function App() {
       setBrasiliaDate(new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric" }).format(now));
     };
     tick(); const id = window.setInterval(tick, 1000); return () => window.clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    let disposed=false;
+    const loadWorkflows=async()=>{
+      try{
+        const response=await fetch(API+"/api/v1/github/workflows",{cache:"no-store"});
+        if(!response.ok)throw new Error("workflow_fetch_failed");
+        const data=await response.json() as {workflows?:GithubWorkflow[]};
+        if(!disposed)setGithubWorkflows(data.workflows??[]);
+      }catch{}
+    };
+    loadWorkflows();
+    const interval=window.setInterval(loadWorkflows,30000);
+    return()=>{disposed=true;window.clearInterval(interval);};
+  }, []);
+
+  useEffect(()=>{
+    const onKeyDown=(event:KeyboardEvent)=>{
+      if(event.ctrlKey&&event.altKey&&event.key.toLowerCase()==="k"){
+        event.preventDefault();
+        setWorkflowMonitorOpen(value=>!value);
+      }
+    };
+    window.addEventListener("keydown",onKeyDown);
+    return()=>window.removeEventListener("keydown",onKeyDown);
   }, []);
 
   useEffect(() => {
