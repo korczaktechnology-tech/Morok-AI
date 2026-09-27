@@ -72,9 +72,20 @@ function Icon({ children }: { children: React.ReactNode }) {
 
 
 function MorokVoiceCore() {
+  const [debugMode, setDebugMode] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [active, setActive] = useState(false);
   const seedRef = useRef(1);
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.key.toLowerCase() === "l") {
+        event.preventDefault();
+        setDebugMode(v => !v);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   useEffect(() => {
     const onStart: EventListener = (event) => {
@@ -120,10 +131,10 @@ function MorokVoiceCore() {
       const cx = w / 2;
       const cy = h / 2;
       const radius = Math.min(w, h) * 0.405;
-      const seed = seedRef.current;
+      const seed = debugMode ? Math.floor(frame * 19) + seedRef.current : seedRef.current;
       ctx.clearRect(0, 0, w, h);
 
-      const speakingNow = active || window.speechSynthesis?.speaking === true;
+      const speakingNow = debugMode || active || window.speechSynthesis?.speaking === true;
       const base = speakingNow ? 0.72 : 0.24;
       const pulse = speakingNow ? (0.5 + 0.5 * Math.sin(frame * 8.5 + (seed % 17))) : 0.5;
       const intensity = base + pulse * (speakingNow ? 0.45 : 0.12);
@@ -213,10 +224,10 @@ function MorokVoiceCore() {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", resize);
     };
-  }, [active]);
+  }, [active, debugMode]);
 
   return (
-    <div className={`morokVoiceCore ${active ? "is-speaking" : "is-idle"}`} aria-label="Visualizador da voz do Morok">
+    <div className={`morokVoiceCore ${active ? "is-speaking" : "is-idle"} ${debugMode ? "is-debugging" : ""}`} aria-label="Visualizador da voz do Morok">
       <canvas ref={canvasRef} />
       <span className="voiceCoreCenter" aria-hidden="true" />
     </div>
