@@ -436,9 +436,14 @@ function EarthGlobe(){
       const earthEquatorialSpeedKmh=1670;
       const earthRadiusKm=6378.137;
       const earthAngularVelocity=(earthEquatorialSpeedKmh/3600)/earthRadiusKm;
+      // A velocidade física de 1.670 km/h corresponde a uma volta em ~23h56min,
+      // praticamente imperceptível na interface. A animação usa um fator visual
+      // acelerado, mantendo 1.670 km/h como referência física da Terra.
+      const earthVisualTimeScale=3600;
+      const earthVisualAngularVelocity=earthAngularVelocity*earthVisualTimeScale;
 
       if(!dragging && !earthLocationLock){
-        earthSystem.rotateY(earthAngularVelocity*deltaSeconds);
+        earthSystem.rotateY(earthVisualAngularVelocity*deltaSeconds);
         globeRotation.x=earthSystem.rotation.x;
         globeRotation.y=earthSystem.rotation.y;
         globeRotation.z=earthSystem.rotation.z;
