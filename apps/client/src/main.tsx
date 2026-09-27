@@ -137,17 +137,22 @@ function EarthGlobe(){
       const borderGeometry=new THREE.BufferGeometry().setFromPoints(points);
       const borderMaterial=new THREE.LineBasicMaterial({
         color:0xffffff,
-        transparent:true,
-        opacity:.92,
-        depthWrite:false
+        transparent:false,
+        opacity:1,
+        depthTest:false,
+        depthWrite:false,
+        toneMapped:false,
+        blending:THREE.AdditiveBlending
       });
-      borderGroup.add(new THREE.Line(borderGeometry,borderMaterial));
+      const borderLine=new THREE.Line(borderGeometry,borderMaterial);
+      borderLine.renderOrder=50;
+      borderGroup.add(borderLine);
     };
 
     const loadCountryBorders=async()=>{
       try{
         const response=await fetch(
-          "https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson"
+          "https://raw.githubusercontent.com/datasets/geo-boundaries-world-110m/main/countries.geojson"
         );
         if(!response.ok)throw new Error("country_borders_failed");
         const collection=await response.json() as {
