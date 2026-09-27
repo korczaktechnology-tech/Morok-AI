@@ -71,62 +71,99 @@ function Icon({ children }: { children: React.ReactNode }) {
 }
 
 function Dashboard() {
-  const systems = [
-    ["ERP","systemErp"],["FLOW","systemFlow"],["OPS","systemOps"],["VISION","systemVision"],
-    ["CONNECT","systemConnect"],["MOBILE","systemMobile"],["DOCUMENTS","systemDocs"],["AI","systemAi"]
-  ] as const;
+  const systems = ["ERP","FLOW","OPS","VISION","CONNECT","MOBILE","DOCUMENTS","AI"];
+  const processes = [
+    ["KORCZAK FLOW","324 MB"],["KORCZAK ERP","512 MB"],["KORCZAK VISION","448 MB"],
+    ["KORCZAK OPS","287 MB"],["KORCZAK CONNECT","196 MB"],["KORCZAK MOBILE","143 MB"]
+  ];
+  const notifications = [
+    ["3 processos concluídos","ok"],["1 nova solicitação","hot"],
+    ["2 alertas de estoque","hot"],["Atualização disponível","info"]
+  ];
+  const activity = [
+    ["14:32","Fluxo aprovado"],["14:21","Venda registrada"],["13:58","Produção iniciada"],
+    ["13:47","Relatório gerado"],["13:12","Integração concluída"]
+  ];
+  const actions = [["⌕","ANALISAR"],["▦","PLANEJAR"],["▶","EXECUTAR"],["▥","MONITORAR"],["⚙","OTIMIZAR"]];
 
   return (
-    <div className="dashboard morokDashboard">
-      <div className="hudNoise" aria-hidden="true" />
-      <div className="hudGrid" aria-hidden="true" />
-      <div className="hudTopFrame" aria-hidden="true">
-        <i/><i/><i/>
-      </div>
-      <div className="hudBottomFrame" aria-hidden="true">
-        <i/><i/><i/>
-      </div>
+    <div className="morokFullDashboard">
+      <div className="dashAmbient" aria-hidden="true" />
+      <div className="dashTechLines" aria-hidden="true" />
+      <header className="dashHeader">
+        <div className="kosBrand">
+          <div className="kosMark">K<span>O</span>S</div>
+          <div>
+            <strong>KORCZAK OPERATIONS SYSTEM</strong>
+            <small>MAIS CONTROLE. MAIS RESULTADOS.</small>
+          </div>
+        </div>
+        <div className="dashClock"><strong>14:37:26</strong><span>24 SET 2026</span></div>
+        <div className="dashWeather"><span className="sunGlyph">☼</span><strong>22°C</strong><small>BRASIL, SP</small></div>
+      </header>
 
-      <aside className="morokSystemsPanel" aria-label="Sistemas">
-        <div className="systemsPanelAccent" aria-hidden="true" />
-        <h2>SISTEMAS</h2>
-        <ul>
-          {systems.map(([label, cls]) => (
-            <li className={cls} key={label}>
-              <span className="systemIcon" aria-hidden="true" />
-              <span>{label}</span>
-            </li>
-          ))}
-        </ul>
+      <aside className="dashLeft">
+        <section className="dashPanel resourcePanel">
+          {[
+            ["CPU","12%"],["MEMÓRIA RAM","48%"],["ARMAZENAMENTO","67%"],["REDE","1.2 Gbps"]
+          ].map(([label,value],i)=>
+            <div className="resourceRow" key={label}>
+              <span className={"resourceIcon ri"+i}>{i===0?"▣":i===1?"▤":i===2?"◉":"⌘"}</span>
+              <div className="resourceData"><b>{label}</b><strong>{value}</strong><span className="resourceBar"><i style={{width:i===0?"12%":i===1?"48%":i===2?"67%":"54%"}}/></span></div>
+            </div>
+          )}
+        </section>
+        <section className="dashPanel processPanel">
+          <h3>PROCESSOS ATIVOS</h3>
+          {processes.map(([name,val],i)=><div className="processRow" key={name}><i className={"processDot p"+i}/><span>{name}</span><strong>{val}</strong></div>)}
+        </section>
+        <section className="assistantPanel">
+          <div className="miniRadar"><span/><i/><b/></div>
+          <div><h3>MOROK</h3><small>ASSISTENTE VIRTUAL</small><p>Olá, Korczak.<br/>Todos os sistemas estão operando normalmente.</p><div className="wave">▁▃▅▂▆▃▇▂▅▁▃▆▂</div></div>
+        </section>
       </aside>
 
-      <section className="morokCore" aria-label="Morok">
-        <div className="coreOrbit orbitOne" aria-hidden="true" />
-        <div className="coreOrbit orbitTwo" aria-hidden="true" />
-        <div className="coreOrbit orbitThree" aria-hidden="true" />
-        <div className="coreOrbit orbitFour" aria-hidden="true" />
-        <div className="coreTicks" aria-hidden="true" />
-        <div className="coreNode nodeNorth" aria-hidden="true" />
-        <div className="coreNode nodeEast" aria-hidden="true" />
-        <div className="coreNode nodeSouth" aria-hidden="true" />
-        <div className="coreNode nodeWest" aria-hidden="true" />
-        <div className="coreLogoFrame">
-          <img src={MOROK_CENTER_ICON} alt="Símbolo Morok" />
-        </div>
-        <div className="coreLabel">MOROK</div>
+      <aside className="dashSystems">
+        <div className="systemsEdge"/>
+        <h2>SISTEMAS</h2>
+        <ul>{systems.map((x,i)=><li key={x}><span className={"sysGlyph g"+i}>{["◉","♧","◌","◎","♧","□","▣","♧"][i]}</span>{x}</li>)}</ul>
+      </aside>
+
+      <main className="dashCore">
+        <div className="coreTopLabel"><b>KOS</b><span>CONNEX</span></div>
+        <div className="coreRing ringA"/><div className="coreRing ringB"/><div className="coreRing ringC"/>
+        <div className="coreRing ringD"/><div className="coreRing ringE"/>
+        <div className="coreSweep sweep1"/><div className="coreSweep sweep2"/>
+        <div className="coreStar star1"/><div className="coreStar star2"/><div className="coreStar star3"/><div className="coreStar star4"/>
+        <div className="coreLogo"><img src={MOROK_CENTER_ICON} alt="Símbolo Morok"/></div>
+        <div className="coreName">MOROK</div>
+        <div className="coreSubtitle">INTELIGÊNCIA ARTIFICIAL<br/>ASSISTENTE VIRTUAL</div>
+      </main>
+
+      <aside className="dashRight">
+        <section className="dashPanel notificationPanel"><h3>NOTIFICAÇÕES</h3>{notifications.map(([x,c])=><div className="noticeRow" key={x}><i className={c}>◉</i><span>{x}</span></div>)}</section>
+        <section className="dashPanel activityPanel"><h3>ATIVIDADE RECENTE</h3>{activity.map(([time,x])=><div className="activityRow" key={time}><b>{time}</b><span>{x}</span></div>)}</section>
+      </aside>
+
+      <nav className="dashNav">
+        {["⌂|INÍCIO","▦|SISTEMAS","▤|DOCUMENTOS","♙|PROCESSOS","♟|EQUIPES","▥|RELATÓRIOS","⚙|CONFIGURAÇÕES"].map((item,i)=>{
+          const [icon,label]=item.split("|"); return <button className={i===0?"active":""} key={label}><span>{icon}</span>{label}</button>
+        })}
+      </nav>
+
+      <section className="dashMiniStatus">
+        <div className="miniChart"><i/><i/><i/><i/><i/><i/><i/><i/></div>
+        <span>OPERAÇÕES<br/><b>ESTÁVEIS</b></span>
+        <span className="stable">✓ SEM ANOMALIAS</span>
       </section>
 
-      <section className="hudRightTelemetry" aria-hidden="true">
-        <div className="telemetryArc arcOne" />
-        <div className="telemetryArc arcTwo" />
-        <div className="telemetryArc arcThree" />
-        <div className="telemetryArc arcFour" />
-        <div className="telemetrySweep" />
-        <div className="telemetryTicks" />
+      <section className="dashGoal">
+        <h3>OBJETIVO ATUAL</h3><b>EVOLUÇÃO CONTÍNUA</b><div className="goalBar"><i/></div>
+        <p>“Tecnologia não é o futuro.<br/>É o presente que você constrói<br/>o amanhã.”</p><strong>— KORCZAK TECHNOLOGIES</strong>
       </section>
 
-      <div className="hudReadout hudReadoutTop">SYSTEM / CORE <span>ONLINE</span></div>
-      <div className="hudReadout hudReadoutBottom">MOROK // KOS <span>ACTIVE</span></div>
+      <div className="dashActions">{actions.map(([icon,label],i)=><button className={i===2?"execute":""} key={label}><span>{icon}</span>{label}</button>)}</div>
+      <footer className="dashFooter">KOS&nbsp; // &nbsp;KORCZAK OPERATIONS SYSTEM</footer>
     </div>
   );
 }
