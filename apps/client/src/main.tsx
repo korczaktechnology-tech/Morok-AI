@@ -83,67 +83,62 @@ function EarthGlobe(){
     if(!mount)return;
 
     const scene=new THREE.Scene();
-    const orbitalVisualGroup=new THREE.Group();
-    scene.add(orbitalVisualGroup);
 
-    // Órbita visual independente dos satélites reais.
-    const orbitalColor=0x9b5cff;
+    // Órbita visual independente da Terra e dos satélites rastreados.
+    // Este sistema possui seu próprio grupo, geometria e orientação.
+    const standaloneOrbitGroup=new THREE.Group();
+    scene.add(standaloneOrbitGroup);
+
+    const standaloneOrbitColor=0x9b5cff;
     const orbitPoints:THREE.Vector3[]=[];
-    const predictionPointsVisual:THREE.Vector3[]=[];
-    // Sistema orbital visual independente: não usa TLE, satellite.js ou orbitGroup.
-    // A elipse fica claramente fora da superfície terrestre, como uma órbita baixa.
+    const predictionPoints:THREE.Vector3[]=[];
     const semiMajor=1.82;
     const semiMinor=1.48;
-    const tiltX=THREE.MathUtils.degToRad(58);
-    const tiltZ=THREE.MathUtils.degToRad(-18);
+    const orbitTiltX=THREE.MathUtils.degToRad(58);
+    const orbitTiltY=THREE.MathUtils.degToRad(12);
+    const orbitTiltZ=THREE.MathUtils.degToRad(-18);
 
-    for(let i=0;i<=360;i++){
+    for(let i=0;i<360;i++){
       const angle=(i/360)*Math.PI*2;
       const point=new THREE.Vector3(
         semiMajor*Math.cos(angle),
         0,
         semiMinor*Math.sin(angle)
       );
-      point.applyAxisAngle(new THREE.Vector3(1,0,0),tiltX);
-      point.applyAxisAngle(new THREE.Vector3(0,0,1),tiltZ);
+      point.applyAxisAngle(new THREE.Vector3(1,0,0),orbitTiltX);
+      point.applyAxisAngle(new THREE.Vector3(0,1,0),orbitTiltY);
+      point.applyAxisAngle(new THREE.Vector3(0,0,1),orbitTiltZ);
       orbitPoints.push(point);
-
-      const predictionPoint=point.clone().multiplyScalar(1.001);
-      predictionPointsVisual.push(predictionPoint);
+      predictionPoints.push(point.clone());
     }
 
-    const orbitGeometry=new THREE.BufferGeometry().setFromPoints(orbitPoints);
-    const orbitMaterial=new THREE.LineBasicMaterial({
-      color:orbitalColor,
+    const standaloneOrbitGeometry=new THREE.BufferGeometry().setFromPoints(orbitPoints);
+    const standaloneOrbitMaterial=new THREE.LineBasicMaterial({
+      color:standaloneOrbitColor,
       transparent:true,
       opacity:.95,
       depthTest:false,
-      depthWrite:false
+      depthWrite:false,
+      toneMapped:false
     });
-    const orbitLine=new THREE.LineLoop(orbitGeometry,orbitMaterial);
-    orbitLine.renderOrder=20;
-    orbitalVisualGroup.add(orbitLine);
+    const standaloneOrbitLine=new THREE.LineLoop(standaloneOrbitGeometry,standaloneOrbitMaterial);
+    standaloneOrbitLine.renderOrder=100;
+    standaloneOrbitGroup.add(standaloneOrbitLine);
 
-    const predictionGeometry=new THREE.BufferGeometry().setFromPoints(predictionPointsVisual);
-    const predictionMaterial=new THREE.LineBasicMaterial({
-      color:orbitalColor,
+    const standalonePredictionGeometry=new THREE.BufferGeometry().setFromPoints(predictionPoints);
+    const standalonePredictionMaterial=new THREE.LineBasicMaterial({
+      color:standaloneOrbitColor,
       transparent:true,
-      opacity:.28,
+      opacity:.22,
       depthTest:false,
-      depthWrite:false
+      depthWrite:false,
+      toneMapped:false
     });
-    const predictionLine=new THREE.LineLoop(predictionGeometry,predictionMaterial);
-    predictionLine.renderOrder=19;
-    orbitalVisualGroup.add(predictionLine);
+    const standalonePredictionLine=new THREE.LineLoop(standalonePredictionGeometry,standalonePredictionMaterial);
+    standalonePredictionLine.renderOrder=99;
+    standaloneOrbitGroup.add(standalonePredictionLine);
 
-    // A órbita visual possui orientação própria e não acompanha a rotação da Terra.
-    orbitalVisualGroup.rotation.set(
-      THREE.MathUtils.degToRad(58),
-      THREE.MathUtils.degToRad(12),
-      THREE.MathUtils.degToRad(-18)
-    );
-    orbitalVisualGroup.position.set(0,0,0);
-    orbitalVisualGroup.visible=true;
+    standaloneOrbitGroup.rotation.set(orbitTiltX,orbitTiltY,orbitTiltZ);
 
     const camera=new THREE.PerspectiveCamera(34,1,.1,100);
     camera.position.z=2.65;
@@ -1176,7 +1171,7 @@ function App() {
 
       const controller=new AbortController();
       workflowRequestRef.current=controller;
-      const timeout=window.setTimeout(()=>controller.abort(),4200);
+      const timeout=window.setTimeout(()=>controller.abort(),4700);
 
       setWorkflowLoading(true);
       setWorkflowError(null);
