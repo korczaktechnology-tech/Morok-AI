@@ -1372,3 +1372,62 @@ mix-blend-mode:screen;opacity:.65}
     filter:drop-shadow(0 0 16px rgba(0,220,255,.20)) drop-shadow(0 0 28px rgba(120,45,255,.14))!important;
   }
 }
+
+
+/* Desktop: globo SVG holográfico técnico */
+.earthGlobe.holographicEarth{
+  overflow:visible!important;
+  perspective:1200px!important;
+  transform-style:preserve-3d!important;
+}
+.earthGlobe.holographicEarth .holographicEarthSvg{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  display:block!important;
+  overflow:visible!important;
+  transform:perspective(1200px) rotateX(var(--globe-x,-8deg)) rotateY(var(--globe-y,-18deg)) translateZ(0)!important;
+  transform-style:preserve-3d!important;
+  opacity:.94!important;
+  filter:drop-shadow(0 0 5px rgba(0,255,255,.16)) drop-shadow(0 0 9px rgba(85,35,255,.10))!important;
+  mix-blend-mode:screen!important;
+  transition:transform 80ms linear!important;
+}
+.earthGlobe.holographicEarth::after{
+  content:""!important;
+  position:absolute!important;
+  inset:7%!important;
+  border-radius:50%!important;
+  pointer-events:none!important;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(0,255,255,.055) 0px,
+      rgba(0,255,255,.055) 1px,
+      transparent 1px,
+      transparent 5px
+    ),
+    radial-gradient(circle at 50% 48%,transparent 58%,rgba(0,255,255,.09) 74%,transparent 78%)!important;
+  mix-blend-mode:screen!important;
+  opacity:.55!important;
+}
+.earthGlobe.holographicEarth::before{
+  content:""!important;
+  position:absolute!important;
+  left:8%!important;
+  right:8%!important;
+  top:49%!important;
+  height:2px!important;
+  pointer-events:none!important;
+  background:linear-gradient(90deg,transparent,rgba(0,255,255,.65),rgba(255,255,255,.45),rgba(0,255,255,.65),transparent)!important;
+  opacity:.22!important;
+  animation:holographicGlobeScan 4.8s linear infinite!important;
+  z-index:3!important;
+}
+@keyframes holographicGlobeScan{
+  0%{transform:translateY(-190px);opacity:0}
+  12%{opacity:.28}
+  88%{opacity:.28}
+  100%{transform:translateY(190px);opacity:0}
+}
