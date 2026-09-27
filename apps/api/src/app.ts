@@ -45,7 +45,8 @@ export function buildApp(){
         id:number;name:string;run_number:number;status:string;conclusion:string|null;
         head_sha:string;head_commit?:{message?:string}|null;created_at:string;updated_at:string;
       }>};
-      const latestByWorkflow=new Map<string,typeof data.workflow_runs[number]>();
+      type WorkflowRun=NonNullable<typeof data.workflow_runs>[number];
+      const latestByWorkflow=new Map<string,WorkflowRun>();
       for(const run of data.workflow_runs??[]){
         const key=run.name;
         if(!latestByWorkflow.has(key))latestByWorkflow.set(key,run);
