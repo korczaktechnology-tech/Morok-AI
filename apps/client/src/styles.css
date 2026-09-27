@@ -1330,3 +1330,17 @@ mix-blend-mode:screen;opacity:.65}
   .mobileRecent,.mobileKosCard{margin-top:0!important}
   .mobileQuick{min-height:112px!important}
 }
+
+
+/* DESKTOP GLOBE — ABSOLUTELY NO SPHERE GLOW */
+.cleanCommandCenter .realEarth{
+  filter:none!important;
+  box-shadow:none!important;
+  -webkit-filter:none!important;
+}
+.cleanCommandCenter .realEarth canvas{
+  filter:none!important;
+  box-shadow:none!important;
+  background:transparent!important;
+  -webkit-filter:none!important;
+}
