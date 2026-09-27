@@ -1203,7 +1203,7 @@ function App() {
       setWorkflowError(null);
 
       try{
-        const response=await fetch(`https://api.github.com/repos/korczaktechnology-tech/Morok-AI/actions/runs?per_page=100&_=1790493839467`,{
+        const response=await fetch(`https://api.github.com/repos/korczaktechnology-tech/Morok-AI/actions/runs?per_page=100&ts=${Date.now()}`,{
           cache:"no-store",
           signal:controller.signal,
           headers:{
@@ -1247,7 +1247,11 @@ function App() {
           conclusion:run.conclusion,
           updatedAt:run.updated_at,
           workflowState:
-            run.status==="queued"||run.status==="in_progress"
+            run.status==="queued" ||
+            run.status==="in_progress" ||
+            run.status==="waiting" ||
+            run.status==="requested" ||
+            run.status==="pending"
               ? "queued"
               : run.conclusion==="success"
                 ? "success"
@@ -1277,7 +1281,7 @@ function App() {
 
     if(workflowMonitorOpen){
       void loadWorkflows();
-      refreshTimer=window.setInterval(()=>void loadWorkflows(),5000);
+      refreshTimer=window.setInterval(()=>void loadWorkflows(),3000);
     }else{
       workflowRequestRef.current?.abort();
     }
