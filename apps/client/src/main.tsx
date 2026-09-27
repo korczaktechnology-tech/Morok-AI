@@ -78,6 +78,19 @@ function Dashboard() {
         src={MOROK_CENTER_ICON}
         alt="Símbolo Morok"
       />
+      <section className="morokSystemsPanel" aria-label="Sistemas">
+        <h2>SISTEMAS</h2>
+        <ul>
+          <li className="systemErp"><span className="systemIcon" />ERP</li>
+          <li className="systemFlow"><span className="systemIcon" />FLOW</li>
+          <li className="systemOps"><span className="systemIcon" />OPS</li>
+          <li className="systemVision"><span className="systemIcon" />VISION</li>
+          <li className="systemConnect"><span className="systemIcon" />CONNECT</li>
+          <li className="systemMobile"><span className="systemIcon" />MOBILE</li>
+          <li className="systemDocs"><span className="systemIcon" />DOCUMENTS</li>
+          <li className="systemAi"><span className="systemIcon" />AI</li>
+        </ul>
+      </section>
     </div>
   );
 }
