@@ -76,363 +76,197 @@ function EarthGlobe(){
     const mount=mountRef.current;
     if(!mount)return;
 
-    const scene=new THREE.Scene();
-    const camera=new THREE.PerspectiveCamera(34,1,0.1,100);
-    camera.position.set(0,0,6.3);
-
-    const renderer=new THREE.WebGLRenderer({
-      antialias:true,
-      alpha:true,
-      powerPreference:"high-performance"
-    });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.25));
-    renderer.outputColorSpace=THREE.SRGBColorSpace;
-    renderer.setClearColor(0x000000,0);
-    mount.appendChild(renderer.domElement);
-
-    const earthSystem=new THREE.Group();
-    earthSystem.rotation.x=-0.12;
-    earthSystem.rotation.y=-0.48;
-    scene.add(earthSystem);
-
-    const earthTexture=new THREE.TextureLoader().load(
-      "https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg"
-    );
-    earthTexture.colorSpace=THREE.SRGBColorSpace;
-    earthTexture.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
-
-    /*
-     * HOLOGRAPHIC EARTH
-     * The geographic texture remains the source of truth for the continents.
-     * Instead of painting the texture onto a normal sphere, the shader converts
-     * the real landmass into transparent projection fragments, scanlines and
-     * coast contours. A second particle layer breaks the projection into
-     * visible holographic points. This is intentionally NOT a blue-tinted globe.
-     */
-    const hologramSurface=new THREE.ShaderMaterial({
-      uniforms:{
-        uMap:{value:earthTexture},
-        uTime:{value:0},
-        uTexel:{value:new THREE.Vector2(1/2048,1/2048)}
-      },
-      vertexShader:`
-        varying vec2 vUv;
-        varying vec3 vNormal;
-        varying vec3 vWorldPosition;
-        void main(){
-          vUv=uv;
-          vNormal=normalize(normalMatrix*normal);
-          vec4 worldPosition=modelMatrix*vec4(position,1.0);
-          vWorldPosition=worldPosition.xyz;
-          gl_Position=projectionMatrix*viewMatrix*worldPosition;
-        }
-      `,
-      fragmentShader:`
-        uniform sampler2D uMap;
-        uniform float uTime;
-        uniform vec2 uTexel;
-        varying vec2 vUv;
-        varying vec3 vNormal;
-        varying vec3 vWorldPosition;
-
-        float landMask(vec3 c){
-          float green=c.g-(c.b*0.78+c.r*0.10);
-          float warm=(c.r+c.g)*0.42-c.b*0.52;
-          float brightness=dot(c,vec3(.299,.587,.114));
-          float chroma=max(c.r,max(c.g,c.b))-min(c.r,min(c.g,c.b));
-          return smoothstep(.015,.085,max(green,warm))*
-                 smoothstep(.08,.62,brightness+.35*chroma);
-        }
-
-        float landAt(vec2 uv){
-          return landMask(texture2D(uMap,fract(uv)).rgb);
-        }
-
-        float coastAt(vec2 uv){
-          float c=landAt(uv);
-          float l=landAt(uv-vec2(uTexel.x*2.4,0.0));
-          float r=landAt(uv+vec2(uTexel.x*2.4,0.0));
-          float d=landAt(uv-vec2(0.0,uTexel.y*2.4));
-          float u=landAt(uv+vec2(0.0,uTexel.y*2.4));
-          return clamp(abs(c-l)+abs(c-r)+abs(c-d)+abs(c-u),0.0,1.0);
-        }
-
-        float hash21(vec2 p){
-          p=fract(p*vec2(127.1,311.7));
-          p+=dot(p,p+41.7);
-          return fract(p.x*p.y);
-        }
-
-        void main(){
-          float land=landAt(vUv);
-          float coast=coastAt(vUv);
-
-          // Hologram projection is strongest on the visible hemisphere.
-          float facing=smoothstep(-.12,.52,vNormal.z);
-          float edgeFade=smoothstep(.01,.28,facing);
-
-          // Multi-spectrum projection: violet, electric blue and cyan,
-          // with tiny magenta/red interference instead of a flat blue tint.
-          vec3 violet=vec3(.62,.12,1.0);
-          vec3 blue=vec3(.10,.38,1.0);
-          vec3 cyan=vec3(.05,.95,1.0);
-          vec3 magenta=vec3(1.0,.05,.48);
-          float spectrum=fract(vUv.x*1.35+vUv.y*.22);
-          vec3 projected=mix(violet,blue,smoothstep(.0,.42,spectrum));
-          projected=mix(projected,cyan,smoothstep(.42,.78,spectrum));
-          projected=mix(projected,magenta,smoothstep(.92,1.0,spectrum));
-
-          // Fine horizontal scanlines and a moving projection sweep.
-          float scanBand=pow(max(0.0,sin(vUv.y*420.0)),18.0);
-          float sweep=exp(-pow((fract(vUv.y-uTime*.055)-.5)*10.0,2.0));
-
-          // Fragment the continent into projected digital cells.
-          vec2 cell=floor(vUv*vec2(260.0,170.0));
-          float cellNoise=hash21(cell);
-          float broken=step(.075,cellNoise);
-          float micro=step(.40,hash21(cell+17.0));
-          float fragments=land*broken*(.45+.55*micro);
-
-          // Real coastlines remain sharply visible.
-          float coastLine=smoothstep(.035,.28,coast);
-
-          float alpha=
-            land*0.16+
-            fragments*0.34+
-            coastLine*0.78+
-            scanBand*land*0.28+
-            sweep*land*0.42;
-
-          alpha*=edgeFade;
-
-          if(alpha<.025) discard;
-          gl_FragColor=vec4(projected,clamp(alpha,.0,.86));
-        }
-      `,
-      transparent:true,
-      depthWrite:false,
-      blending:THREE.AdditiveBlending,
-      side:THREE.FrontSide
-    });
-
-    const earth=new THREE.Mesh(
-      new THREE.SphereGeometry(1,128,96),
-      hologramSurface
-    );
-    earth.scale.setScalar(.5625);
-    earthSystem.add(earth);
-
-    // Holographic point projection: real land areas become separated luminous dots.
-    const pointGeometry=new THREE.SphereGeometry(1.012,112,72);
-    const pointMaterial=new THREE.ShaderMaterial({
-      uniforms:{
-        uMap:{value:earthTexture},
-        uTime:{value:0},
-        uTexel:{value:new THREE.Vector2(1/2048,1/2048)}
-      },
-      vertexShader:`
-        uniform float uTime;
-        varying vec2 vUv;
-        varying float vFacing;
-        void main(){
-          vUv=uv;
-          vec4 mvPosition=modelViewMatrix*vec4(position,1.0);
-          vec3 n=normalize(normalMatrix*normal);
-          vFacing=smoothstep(-.15,.58,n.z);
-          float pulse=.82+.18*sin(uTime*2.1+position.y*12.0+position.x*9.0);
-          gl_PointSize=(2.0+2.8*pulse)*vFacing;
-          gl_Position=projectionMatrix*mvPosition;
-        }
-      `,
-      fragmentShader:`
-        uniform sampler2D uMap;
-        uniform float uTime;
-        varying vec2 vUv;
-        varying float vFacing;
-
-        float landMask(vec3 c){
-          float green=c.g-(c.b*0.78+c.r*0.10);
-          float warm=(c.r+c.g)*0.42-c.b*0.52;
-          float brightness=dot(c,vec3(.299,.587,.114));
-          float chroma=max(c.r,max(c.g,c.b))-min(c.r,min(c.g,c.b));
-          return smoothstep(.015,.085,max(green,warm))*
-                 smoothstep(.08,.62,brightness+.35*chroma);
-        }
-
-        void main(){
-          vec2 p=gl_PointCoord-.5;
-          float d=length(p);
-          if(d>.5) discard;
-          float land=landMask(texture2D(uMap,vUv).rgb);
-          if(land<.22 || vFacing<.04) discard;
-
-          float sparkle=step(.68,fract(sin(dot(vUv+uTime*.002,vec2(127.1,311.7)))*43758.5453));
-          vec3 c=mix(vec3(.18,.55,1.0),vec3(.75,.18,1.0),fract(vUv.x*2.0));
-          c=mix(c,vec3(1.0,.12,.48),sparkle*.35);
-          float a=(1.0-smoothstep(.0,.5,d))*(.32+.32*sparkle)*vFacing;
-          gl_FragColor=vec4(c,a);
-        }
-      `,
-      transparent:true,
-      depthWrite:false,
-      blending:THREE.AdditiveBlending
-    });
-    pointMaterial.uniforms.uMap.value=earthTexture;
-
-    const landPoints=new THREE.Points(pointGeometry,pointMaterial);
-    landPoints.scale.setScalar(.5625);
-    earthSystem.add(landPoints);
-
-    // Transparent latitude/longitude projection grid: technical hologram scaffold.
-    const gridMaterial=new THREE.LineBasicMaterial({
-      color:0x4fa9ff,
-      transparent:true,
-      opacity:.16,
-      blending:THREE.AdditiveBlending,
-      depthWrite:false
-    });
-    const gridGroup=new THREE.Group();
-    const gridRadius=.566;
-    const gridSegments=96;
-
-    for(let lat=-60;lat<=60;lat+=20){
-      const phi=THREE.MathUtils.degToRad(lat);
-      const r=Math.cos(phi)*gridRadius;
-      const y=Math.sin(phi)*gridRadius;
-      const pts=[];
-      for(let i=0;i<=gridSegments;i++){
-        const a=(i/gridSegments)*Math.PI*2;
-        pts.push(new THREE.Vector3(Math.cos(a)*r,y,Math.sin(a)*r));
-      }
-      const line=new THREE.Line(
-        new THREE.BufferGeometry().setFromPoints(pts),
-        gridMaterial
-      );
-      gridGroup.add(line);
-    }
-
-    for(let lon=0;lon<360;lon+=20){
-      const pts=[];
-      const theta=THREE.MathUtils.degToRad(lon);
-      for(let i=0;i<=72;i++){
-        const t=i/72;
-        const phi=-Math.PI/2+t*Math.PI;
-        pts.push(new THREE.Vector3(
-          Math.cos(phi)*Math.cos(theta)*gridRadius,
-          Math.sin(phi)*gridRadius,
-          Math.cos(phi)*Math.sin(theta)*gridRadius
-        ));
-      }
-      const line=new THREE.Line(
-        new THREE.BufferGeometry().setFromPoints(pts),
-        gridMaterial
-      );
-      gridGroup.add(line);
-    }
-    earthSystem.add(gridGroup);
-
-    // Floating hologram shell: broken equator bands instead of a physical glow.
-    const shellMaterial=new THREE.ShaderMaterial({
-      uniforms:{uTime:{value:0}},
-      vertexShader:`
-        varying vec3 vNormal;
-        void main(){
-          vNormal=normalize(normalMatrix*normal);
-          gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);
-        }
-      `,
-      fragmentShader:`
-        uniform float uTime;
-        varying vec3 vNormal;
-        void main(){
-          float facing=pow(1.0-max(0.0,vNormal.z),2.2);
-          float scan=step(.74,fract((vNormal.y+uTime*.025)*34.0));
-          float a=facing*.08+scan*.035;
-          if(a<.012) discard;
-          vec3 c=mix(vec3(.45,.08,1.0),vec3(.05,.75,1.0),vNormal.y*.5+.5);
-          gl_FragColor=vec4(c,a);
-        }
-      `,
-      transparent:true,
-      depthWrite:false,
-      blending:THREE.AdditiveBlending,
-      side:THREE.BackSide
-    });
-    const shell=new THREE.Mesh(new THREE.SphereGeometry(1.035,64,48),shellMaterial);
-    shell.scale.setScalar(.5625);
-    earthSystem.add(shell);
+    const svg=mount.querySelector("svg") as SVGSVGElement|null;
+    if(!svg)return;
 
     let dragging=false;
     let lastPointer={x:0,y:0};
+    let rotX=-4;
+    let rotY=-10;
+
+    const render=()=>{
+      svg.style.transform=`perspective(1100px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+    };
+
     const onPointerDown=(e:PointerEvent)=>{
       dragging=true;
       lastPointer={x:e.clientX,y:e.clientY};
-      renderer.domElement.setPointerCapture(e.pointerId);
+      mount.setPointerCapture(e.pointerId);
     };
+
     const onPointerMove=(e:PointerEvent)=>{
       if(!dragging)return;
       const dx=e.clientX-lastPointer.x;
       const dy=e.clientY-lastPointer.y;
       lastPointer={x:e.clientX,y:e.clientY};
-      earthSystem.rotation.y+=dx*.006;
-      earthSystem.rotation.x+=dy*.0045;
-      earthSystem.rotation.x=Math.max(-1.45,Math.min(1.45,earthSystem.rotation.x));
+      rotY+=dx*.22;
+      rotX-=dy*.16;
+      rotX=Math.max(-38,Math.min(38,rotX));
+      rotY=Math.max(-55,Math.min(55,rotY));
+      render();
     };
+
     const onPointerUp=(e:PointerEvent)=>{
       dragging=false;
-      if(renderer.domElement.hasPointerCapture(e.pointerId)){
-        renderer.domElement.releasePointerCapture(e.pointerId);
-      }
+      if(mount.hasPointerCapture(e.pointerId))mount.releasePointerCapture(e.pointerId);
     };
-    renderer.domElement.addEventListener("pointerdown",onPointerDown);
-    renderer.domElement.addEventListener("pointermove",onPointerMove);
-    renderer.domElement.addEventListener("pointerup",onPointerUp);
-    renderer.domElement.addEventListener("pointercancel",onPointerUp);
 
-    const resize=()=>{
-      const w=Math.max(1,mount.clientWidth);
-      const h=Math.max(1,mount.clientHeight);
-      camera.aspect=w/h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w,h,false);
-    };
-    const resizeObserver=new ResizeObserver(resize);
-    resizeObserver.observe(mount);
-    resize();
-
-    let raf=0;
-    const animate=(now:number)=>{
-      const elapsed=now*.001;
-      hologramSurface.uniforms.uTime.value=elapsed;
-      pointMaterial.uniforms.uTime.value=elapsed;
-      shellMaterial.uniforms.uTime.value=elapsed;
-      renderer.render(scene,camera);
-      raf=requestAnimationFrame(animate);
-    };
-    raf=requestAnimationFrame(animate);
+    mount.addEventListener("pointerdown",onPointerDown);
+    mount.addEventListener("pointermove",onPointerMove);
+    mount.addEventListener("pointerup",onPointerUp);
+    mount.addEventListener("pointercancel",onPointerUp);
+    render();
 
     return()=>{
-      cancelAnimationFrame(raf);
-      resizeObserver.disconnect();
-      renderer.domElement.removeEventListener("pointerdown",onPointerDown);
-      renderer.domElement.removeEventListener("pointermove",onPointerMove);
-      renderer.domElement.removeEventListener("pointerup",onPointerUp);
-      renderer.domElement.removeEventListener("pointercancel",onPointerUp);
-      scene.traverse(o=>{
-        const mesh=o as THREE.Mesh|THREE.Line|THREE.Points;
-        if(mesh.geometry)mesh.geometry.dispose();
-        const material=mesh.material as THREE.Material|THREE.Material[];
-        if(Array.isArray(material))material.forEach(m=>m.dispose());
-        else if(material)material.dispose();
-      });
-      earthTexture.dispose();
-      renderer.dispose();
-      if(renderer.domElement.parentElement===mount)mount.removeChild(renderer.domElement);
+      mount.removeEventListener("pointerdown",onPointerDown);
+      mount.removeEventListener("pointermove",onPointerMove);
+      mount.removeEventListener("pointerup",onPointerUp);
+      mount.removeEventListener("pointercancel",onPointerUp);
     };
   },[]);
 
-  return <div className="earthGlobe realEarth" ref={mountRef} aria-label="Globo holográfico 3D da Terra interativo" />;
+  return (
+    <div className="earthGlobe holographicEarth" ref={mountRef} aria-label="Globo holográfico tecnológico da Terra interativo">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="100%" height="100%" role="img">
+        <defs>
+          <radialGradient id="relevoReal" cx="40%" cy="40%" r="70%">
+            <stop offset="0%" stopColor="#2A4365"/>
+            <stop offset="60%" stopColor="#1A365D"/>
+            <stop offset="95%" stopColor="#0F172A"/>
+          </radialGradient>
+
+          <linearGradient id="altimetria" x1="0%" y1="100%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#1A365D" stopOpacity="0"/>
+            <stop offset="40%" stopColor="#319795" stopOpacity=".4"/>
+            <stop offset="85%" stopColor="#4FD1C5" stopOpacity=".8"/>
+            <stop offset="100%" stopColor="#E2E8F0" stopOpacity=".9"/>
+          </linearGradient>
+
+          <radialGradient id="atmosferaLimpa" cx="50%" cy="50%" r="50%">
+            <stop offset="92%" stopColor="#00FFFF" stopOpacity="0"/>
+            <stop offset="97%" stopColor="#00FFFF" stopOpacity=".2"/>
+            <stop offset="100%" stopColor="#00FFFF" stopOpacity=".5"/>
+          </radialGradient>
+
+          <linearGradient id="holoSpectrum" x1="0%" y1="100%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#FF1744"/>
+            <stop offset="28%" stopColor="#FF00C8"/>
+            <stop offset="52%" stopColor="#7B2CFF"/>
+            <stop offset="76%" stopColor="#168BFF"/>
+            <stop offset="100%" stopColor="#00FFFF"/>
+          </linearGradient>
+
+          <pattern id="scanlines" width="1000" height="12" patternUnits="userSpaceOnUse">
+            <rect width="1000" height="2" fill="#00FFFF" opacity=".26"/>
+          </pattern>
+
+          <filter id="holoGlow" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="5" result="blur"/>
+            <feMerge>
+              <feMergeNode in="blur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+
+          <clipPath id="earthClip">
+            <circle cx="500" cy="500" r="420"/>
+          </clipPath>
+        </defs>
+
+        <!-- Base de projeção: transparente, técnica, sem aparência de planeta real -->
+        <circle cx="500" cy="500" r="420" fill="#020812" fillOpacity=".76" stroke="#00FFFF" strokeWidth="2"/>
+
+        <!-- Campo de varredura holográfico -->
+        <circle cx="500" cy="500" r="420" fill="url(#scanlines)" opacity=".34"/>
+
+        <!-- Malha geodésica -->
+        <g stroke="#00FFFF" strokeWidth=".5" fill="none" opacity=".20">
+          <line x1="80" y1="500" x2="920" y2="500" strokeWidth="1.2"/>
+          <line x1="500" y1="80" x2="500" y2="920" strokeWidth="1.2"/>
+          <circle cx="500" cy="500" r="105"/>
+          <circle cx="500" cy="500" r="210"/>
+          <circle cx="500" cy="500" r="315"/>
+          <path d="M500,80 C320,200 320,800 500,920"/>
+          <path d="M500,80 C140,250 140,750 500,920"/>
+          <path d="M500,80 C680,200 680,800 500,920"/>
+          <path d="M500,80 C860,250 860,750 500,920"/>
+        </g>
+
+        <!-- Continentes -->
+        <g fill="url(#relevoReal)" stroke="none">
+          <path d="M260,180 L290,170 L340,140 L380,130 L400,160 L460,150 L480,180 L440,210 L410,190 L420,240 L450,260 L410,290 L390,340 L380,395 L345,440 L350,460 L335,460 L320,420 L300,410 L250,390 L210,380 L180,340 L210,310 L200,260 L240,230 L220,210 Z"/>
+          <path d="M440,110 L490,120 L510,150 L460,170 L430,140 Z"/>
+          <path d="M335,460 C360,455 390,465 410,480 C440,500 480,515 505,550 C520,575 515,620 485,670 C460,710 420,770 385,820 L365,825 C365,790 350,730 335,680 C320,630 300,560 310,520 C315,500 325,480 335,460 Z"/>
+          <path d="M500,440 C530,410 580,415 620,430 C655,445 690,470 695,510 C700,560 670,620 640,660 C615,700 590,740 575,760 L565,740 C565,700 550,650 540,610 C530,580 500,530 495,500 C490,475 490,455 500,440 Z"/>
+          <path d="M660,640 L685,670 L675,700 L650,660 Z"/>
+          <path d="M480,290 C510,260 540,240 560,250 C580,230 600,210 630,220 C670,180 730,190 800,210 C840,230 850,270 820,310 C790,340 810,380 770,410 C740,430 710,410 680,440 C650,450 620,430 580,410 L540,420 L530,370 L500,360 Z"/>
+          <path d="M465,230 L485,220 L480,245 L460,250 Z"/>
+          <path d="M830,270 L850,290 L840,320 L825,300 Z"/>
+          <path d="M760,600 L820,590 L850,630 L830,690 L770,680 L740,640 Z M770,550 L820,560 L800,580 Z"/>
+        </g>
+
+        <!-- Relevo/altimetria -->
+        <g fill="url(#altimetria)" stroke="none" opacity=".9">
+          <path d="M340,470 C330,510 315,560 320,620 C325,670 340,720 370,800 L360,805 C330,725 315,670 310,615 C305,550 320,505 330,470 Z"/>
+          <path d="M240,240 Q270,300 310,380 L295,385 Q255,305 225,245 Z"/>
+          <path d="M660,310 Q730,315 780,340 L775,355 Q725,330 655,325 Z"/>
+          <path d="M530,265 Q555,265 570,275 L565,285 Q550,275 525,275 Z"/>
+        </g>
+
+        <!-- Regiões polares -->
+        <g fill="#FFFFFF" fillOpacity=".72">
+          <path d="M320,135 C380,115 540,115 600,135 C540,150 380,150 320,135 Z"/>
+          <path d="M340,845 C400,835 520,835 580,845 C520,860 400,860 340,845 Z"/>
+          <path d="M445,120 L485,128 L495,145 L465,160 L440,140 Z"/>
+        </g>
+
+        <!-- Fronteiras internacionais -->
+        <g stroke="#00FFFF" strokeWidth="1.2" fill="none" opacity=".78">
+          <path d="M245,230 L395,240 M280,310 L415,315 M322,420 L345,415"/>
+          <path d="M525,480 L575,485 M540,530 L625,510 M580,610 L645,595 M610,650 L635,655"/>
+          <path d="M520,290 L560,310 M575,260 L590,320 M680,290 L710,350 M760,340 L790,410"/>
+        </g>
+
+        <!-- Brasil: divisão estadual estilizada -->
+        <g stroke="#D1FFFA" strokeWidth=".8" fill="none" opacity=".92">
+          <path d="M340,495 L355,490 L380,500 L395,490 L415,510 L430,505"/>
+          <path d="M375,475 L380,500 M415,510 L420,490"/>
+          <path d="M322,525 L340,515 L355,490"/>
+          <path d="M340,515 L355,535 L375,530 L380,500"/>
+          <path d="M430,505 L450,515 L475,510 L500,535 L490,560 L460,575 L435,540 Z"/>
+          <path d="M450,515 L455,545 L460,575"/>
+          <path d="M465,513 L470,538 L485,540"/>
+          <path d="M485,515 L485,530 M495,520 L480,530"/>
+          <path d="M495,535 L485,540 M490,545 L480,542"/>
+          <path d="M380,500 L410,525 L435,540 L425,580 L395,585 L375,530 Z"/>
+          <path d="M410,525 L405,565 L395,585"/>
+          <path d="M410,550 L430,555 L425,580"/>
+          <path d="M435,540 L455,550 L465,570 L445,600 L425,580 Z"/>
+          <path d="M435,540 L435,570 L445,600"/>
+          <path d="M450,555 L445,575 L460,573"/>
+          <path d="M425,580 L435,600 L425,620 L410,640 L395,620 L400,595 Z"/>
+          <path d="M415,595 L430,605 M410,610 L428,615"/>
+        </g>
+
+        <!-- Camada de interferência holográfica -->
+        <g clipPath="url(#earthClip)" opacity=".32" filter="url(#holoGlow)">
+          <rect x="80" y="80" width="840" height="840" fill="url(#holoSpectrum)" opacity=".28"/>
+          <rect x="80" y="80" width="840" height="840" fill="url(#scanlines)" opacity=".65"/>
+          <path d="M80 315 H920 M80 570 H920" stroke="#FFFFFF" strokeWidth="2" opacity=".20">
+            <animate attributeName="opacity" values=".05;.32;.05" dur="2.8s" repeatCount="indefinite"/>
+          </path>
+        </g>
+
+        <!-- Borda de projeção -->
+        <circle cx="500" cy="500" r="420" fill="url(#atmosferaLimpa)" pointerEvents="none"/>
+        <circle cx="500" cy="500" r="423" fill="none" stroke="url(#holoSpectrum)" strokeWidth="2.5" opacity=".82"/>
+        <circle cx="500" cy="500" r="430" fill="none" stroke="#00FFFF" strokeWidth=".8" strokeDasharray="3 15" opacity=".48"/>
+        <circle cx="500" cy="500" r="437" fill="none" stroke="#7B2CFF" strokeWidth=".7" strokeDasharray="1 23" opacity=".38"/>
+      </svg>
+    </div>
+  );
 }
+
 function OrbitalRings(){
   const mountRef=useRef<HTMLDivElement>(null);
 
