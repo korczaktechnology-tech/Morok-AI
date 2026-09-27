@@ -5,7 +5,7 @@ import { Capacitor } from "@capacitor/core";
 import "./styles.css";
 
 const API = import.meta.env.VITE_API_URL ?? "https://morok-ai.onrender.com";
-const MOROK_SUB_ICON = "/MorokSubIcon.svg";
+const MOROK_SUB_ICON = `${import.meta.env.BASE_URL}MorokSubIcon.svg`;
 
 type Msg = { role: "user" | "assistant"; content: string };
 type Task = { id: string; title: string; status: string; dueAt?: string };
@@ -124,7 +124,7 @@ function EarthGlobe(){
       aria-label="Globo holográfico tecnológico da Terra interativo"
     >
       <img
-        src="/holographic-earth.svg"
+        src={`${import.meta.env.BASE_URL}holographic-earth.svg`}
         alt=""
         className="holographicEarthSvg"
         draggable={false}
