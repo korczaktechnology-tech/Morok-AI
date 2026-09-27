@@ -71,7 +71,7 @@ function Icon({ children }: { children: React.ReactNode }) {
 }
 
 
-type ResizeDirection = "e" | "s" | "se";
+type ResizeDirection = "n" | "e" | "s" | "w" | "ne" | "nw" | "se" | "sw";
 type PanelGeometry = { width?: number; height?: number; left?: number; top?: number };
 
 function ResizablePanel({
@@ -133,11 +133,23 @@ function ResizablePanel({
 
     const move = (e: PointerEvent) => {
       const next: PanelGeometry = { ...start };
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
       if (direction.includes("e")) {
-        next.width = Math.max(minWidth, Math.min(maxWidth, (start.width || 0) + e.clientX - startX));
+        next.width = Math.max(minWidth, Math.min(maxWidth, (start.width || 0) + dx));
       }
       if (direction.includes("s")) {
-        next.height = Math.max(minHeight, Math.min(maxHeight, (start.height || 0) + e.clientY - startY));
+        next.height = Math.max(minHeight, Math.min(maxHeight, (start.height || 0) + dy));
+      }
+      if (direction.includes("w")) {
+        const width = Math.max(minWidth, Math.min(maxWidth, (start.width || 0) - dx));
+        next.width = width;
+        next.left = (start.left || 0) + (start.width || 0) - width;
+      }
+      if (direction.includes("n")) {
+        const height = Math.max(minHeight, Math.min(maxHeight, (start.height || 0) - dy));
+        next.height = height;
+        next.top = (start.top || 0) + (start.height || 0) - height;
       }
       setGeometry(next);
     };
@@ -215,9 +227,14 @@ function ResizablePanel({
     >
       <div className="panelMoveHandle" onPointerDown={startMove} title="Arrastar painel" aria-label={`Mover painel ${id}`} />
       {children}
+      <div className="resizeHandle resizeHandleN" onPointerDown={e => startResize(e, "n")} />
       <div className="resizeHandle resizeHandleE" onPointerDown={e => startResize(e, "e")} />
       <div className="resizeHandle resizeHandleS" onPointerDown={e => startResize(e, "s")} />
+      <div className="resizeHandle resizeHandleW" onPointerDown={e => startResize(e, "w")} />
+      <div className="resizeHandle resizeHandleNE" onPointerDown={e => startResize(e, "ne")} />
+      <div className="resizeHandle resizeHandleNW" onPointerDown={e => startResize(e, "nw")} />
       <div className="resizeHandle resizeHandleSE" onPointerDown={e => startResize(e, "se")} />
+      <div className="resizeHandle resizeHandleSW" onPointerDown={e => startResize(e, "sw")} />
     </section>
   );
 }
