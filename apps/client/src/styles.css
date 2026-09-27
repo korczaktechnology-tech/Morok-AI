@@ -1357,3 +1357,147 @@ mix-blend-mode:screen;opacity:.65}
 @media(max-width:760px){
   .morokFullDashboard{min-height:100dvh;overflow:auto}.dashHeader{left:12px;right:12px}.dashLeft,.dashSystems,.dashRight,.dashNav,.dashMiniStatus,.dashGoal{display:none}.dashCore{left:50%;top:42%;width:min(430px,88vw)}.dashActions{bottom:40px;gap:4px}.dashActions button{width:64px;height:64px;font-size:7px}.dashActions button span{font-size:19px}.coreName{font-size:30px}.coreSubtitle{font-size:8px}.dashFooter{display:none}.kosBrand small{display:none}.kosBrand strong{font-size:8px}.kosMark{font-size:32px}.dashClock{display:none}.dashWeather{display:none}
 }
+
+/* MOROK // TECHNOLOGICAL DENSITY + FULL-CANVAS OVERRIDE */
+.morokFullDashboard{
+  min-height:100dvh!important;
+  height:100dvh!important;
+  background:
+    radial-gradient(circle at 50% 48%,rgba(79,28,255,.18),transparent 30%),
+    radial-gradient(circle at 8% 45%,rgba(34,79,255,.08),transparent 22%),
+    radial-gradient(circle at 91% 46%,rgba(188,0,255,.08),transparent 22%),
+    linear-gradient(180deg,#010208 0%,#02030a 48%,#010207 100%)!important;
+}
+.morokFullDashboard:before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-3;
+  pointer-events:none;
+  opacity:.45;
+  background:
+    repeating-linear-gradient(0deg,transparent 0 3px,rgba(100,120,255,.018) 3px 4px),
+    linear-gradient(90deg,transparent 0 49.92%,rgba(84,91,255,.10) 50%,transparent 50.08%),
+    linear-gradient(0deg,transparent 0 49.92%,rgba(84,91,255,.07) 50%,transparent 50.08%);
+  mask-image:radial-gradient(ellipse at center,black 25%,transparent 92%);
+}
+.morokFullDashboard:after{
+  content:"";
+  position:absolute;
+  inset:7px;
+  z-index:30;
+  pointer-events:none;
+  border:1px solid rgba(73,91,191,.20);
+  box-shadow:inset 0 0 35px rgba(30,45,150,.08),0 0 0 1px rgba(0,0,0,.8);
+  clip-path:polygon(0 2%,1.2% 2%,1.2% 0,98.8% 0,98.8% 2%,100% 2%,100% 98%,98.8% 98%,98.8% 100%,1.2% 100%,1.2% 98%,0 98%);
+}
+.dashHeader{left:24px!important;right:24px!important;top:12px!important;height:72px!important}
+.dashLeft{left:18px!important;top:106px!important;width:326px!important;bottom:82px!important}
+.resourcePanel{height:286px!important;padding:18px 22px!important}
+.resourceRow{height:65px!important}
+.processPanel{height:246px!important;margin-top:12px!important}
+.assistantPanel{height:218px!important}
+.dashSystems{
+  left:362px!important;top:148px!important;width:188px!important;height:402px!important;
+  padding:36px 20px 20px 58px!important;
+}
+.dashSystems li{height:42px!important}
+.dashCore{
+  left:50%!important;top:49%!important;
+  width:min(650px,47vw,75vh)!important;
+  filter:drop-shadow(0 0 28px rgba(69,54,255,.10));
+}
+.ringA{border-width:2px!important}
+.ringB{border-width:2px!important}
+.ringC{border-style:dashed!important}
+.ringD{width:70%!important;height:70%!important}
+.ringE{width:59%!important;height:59%!important}
+.coreLogo{width:46%!important;height:46%!important}
+.coreName{top:75%!important;font-size:42px!important;letter-spacing:7px!important}
+.coreSubtitle{top:86%!important;font-size:11px!important}
+.coreTopLabel{top:2%!important}
+.dashRight{
+  right:235px!important;top:116px!important;width:292px!important
+}
+.notificationPanel{height:190px!important}
+.activityPanel{height:242px!important}
+.dashNav{
+  right:14px!important;top:116px!important;width:210px!important
+}
+.dashNav button{height:61px!important;font-size:12px!important}
+.dashMiniStatus{left:438px!important;bottom:144px!important;width:185px!important;height:140px!important}
+.dashGoal{right:16px!important;bottom:73px!important;width:326px!important;height:226px!important}
+.dashActions{
+  bottom:62px!important;
+  gap:10px!important;
+}
+.dashActions button{width:118px!important;height:94px!important}
+.dashFooter{left:30%!important;right:30%!important;bottom:14px!important;height:38px!important}
+
+/* Circuitry around the canvas */
+.dashTechLines{
+  opacity:.55!important;
+  background-image:
+    linear-gradient(118deg,transparent 0 6%,rgba(70,92,210,.38) 6.08%,transparent 6.22%),
+    linear-gradient(62deg,transparent 0 13%,rgba(137,32,255,.34) 13.08%,transparent 13.2%),
+    linear-gradient(118deg,transparent 0 29%,rgba(19,164,255,.22) 29.06%,transparent 29.18%),
+    linear-gradient(62deg,transparent 0 71%,rgba(255,23,92,.24) 71.08%,transparent 71.2%),
+    linear-gradient(0deg,rgba(50,64,135,.11) 1px,transparent 1px)!important;
+  background-size:360px 240px,410px 280px,520px 340px,480px 320px,100% 74px!important;
+}
+.dashTechLines:before,.dashTechLines:after{
+  content:"";
+  position:absolute;
+  pointer-events:none;
+  border:1px solid rgba(61,104,255,.22);
+}
+.dashTechLines:before{
+  left:2%;top:16%;width:25%;height:28%;
+  clip-path:polygon(0 12%,7% 0,88% 0,100% 12%,100% 86%,92% 100%,8% 100%,0 88%);
+  box-shadow:inset 0 0 28px rgba(37,71,255,.06);
+}
+.dashTechLines:after{
+  right:2%;bottom:12%;width:24%;height:25%;
+  clip-path:polygon(10% 0,92% 0,100% 12%,100% 88%,92% 100%,8% 100%,0 88%,0 12%);
+}
+
+/* More HUD segmentation without adding image assets */
+.dashPanel:after{
+  content:"";
+  position:absolute;
+  width:42px;height:1px;
+  right:16px;top:10px;
+  background:linear-gradient(90deg,transparent,#6f7dff);
+  box-shadow:0 0 7px rgba(88,104,255,.65);
+}
+.coreRing:after{
+  content:"";
+  position:absolute;
+  left:50%;top:-4px;
+  width:5px;height:5px;
+  transform:translateX(-50%);
+  border-radius:50%;
+  background:#72cfff;
+  box-shadow:0 0 8px #72cfff;
+}
+.dashNav:after{
+  content:"SYSTEM NAV // 08";
+  position:absolute;
+  left:22px;bottom:-19px;
+  color:rgba(94,126,255,.45);
+  font:600 7px "Segoe UI",sans-serif;
+  letter-spacing:1.8px;
+}
+@media(max-width:1350px){
+  .dashLeft{width:285px!important}
+  .dashSystems{left:316px!important;width:176px!important}
+  .dashRight{right:205px!important;width:250px!important}
+  .dashNav{width:185px!important}
+  .dashCore{width:min(590px,46vw,70vh)!important}
+  .dashActions button{width:102px!important}
+}
+@media(max-width:1100px){
+  .dashLeft{width:245px!important}.dashSystems{left:270px!important}
+  .dashRight{right:178px!important;width:210px!important}.dashNav{width:165px!important}
+  .dashCore{left:53%!important;width:min(500px,48vw,64vh)!important}
+}
