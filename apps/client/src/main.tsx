@@ -5,7 +5,7 @@ import { Capacitor } from "@capacitor/core";
 import "./styles.css";
 
 const API = import.meta.env.VITE_API_URL ?? "https://morok-ai.onrender.com";
-const MOROK_SUB_ICON = "/MorokSubIcon.png";
+const MOROK_SUB_ICON = "/MorokSubIcon.svg";
 
 type Msg = { role: "user" | "assistant"; content: string };
 type Task = { id: string; title: string; status: string; dueAt?: string };
