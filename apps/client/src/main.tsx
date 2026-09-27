@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { Capacitor } from "@capacitor/core";
 import "./styles.css";
 
@@ -85,7 +85,7 @@ function ResizablePanel({
 }: {
   id: string;
   className: string;
-  children: React.ReactNode;
+  children: ReactNode;
   minWidth?: number;
   minHeight?: number;
   maxWidth?: number;
@@ -148,7 +148,7 @@ function ResizablePanel({
 
   return (
     <section
-      ref={ref as React.RefObject<HTMLElement>}
+      ref={ref as RefObject<HTMLElement>}
       className={`morokResizablePanel ${className} ${resizing ? "is-resizing" : ""}`}
       style={{
         ...(size.width ? { width: size.width } : {}),
