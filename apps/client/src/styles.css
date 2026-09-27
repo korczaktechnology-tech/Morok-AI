@@ -1576,3 +1576,89 @@ mix-blend-mode:screen;opacity:.65}
     min-width:auto!important;
   }
 }
+
+
+.workflowMonitor{
+  position:fixed;
+  top:18px;
+  left:18px;
+  z-index:1000;
+  width:min(360px,calc(100vw - 36px));
+  max-height:min(70vh,520px);
+  overflow:hidden;
+  padding:12px;
+  border:1px solid rgba(155,92,255,.28);
+  border-radius:6px;
+  background:rgba(3,3,8,.82);
+  box-shadow:0 10px 40px rgba(0,0,0,.45),0 0 30px rgba(155,92,255,.08);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  color:#fff;
+  font-family:Arial,sans-serif;
+}
+.workflowMonitorHeader{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:2px 2px 9px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  font-size:9px;
+  font-weight:700;
+  letter-spacing:.14em;
+}
+.workflowMonitorHint{
+  color:rgba(255,255,255,.35);
+  font-size:7px;
+  letter-spacing:.08em;
+}
+.workflowMonitorList{
+  max-height:calc(min(70vh,520px) - 45px);
+  overflow-y:auto;
+  scrollbar-width:thin;
+}
+.workflowMonitorItem{
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+  padding:10px 3px;
+  border-bottom:1px solid rgba(255,255,255,.055);
+}
+.workflowMonitorItem:last-child{border-bottom:0}
+.workflowStatusDot{
+  flex:0 0 7px;
+  width:7px;
+  height:7px;
+  margin-top:4px;
+  border-radius:50%;
+  box-shadow:0 0 9px currentColor;
+}
+.workflowStatusDot.success{background:#32e875;color:#32e875}
+.workflowStatusDot.queued{background:#ffd447;color:#ffd447}
+.workflowStatusDot.failure{background:#ff3f5f;color:#ff3f5f}
+.workflowMonitorInfo{min-width:0}
+.workflowMonitorName{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.06em;
+}
+.workflowMonitorMeta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px 12px;
+  margin-top:4px;
+  color:rgba(255,255,255,.45);
+  font-size:7px;
+  letter-spacing:.08em;
+}
+.workflowMonitorEmpty{
+  padding:18px 3px;
+  color:rgba(255,255,255,.42);
+  font-size:8px;
+  letter-spacing:.1em;
+}
+@media(max-width:700px){
+  .workflowMonitor{top:10px;left:10px;width:calc(100vw - 20px)}
+}
