@@ -96,11 +96,21 @@ function EarthGlobe(){
     const earthVisualRadius=1;
     const geometry=new THREE.SphereGeometry(earthVisualRadius,128,128);
     const textureLoader=new THREE.TextureLoader();
+    // Textura cartográfica diurna 4K do conjunto atual do Three.js.
+    // É uma projeção equiretangular 2:1 (4096x2048), portanto cada
+    // longitude/latitude ocupa exatamente a mesma referência UV da esfera.
     const earthTexture=textureLoader.load(
-      "https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg",
+      "https://threejs.org/examples/textures/planets/earth_day_4096.jpg",
       (texture)=>{
         texture.colorSpace=THREE.SRGBColorSpace;
+        texture.wrapS=THREE.ClampToEdgeWrapping;
+        texture.wrapT=THREE.ClampToEdgeWrapping;
+        texture.repeat.set(1,1);
+        texture.offset.set(0,0);
+        texture.center.set(.5,.5);
+        texture.rotation=0;
         texture.anisotropy=Math.min(renderer.capabilities.getMaxAnisotropy(),8);
+        texture.needsUpdate=true;
       }
     );
 
