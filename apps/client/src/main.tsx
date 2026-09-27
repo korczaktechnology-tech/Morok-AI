@@ -1138,6 +1138,9 @@ function App() {
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
   const [workflowMonitorOpen, setWorkflowMonitorOpen] = useState(false);
   const [githubWorkflows, setGithubWorkflows] = useState<GithubWorkflow[]>([]);
+  const [workflowLoading, setWorkflowLoading] = useState(false);
+  const [workflowError, setWorkflowError] = useState<string | null>(null);
+  const workflowRequestRef = useRef<AbortController | null>(null);
 
   const speech = useMemo(() => {
     const C = window.SpeechRecognition ?? window.webkitSpeechRecognition;
@@ -1155,18 +1158,62 @@ function App() {
 
   useEffect(() => {
     let disposed=false;
+    let refreshTimer=0;
+
     const loadWorkflows=async()=>{
+      if(disposed)return;
+      workflowRequestRef.current?.abort();
+
+      const controller=new AbortController();
+      workflowRequestRef.current=controller;
+      const timeout=window.setTimeout(()=>controller.abort(),4200);
+
+      setWorkflowLoading(true);
+      setWorkflowError(null);
+
       try{
-        const response=await fetch(API+"/api/v1/github/workflows",{cache:"no-store"});
-        if(!response.ok)throw new Error("workflow_fetch_failed");
+        const response=await fetch(API+"/api/v1/github/workflows",{
+          cache:"no-store",
+          signal:controller.signal,
+          headers:{Accept:"application/json"}
+        });
+        if(!response.ok)throw new Error(`HTTP_${response.status}`);
         const data=await response.json() as {workflows?:GithubWorkflow[]};
-        if(!disposed)setGithubWorkflows(data.workflows??[]);
-      }catch{}
+        if(!disposed){
+          const workflows=Array.isArray(data.workflows)?data.workflows:[];
+          setGithubWorkflows(workflows);
+          if(workflows.length===0)setWorkflowError("NENHUM WORKFLOW ENCONTRADO");
+        }
+      }catch(error){
+        if(disposed)return;
+        if(error instanceof DOMException && error.name==="AbortError"){
+          setWorkflowError("TEMPO LIMITE EXCEDIDO");
+        }else{
+          setWorkflowError("NÃO FOI POSSÍVEL CARREGAR OS WORKFLOWS");
+        }
+      }finally{
+        window.clearTimeout(timeout);
+        if(!disposed){
+          setWorkflowLoading(false);
+          workflowRequestRef.current=null;
+        }
+      }
     };
-    loadWorkflows();
-    const interval=window.setInterval(loadWorkflows,5000);
-    return()=>{disposed=true;window.clearInterval(interval);};
-  }, []);
+
+    if(workflowMonitorOpen){
+      void loadWorkflows();
+      refreshTimer=window.setInterval(()=>void loadWorkflows(),5000);
+    }else{
+      workflowRequestRef.current?.abort();
+    }
+
+    return()=>{
+      disposed=true;
+      window.clearInterval(refreshTimer);
+      workflowRequestRef.current?.abort();
+      workflowRequestRef.current=null;
+    };
+  }, [workflowMonitorOpen]);
 
   useEffect(()=>{
     const onKeyDown=(event:KeyboardEvent)=>{
@@ -1440,8 +1487,12 @@ function App() {
             <span className="workflowMonitorHint">CTRL + ALT + K</span>
           </div>
           <div className="workflowMonitorList">
-            {githubWorkflows.length===0 ? (
+            {workflowLoading && githubWorkflows.length===0 ? (
               <div className="workflowMonitorEmpty">CARREGANDO WORKFLOWS...</div>
+            ) : workflowError && githubWorkflows.length===0 ? (
+              <div className="workflowMonitorEmpty">{workflowError}<button type="button" className="workflowMonitorRetry" onClick={()=>{setWorkflowError(null);setWorkflowMonitorOpen(false);window.setTimeout(()=>setWorkflowMonitorOpen(true),0);}}>TENTAR NOVAMENTE</button></div>
+            ) : githubWorkflows.length===0 ? (
+              <div className="workflowMonitorEmpty">NENHUM WORKFLOW DISPONÍVEL</div>
             ) : githubWorkflows.map(workflow=>{
               const state=workflow.status==="queued"||workflow.status==="in_progress" ? "queued" : workflow.conclusion==="success" ? "success" : "failure";
               return (
