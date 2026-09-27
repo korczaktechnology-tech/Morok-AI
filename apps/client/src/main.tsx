@@ -392,9 +392,16 @@ function EarthGlobe(){
 
     const up=(e:PointerEvent)=>{
       dragging=false;
-      returningToAxis=false;
       if(mount.hasPointerCapture(e.pointerId))mount.releasePointerCapture(e.pointerId);
       mount.style.cursor="grab";
+
+      // No modo de rotação terrestre, o arrasto é temporário. Ao soltar,
+      // retorna suavemente ao eixo correto antes de continuar a rotação.
+      if(!earthLocationLock){
+        returningToAxis=true;
+      }else{
+        returningToAxis=false;
+      }
     };
 
     const observer=new ResizeObserver(resize);
@@ -439,7 +446,18 @@ function EarthGlobe(){
       const earthVisualAngularVelocity=earthAngularVelocity*earthVisualTimeScale;
 
       if(!dragging && !earthLocationLock){
-        earthSystem.rotateY(earthVisualAngularVelocity*deltaSeconds);
+        if(returningToAxis){
+          const target=earthRestQuaternion;
+          const step=1-Math.exp(-8*deltaSeconds);
+          earthSystem.quaternion.slerp(target,step);
+          if(earthSystem.quaternion.angleTo(target)<0.001){
+            earthSystem.quaternion.copy(target);
+            returningToAxis=false;
+          }
+        }else{
+          earthSystem.rotateY(earthVisualAngularVelocity*deltaSeconds);
+        }
+
         globeRotation.x=earthSystem.rotation.x;
         globeRotation.y=earthSystem.rotation.y;
         globeRotation.z=earthSystem.rotation.z;
