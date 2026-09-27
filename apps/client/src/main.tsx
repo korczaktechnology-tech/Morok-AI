@@ -76,6 +76,7 @@ function MorokVoiceCore() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [active, setActive] = useState(false);
   const seedRef = useRef(1);
+
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.ctrlKey && event.key.toLowerCase() === "l") {
@@ -132,49 +133,16 @@ function MorokVoiceCore() {
       const cy = h / 2;
       const radius = Math.min(w, h) * 0.405;
       const seed = debugMode ? Math.floor(frame * 19) + seedRef.current : seedRef.current;
-      ctx.clearRect(0, 0, w, h);
-
       const speakingNow = debugMode || active || window.speechSynthesis?.speaking === true;
       const base = speakingNow ? 0.72 : 0.24;
       const pulse = speakingNow ? (0.5 + 0.5 * Math.sin(frame * 8.5 + (seed % 17))) : 0.5;
       const intensity = base + pulse * (speakingNow ? 0.45 : 0.12);
 
+      ctx.clearRect(0, 0, w, h);
       ctx.save();
       ctx.translate(cx, cy);
 
-      // Quiet circular field: no solid radar/grid, only the wave mesh itself.
-      const layers = speakingNow ? 9 : 7;
-      for (let layer = 0; layer < layers; layer++) {
-        const depth = layer / Math.max(1, layers - 1);
-        const yScale = 0.34 + depth * 0.66;
-        const layerRadius = radius * (0.76 + depth * 0.25);
-        ctx.beginPath();
-
-        const points = 180;
-        for (let j = 0; j <= points; j++) {
-          const a = (j / points) * Math.PI * 2;
-          const harmonic =
-            Math.sin(a * (7 + (seed % 5)) - frame * (1.5 + depth)) * 0.42 +
-            Math.sin(a * (13 + (seed % 7)) + frame * 2.1) * 0.24 +
-            Math.sin(a * 23 - frame * 3.4) * 0.12;
-          const voiceWave = speakingNow
-            ? harmonic * (10 + intensity * 22)
-            : Math.sin(a * 5 - frame * 1.2 + depth * 2) * (3 + depth * 5);
-          const r = layerRadius + voiceWave;
-          const x = Math.cos(a) * r;
-          const y = Math.sin(a) * r * yScale;
-          if (j === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-        }
-
-        const hue = 195 + ((layer * 19 + Math.floor(seed % 80)) % 105);
-        ctx.strokeStyle = `hsla(${hue}, 100%, 67%, ${0.18 + intensity * 0.14})`;
-        ctx.lineWidth = speakingNow ? 1.05 : 0.8;
-        ctx.shadowBlur = speakingNow ? 8 : 4;
-        ctx.shadowColor = ctx.strokeStyle;
-        ctx.stroke();
-      }
-
-      // Radial frequency bars around the perimeter.
+      // Voice Core: somente barras radiais de frequência.
       const bars = 128;
       for (let i = 0; i < bars; i++) {
         const a = (i / bars) * Math.PI * 2;
@@ -195,23 +163,8 @@ function MorokVoiceCore() {
         ctx.lineTo(x2, y2);
         ctx.strokeStyle = `hsla(${195 + ((i + Math.floor(seed % 70)) % 130)}, 100%, 68%, ${speakingNow ? 0.5 + harmonic * 0.45 : 0.22})`;
         ctx.lineWidth = speakingNow ? 1.5 : 0.75;
-        ctx.stroke();
-      }
-
-      // Fine 3D latitude/longitude traces, restricted to the wave surface.
-      for (let line = 0; line < 7; line++) {
-        const phase = line * 0.9 + frame * (speakingNow ? 0.9 : 0.45);
-        ctx.beginPath();
-        for (let j = 0; j <= 150; j++) {
-          const a = (j / 150) * Math.PI * 2;
-          const wave = Math.sin(a * 8 + phase) * (speakingNow ? 8 + intensity * 8 : 4);
-          const rr = radius * (0.80 + line * 0.035) + wave;
-          const x = Math.cos(a) * rr;
-          const y = Math.sin(a) * rr * 0.72;
-          if (j === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-        }
-        ctx.strokeStyle = `rgba(91, 178, 255, ${speakingNow ? 0.16 : 0.11})`;
-        ctx.lineWidth = 0.55;
+        ctx.shadowBlur = speakingNow ? 8 : 4;
+        ctx.shadowColor = ctx.strokeStyle;
         ctx.stroke();
       }
 
@@ -233,7 +186,6 @@ function MorokVoiceCore() {
     </div>
   );
 }
-
 function Dashboard() {
   const systems = ["ERP","FLOW","OPS","VISION","CONNECT","MOBILE","DOCUMENTS","AI"];
   const processes = [
