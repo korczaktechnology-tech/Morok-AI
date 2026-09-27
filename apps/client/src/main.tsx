@@ -1015,9 +1015,11 @@ function StandaloneOrbit(){
       renderAccumulator=0;
 
       for(const [index,orbit] of orbitDefinitions.entries()){
-        particlePhases[index]=(particlePhases[index]+orbit.speed*step)%(Math.PI*2);
-        if(particlePhases[index]<0)particlePhases[index]+=Math.PI*2;
-        particlePoints.copy(getOrbitPoint(orbit,particlePhases[index]));
+        let phase=particlePhases[index] ?? 0;
+        phase=(phase+orbit.speed*step)%(Math.PI*2);
+        if(phase<0)phase+=Math.PI*2;
+        particlePhases[index]=phase;
+        particlePoints.copy(getOrbitPoint(orbit,phase));
         const base=index*3;
         particlePositions[base]=particlePoints.x;
         particlePositions[base+1]=particlePoints.y;
