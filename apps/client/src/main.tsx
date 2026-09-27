@@ -418,19 +418,19 @@ function OrbitalRings(){
     const makeTrack=(definition:SatelliteDefinition):Track=>{
       const line=new THREE.Line(
         new THREE.BufferGeometry(),
-        makeLineMaterial(definition.color,.46)
+        makeLineMaterial(definition.color,.58)
       );
       line.renderOrder=30;
 
       const prediction=new THREE.Line(
         new THREE.BufferGeometry(),
-        makeLineMaterial(definition.color,.34)
+        makeLineMaterial(definition.color,.42)
       );
       prediction.renderOrder=40;
 
       // A predição é ~25% mais transparente que a trajetória principal.
       const marker=new THREE.Mesh(
-        new THREE.SphereGeometry(.017,10,10),
+        new THREE.SphereGeometry(.032,14,14),
         new THREE.MeshBasicMaterial({
           color:definition.color,
           transparent:true,
@@ -452,11 +452,11 @@ function OrbitalRings(){
     // O globo usa raio 1. A geometria orbital continua sendo calculada
     // em quilômetros, mas a distância ao centro da Terra é comprimida
     // visualmente. A direção e a forma da órbita permanecem reais.
-    const orbitDistanceCompression=.035;
+    const orbitDistanceCompression=.022;
     const compressOrbitPosition=(position:THREE.Vector3)=>{
       const radius=position.length();
       if(radius===0)return position.clone();
-      const compressedRadius=1+(radius-1)*orbitDistanceCompression;
+      const compressedRadius=Math.max(1.055,1+(radius-1)*orbitDistanceCompression);
       return position.clone().multiplyScalar(compressedRadius/radius);
     };
     const eciToEarthFixed=(position:{x:number;y:number;z:number},date:Date)=>{
@@ -487,7 +487,7 @@ function OrbitalRings(){
     };
 
     const parseTle=(text:string)=>{
-      const lines=text.split(/\\r?\\n/).map(line=>line.trim()).filter(Boolean);
+      const lines=text.split(/\r?\n/).map(line=>line.trim()).filter(Boolean);
       const line1=lines.find(line=>line.startsWith("1 "));
       const line2=lines.find(line=>line.startsWith("2 "));
       if(!line1||!line2)throw new Error("invalid_tle");
