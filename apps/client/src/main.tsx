@@ -104,15 +104,6 @@ function ResizablePanel({
     } catch {}
   }, [id]);
 
-  const saveGeometry = (next: PanelGeometry) => {
-    setGeometry(next);
-    try {
-      const saved = JSON.parse(localStorage.getItem("morok-dashboard-geometry") || "{}") as Record<string, PanelGeometry>;
-      saved[id] = next;
-      localStorage.setItem("morok-dashboard-geometry", JSON.stringify(saved));
-    } catch {}
-  };
-
   const normalizeGeometry = (): PanelGeometry | null => {
     const element = ref.current;
     if (!element) return null;
@@ -188,7 +179,7 @@ function ResizablePanel({
       const maxTop = Math.max(0, parent.clientHeight - (start.height || 0));
       const left = Math.max(0, Math.min(maxLeft, (start.left || 0) + e.clientX - startX));
       const top = Math.max(0, Math.min(maxTop, (start.top || 0) + e.clientY - startY));
-      setGeometry(current => ({ ...current, left, top, right: undefined, bottom: undefined }));
+      setGeometry(current => ({ ...current, left, top }));
     };
 
     const end = () => {
@@ -210,11 +201,11 @@ function ResizablePanel({
   };
 
   const style = {
-    ...(geometry.width !== undefined ? { width: geometry.width } : {}),
-    ...(geometry.height !== undefined ? { height: geometry.height } : {}),
-    ...(geometry.left !== undefined ? { left: geometry.left, right: "auto" } : {}),
-    ...(geometry.top !== undefined ? { top: geometry.top, bottom: "auto" } : {}),
-  };
+    ...(geometry.width !== undefined ? { "--panel-width": `${geometry.width}px` } : {}),
+    ...(geometry.height !== undefined ? { "--panel-height": `${geometry.height}px` } : {}),
+    ...(geometry.left !== undefined ? { "--panel-left": `${geometry.left}px` } : {}),
+    ...(geometry.top !== undefined ? { "--panel-top": `${geometry.top}px` } : {}),
+  } as React.CSSProperties;
 
   return (
     <section
