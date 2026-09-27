@@ -561,7 +561,7 @@ function OrbitalRings(){
       for(const definition of definitions)void refreshTrack(definition);
     };
     refreshAll();
-    const refreshTimer=window.setInterval(refreshAll,15*60*1000);
+    const refreshTimer=window.setInterval(refreshAll,2*60*60*1000);
 
     const resize=()=>{
       const w=Math.max(1,mount.clientWidth);
