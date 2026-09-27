@@ -25,7 +25,7 @@
           </radialGradient>
         </defs>
 
-        <g className="holographicEarthModel">
+        <g class="holographicEarthModel">
           <circle cx="500" cy="500" r="420" fill="#090D16" stroke="#00FFFF" strokeWidth="2"/>
 
           <g stroke="#00FFFF" strokeWidth=".5" fill="none" opacity=".2">
