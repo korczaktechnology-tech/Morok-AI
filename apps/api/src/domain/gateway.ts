@@ -75,17 +75,19 @@ async function upstreamError(response: Response, prefix: string) {
 
 async function wait(ms:number){return new Promise(resolve=>setTimeout(resolve,ms));}
 
-async function requestWithRetry(url:string, init:RequestInit):Promise<Response>{
+async function requestWithRetry(url:string, init:RequestInit, options:{attempts?:number;delayMs?:number}={}):Promise<Response>{
+  const attempts=options.attempts??8;
+  const delayMs=options.delayMs??5000;
   let last:unknown;
-  for(let attempt=0;attempt<3;attempt++){
+  for(let attempt=0;attempt<attempts;attempt++){
     try{
       const response=await fetch(url,init);
-      if(response.ok || ![408,425,429,502,503,504].includes(response.status) || attempt===2)return response;
-      await wait(750*(attempt+1));
+      if(response.ok || ![408,425,429,502,503,504].includes(response.status) || attempt===attempts-1)return response;
+      await wait(delayMs);
     }catch(error){
       last=error;
-      if(attempt===2)throw error;
-      await wait(750*(attempt+1));
+      if(attempt===attempts-1)throw error;
+      await wait(delayMs);
     }
   }
   throw last instanceof Error?last:new Error("model_gateway_unavailable");
