@@ -96,7 +96,19 @@ done
 echo "Verificando modelo qwen2.5:0.5b..."
 if ! ollama list | awk 'NR > 1 {print $1}' | grep -Fxq "qwen2.5:0.5b"; then
   echo "Modelo não encontrado; baixando qwen2.5:0.5b..."
-  ollama pull qwen2.5:0.5b
+  downloaded=0
+  for attempt in 1 2 3; do
+    if ollama pull qwen2.5:0.5b; then
+      downloaded=1
+      break
+    fi
+    echo "Tentativa de download do modelo falhou ($attempt/3)." >&2
+    sleep 5
+  done
+  if [ "$downloaded" -ne 1 ]; then
+    echo "Não foi possível baixar qwen2.5:0.5b." >&2
+    exit 1
+  fi
 fi
 
 if ! ollama list | awk 'NR > 1 {print $1}' | grep -Fxq "qwen2.5:0.5b"; then
