@@ -3452,3 +3452,38 @@ mix-blend-mode:screen;opacity:.65}
     pointer-events:none;
   }
 }
+
+
+/* MOROK // REFERENCE MATCH v10 — FINAL LEFT-RAIL VERTICAL CORRECTION */
+@media (min-width:1360px){
+  /* Match the reference's exact top line for the left telemetry block. */
+  .morokFullDashboard .dashLeft{
+    top:12.0vh!important;
+  }
+  .morokFullDashboard .processPanel{
+    top:30.0vh!important;
+  }
+
+  /* Assistant panel reaches the same horizontal visual band as the reference. */
+  .morokFullDashboard > .assistantPanel{
+    height:30.4vh!important;
+    min-height:255px!important;
+    max-height:286px!important;
+  }
+  .morokFullDashboard > .assistantPanel .morokVoiceCore{
+    left:1.0%!important;
+    top:-2px!important;
+    width:min(13.5vw,206px)!important;
+    height:min(13.5vw,206px)!important;
+    max-width:206px!important;
+    max-height:206px!important;
+  }
+  .morokFullDashboard > .assistantPanel > div:last-child{
+    left:min(14.0vw,214px)!important;
+    top:27px!important;
+    right:14px!important;
+  }
+  .morokFullDashboard > .assistantPanel > div:last-child p{
+    max-width:205px!important;
+  }
+}
