@@ -49,6 +49,8 @@ services:
     envVars:
       - key: MODEL_PROXY_KEY
         sync: false
+      - key: MODEL_NAME
+        value: qwen2.5:0.5b
       - key: OLLAMA_HOST
         value: 0.0.0.0:11434
       - key: OLLAMA_MODELS
