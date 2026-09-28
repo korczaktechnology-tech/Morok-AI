@@ -2823,3 +2823,70 @@ mix-blend-mode:screen;opacity:.65}
     z-index:31!important;
   }
 }
+
+
+/* MOROK // VOICE CORE + MINI STATUS — FINAL ADJACENCY / VISUAL CLEANUP */
+@media(min-width:1360px){
+  .morokFullDashboard > .assistantPanel{
+    width:142px!important;
+    height:170px!important;
+    overflow:visible!important;
+  }
+
+  .morokFullDashboard > .assistantPanel .morokVoiceCore{
+    left:0!important;
+    bottom:0!important;
+    width:124px!important;
+    height:124px!important;
+  }
+
+  /* Exactly 18px between Voice Core edge and MiniStatus. */
+  .morokFullDashboard > .dashMiniStatus{
+    left:142px!important;
+    bottom:0!important;
+    width:188px!important;
+    height:170px!important;
+  }
+
+  /* Clean, circular HUD treatment for the voice visualizer. */
+  .morokFullDashboard > .assistantPanel .morokVoiceCore{
+    background:radial-gradient(
+      circle at center,
+      rgba(105,82,255,.12) 0 24%,
+      rgba(34,47,120,.05) 25% 48%,
+      transparent 49%
+    )!important;
+    border:1px solid rgba(92,113,255,.38)!important;
+    border-radius:50%!important;
+    box-shadow:
+      0 0 18px rgba(70,87,255,.16),
+      inset 0 0 18px rgba(72,61,180,.10)!important;
+  }
+
+  .morokFullDashboard > .assistantPanel .morokVoiceCore canvas{
+    position:absolute!important;
+    inset:0!important;
+    width:100%!important;
+    height:100%!important;
+    opacity:1!important;
+  }
+
+  .morokFullDashboard > .assistantPanel .morokVoiceCore .voiceCoreCenter{
+    width:7px!important;
+    height:7px!important;
+    background:#e9edff!important;
+    border:1px solid rgba(137,157,255,.8)!important;
+    box-shadow:
+      0 0 7px rgba(110,132,255,.95),
+      0 0 16px rgba(100,73,255,.65)!important;
+  }
+
+  /* Remove old text/decorative artifacts from the Voice Core housing. */
+  .morokFullDashboard > .assistantPanel > div:last-child{
+    display:none!important;
+  }
+
+  .morokFullDashboard > .dashMiniStatus{
+    border-left:1px solid rgba(83,106,221,.45)!important;
+  }
+}
