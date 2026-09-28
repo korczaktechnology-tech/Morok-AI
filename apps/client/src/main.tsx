@@ -1251,26 +1251,48 @@ function MorokMicrophoneSystem(p:{onWake:(command:string)=>void;onListening:(val
   const retryRef=useRef<number|null>(null);
   const manualRef=useRef(false);
   const disposedRef=useRef(false);
+  const listeningRef=useRef(false);
   const wakeRef=useRef(p.onWake);
+  const listeningCallbackRef=useRef(p.onListening);
   wakeRef.current=p.onWake;
+  listeningCallbackRef.current=p.onListening;
 
   useEffect(()=>{
     disposedRef.current=false;
     let buffer="";
     let lastWake=0;
+    let recognitionStarting=false;
 
-    const listening=(value:boolean)=>p.onListening(value);
-    const stop=()=>{
-      if(retryRef.current!==null){window.clearTimeout(retryRef.current);retryRef.current=null;}
+    const listening=(value:boolean)=>{
+      if(listeningRef.current===value)return;
+      listeningRef.current=value;
+      listeningCallbackRef.current(value);
+    };
+
+    const clearRetry=()=>{
+      if(retryRef.current!==null){
+        window.clearTimeout(retryRef.current);
+        retryRef.current=null;
+      }
+    };
+
+    const stopRecognition=()=>{
+      clearRetry();
       const r=recognitionRef.current;
       recognitionRef.current=null;
+      recognitionStarting=false;
       listening(false);
       try{r?.stop?.()}catch{}
     };
+
     const schedule=()=>{
-      if(disposedRef.current||!streamRef.current||recognitionRef.current||retryRef.current!==null)return;
-      retryRef.current=window.setTimeout(()=>{retryRef.current=null;start()},300);
+      if(disposedRef.current||!streamRef.current||recognitionRef.current||recognitionStarting||retryRef.current!==null)return;
+      retryRef.current=window.setTimeout(()=>{
+        retryRef.current=null;
+        start();
+      },500);
     };
+
     const deliver=(text:string)=>{
       const clean=text.trim();
       if(!clean)return;
@@ -1290,17 +1312,28 @@ function MorokMicrophoneSystem(p:{onWake:(command:string)=>void;onListening:(val
       buffer="";
       wakeRef.current(command);
     };
+
     const start=()=>{
-      if(disposedRef.current||!streamRef.current||recognitionRef.current)return;
+      if(disposedRef.current||!streamRef.current||recognitionRef.current||recognitionStarting)return;
       const Recognition=window.SpeechRecognition??window.webkitSpeechRecognition;
       if(!Recognition){setState("unsupported");return;}
+      recognitionStarting=true;
       try{
         const r=new Recognition();
         r.lang="pt-BR";
         r.continuous=true;
         r.interimResults=true;
         r.maxAlternatives=5;
-        r.onstart=()=>{if(disposedRef.current){try{r.stop()}catch{};return;}recognitionRef.current=r;listening(true);};
+        r.onstart=()=>{
+          recognitionStarting=false;
+          if(disposedRef.current){
+            try{r.stop()}catch{}
+            return;
+          }
+          recognitionRef.current=r;
+          setState("ready");
+          listening(true);
+        };
         r.onresult=(event:any)=>{
           let finalText="";
           for(let i=event.resultIndex;i<event.results.length;i++){
@@ -1310,43 +1343,104 @@ function MorokMicrophoneSystem(p:{onWake:(command:string)=>void;onListening:(val
           deliver(finalText);
         };
         r.onerror=(event:any)=>{
-          if(event?.error==="not-allowed"||event?.error==="service-not-allowed"){listening(false);setState("blocked");return;}
-          listening(false);schedule();
+          recognitionStarting=false;
+          const error=event?.error;
+          if(error==="not-allowed"||error==="service-not-allowed"){
+            recognitionRef.current=null;
+            listening(false);
+            setState("blocked");
+            return;
+          }
+          listening(false);
+          if(recognitionRef.current===r)recognitionRef.current=null;
+          schedule();
         };
-        r.onend=()=>{if(recognitionRef.current===r)recognitionRef.current=null;listening(false);schedule();};
+        r.onend=()=>{
+          recognitionStarting=false;
+          if(recognitionRef.current===r)recognitionRef.current=null;
+          listening(false);
+          if(!disposedRef.current&&streamRef.current) schedule();
+        };
         recognitionRef.current=r;
         r.start();
-      }catch{recognitionRef.current=null;listening(false);schedule();}
+      }catch{
+        recognitionStarting=false;
+        if(recognitionRef.current)recognitionRef.current=null;
+        listening(false);
+        schedule();
+      }
     };
+
     const open=async()=>{
       if(disposedRef.current||streamRef.current)return;
       if(!navigator.mediaDevices?.getUserMedia){setState("unsupported");return;}
       try{
-        const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1},video:false});
-        if(disposedRef.current){stream.getTracks().forEach(t=>t.stop());return;}
+        const stream=await navigator.mediaDevices.getUserMedia({
+          audio:{
+            echoCancellation:true,
+            noiseSuppression:true,
+            autoGainControl:true,
+            channelCount:1
+          },
+          video:false
+        });
+        if(disposedRef.current){
+          stream.getTracks().forEach(t=>t.stop());
+          return;
+        }
         streamRef.current=stream;
         setState("ready");
-        stream.getAudioTracks().forEach(track=>track.addEventListener("ended",()=>{
-          if(disposedRef.current)return;
-          streamRef.current=null;
-          stop();
-          setState("blocked");
-        }));
+        const audioTracks=stream.getAudioTracks();
+        audioTracks.forEach(track=>{
+          track.addEventListener("ended",()=>{
+            if(disposedRef.current||streamRef.current!==stream)return;
+            streamRef.current=null;
+            stopRecognition();
+            setState("blocked");
+          });
+          track.addEventListener("mute",()=>{
+            if(disposedRef.current||streamRef.current!==stream)return;
+            // A temporary hardware/browser mute is not permission loss.
+            // Keep the stream and recognition alive and let the browser recover it.
+            listening(false);
+          });
+          track.addEventListener("unmute",()=>{
+            if(disposedRef.current||streamRef.current!==stream)return;
+            if(!recognitionRef.current&&!recognitionStarting)schedule();
+          });
+        });
         start();
-      }catch{if(!disposedRef.current)setState("blocked");}
+      }catch(error){
+        if(disposedRef.current)return;
+        const name=error instanceof DOMException?error.name:"";
+        if(name==="NotAllowedError"||name==="SecurityError"||name==="PermissionDeniedError"){
+          setState("blocked");
+        }else if(name==="NotFoundError"||name==="NotReadableError"){
+          setState("blocked");
+        }else{
+          setState("blocked");
+        }
+      }
     };
-    const manual=()=>{manualRef.current=true;buffer="";if(!recognitionRef.current)start();};
+
+    const manual=()=>{
+      manualRef.current=true;
+      buffer="";
+      if(!recognitionRef.current&&!recognitionStarting)start();
+    };
 
     window.addEventListener("morok-mic-manual",manual);
     void open();
+
     return()=>{
       disposedRef.current=true;
       window.removeEventListener("morok-mic-manual",manual);
-      stop();
+      stopRecognition();
       try{streamRef.current?.getTracks().forEach(t=>t.stop())}catch{}
       streamRef.current=null;
+      listening(false);
     };
-  },[p.onListening]);
+  },[]);
 
   if(state==="ready")return null;
   const title=state==="blocked"?"MICROFONE BLOQUEADO":state==="unsupported"?"VOZ NÃO SUPORTADA":"HABILITANDO MICROFONE";
@@ -1360,7 +1454,6 @@ function MorokMicrophoneSystem(p:{onWake:(command:string)=>void;onListening:(val
     </div>
   </div>;
 }
-
 function findMorokWake(text:string){
   const normalize=(v:string)=>v.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9\s]/g," ").replace(/\s+/g," ").trim();
   const distance=(a:string,b:string)=>{
