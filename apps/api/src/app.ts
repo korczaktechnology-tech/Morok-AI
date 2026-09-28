@@ -33,7 +33,7 @@ export function buildApp(){
   app.get("/api/v1/status",async()=>({status:"ok",identity:MOROK_IDENTITY,phase:1,capabilities:{commands:coreCommands.length,permissions:corePermissions.length,tools:createCoreToolRegistry(await connectDatabase()).list().length,modelGateway:Boolean(config.modelApiUrl),voice:true,web:true,files:true,automation:true,organizer:true}}));
   app.get("/api/v1/model/status",async(_req,reply)=>{
     if(!config.modelApiUrl)return reply.code(503).send({status:"unconfigured",model:config.modelName});
-    const base=config.modelApiUrl.replace(/\\/v1\\/?$/,"");
+    const base=config.modelApiUrl.replace(/\/v1\/?$/,"");
     try{
       const response=await fetch(base+"/api/tags",{signal:AbortSignal.timeout(5000)});
       if(!response.ok)return reply.code(503).send({status:"unavailable",model:config.modelName});
