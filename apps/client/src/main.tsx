@@ -1339,7 +1339,7 @@ function MorokMicrophoneGate(p:{onGranted:()=>void}) {
       recognition.lang="pt-BR";
       recognition.continuous=true;
       recognition.interimResults=true;
-      recognition.onstart=()=>{grantedRef.current=true;setState("ready");p.onGranted();};
+      recognition.onstart=()=>{grantedRef.current=true;setState("ready");p.onGranted();try{recognition.stop()}catch{};recognitionRef.current=null;};
       recognition.onerror=(event:any)=>{
         const error=event?.error;
         if(error==="not-allowed"||error==="service-not-allowed"||error==="audio-capture") setState("blocked");
