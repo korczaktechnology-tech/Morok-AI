@@ -2834,7 +2834,7 @@ mix-blend-mode:screen;opacity:.65}
   }
 
   .morokFullDashboard > .assistantPanel .morokVoiceCore{
-    left:0!important;
+    left:24px!important;
     bottom:0!important;
     width:188px!important;
     height:170px!important;
@@ -2905,11 +2905,11 @@ mix-blend-mode:screen;opacity:.65}
 
   /* MiniStatus fica depois de todo o Voice Core, sem passar por cima da transcrição. */
   .morokFullDashboard > .dashMiniStatus{
-    left:206px!important;
+    left:230px!important;
     bottom:0!important;
     width:188px!important;
     height:170px!important;
-    z-index:29!important;
+    z-index:20!important;
   }
 
   .morokFullDashboard > .assistantPanel .morokVoiceCore .voiceCoreVisual canvas{
