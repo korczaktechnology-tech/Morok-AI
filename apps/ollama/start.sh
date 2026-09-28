@@ -112,7 +112,7 @@ if ! ollama list | awk 'NR > 1 {print $1}' | grep -Fxq "${MODEL_NAME}"; then
   fi
 fi
 
-if ! ollama list | awk 'NR > 1 {print $1}' | grep -Fxq "qwen2.5:0.5b"; then
+if ! ollama list | awk 'NR > 1 {print $1}' | grep -Fxq "${MODEL_NAME}"; then
   echo "Modelo ${MODEL_NAME} não está disponível após o pull." >&2
   exit 1
 fi
