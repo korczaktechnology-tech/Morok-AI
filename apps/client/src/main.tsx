@@ -1433,7 +1433,64 @@ function MorokAlwaysListening(p:{onWake:(command:string)=>void}) {
 
   useEffect(()=>{
     let disposed=false;
-    const normalize=(value:string)=>value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9, ]/g," ").replace(/\s+/g," ").trim();
+    let transcriptBuffer="";
+    let lastWakeAt=0;
+
+    const normalize=(value:string)=>value
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g,"")
+      .replace(/[^a-z0-9\s]/g," ")
+      .replace(/\s+/g," ")
+      .trim();
+
+    const findWake=(value:string)=>{
+      const normalized=normalize(value);
+      const patterns=[
+        /\bmorok\b/,
+        /\bmoroc\b/,
+        /\bmoroque\b/,
+        /\bmoraque\b/,
+        /\bmoroki\b/,
+        /\bmoro\b/,
+        /\bmor\s+oque\b/,
+        /\bmoro\s+oque\b/,
+        /\bmor\s+aqui\b/,
+        /\bmoro\s+aqui\b/
+      ];
+      for(const pattern of patterns){
+        const match=pattern.exec(normalized);
+        if(match)return {index:match.index,end:match.index+match[0].length};
+      }
+
+      const words=normalized.split(" ").filter(Boolean);
+      for(const word of words){
+        if(word.length>=3 && word.length<=8){
+          const a=word;
+          const b="morok";
+          const previous=Array.from({length:b.length+1},(_,i)=>i);
+          for(let i=1;i<=a.length;i++){
+            let diagonal=previous[0]!;
+            previous[0]=i;
+            for(let j=1;j<=b.length;j++){
+              const above=previous[j]!;
+              previous[j]=Math.min(
+                previous[j]!+1,
+                previous[j-1]!+1,
+                diagonal+(a[i-1]===b[j-1]?0:1)
+              );
+              diagonal=above;
+            }
+          }
+          if(previous[b.length]!<=2){
+            const index=normalized.indexOf(word);
+            return {index,end:index+word.length};
+          }
+        }
+      }
+      return null;
+    };
+
     const start=()=>{
       if(disposed||recognitionRef.current||window.speechSynthesis?.speaking)return;
       const Recognition=window.SpeechRecognition ?? window.webkitSpeechRecognition;
@@ -1443,35 +1500,72 @@ function MorokAlwaysListening(p:{onWake:(command:string)=>void}) {
         recognition.lang="pt-BR";
         recognition.continuous=true;
         recognition.interimResults=true;
+        recognition.maxAlternatives=5;
+
         recognition.onresult=(event:any)=>{
-          let transcript="";
-          for(let i=event.resultIndex;i<event.results.length;i++) transcript+=event.results[i][0]?.transcript??"";
-          const normalized=normalize(transcript);
-          const wakeMatch=findMorokWake(normalized);
-          if(wakeMatch){
-            const command=transcript.slice(wakeMatch.end).replace(/^[,.:;\s-]+/,"").trim();
-            onWakeRef.current(command);
+          let fresh="";
+          for(let i=event.resultIndex;i<event.results.length;i++){
+            fresh+=(event.results[i][0]?.transcript??"")+" ";
           }
+          if(!fresh.trim())return;
+
+          transcriptBuffer=(transcriptBuffer+" "+fresh).slice(-180);
+          const wake=findWake(transcriptBuffer);
+          if(!wake)return;
+
+          const now=Date.now();
+          if(now-lastWakeAt<1800)return;
+          lastWakeAt=now;
+
+          const command=transcriptBuffer
+            .slice(wake.end)
+            .replace(/^[,.:;!?\\s-]+/,"")
+            .trim();
+
+          transcriptBuffer="";
+          onWakeRef.current(command);
         };
+
         recognition.onend=()=>{
           recognitionRef.current=null;
           if(!disposed&&!restartingRef.current){
             restartingRef.current=true;
-            window.setTimeout(()=>{restartingRef.current=false;start()},300);
+            window.setTimeout(()=>{
+              restartingRef.current=false;
+              start();
+            },250);
           }
         };
+
         recognition.onerror=(event:any)=>{
-          if(event?.error==="not-allowed"||event?.error==="service-not-allowed"||event?.error==="audio-capture"){recognitionRef.current=null;window.dispatchEvent(new Event("morok-mic-blocked"));return;}
+          if(event?.error==="not-allowed"||event?.error==="service-not-allowed"||event?.error==="audio-capture"){
+            recognitionRef.current=null;
+            window.dispatchEvent(new Event("morok-mic-blocked"));
+          }
         };
+
         recognitionRef.current=recognition;
         recognition.start();
-      }catch{recognitionRef.current=null;}
+      }catch{
+        recognitionRef.current=null;
+      }
     };
-    const timer=window.setTimeout(start,500);
+
+    const ready=()=>start();
+    window.addEventListener("morok-mic-ready",ready);
+    const timer=window.setTimeout(start,1200);
     const resume=()=>{if(!window.speechSynthesis?.speaking)start();};
     window.addEventListener("focus",resume);
-    return()=>{disposed=true;window.clearTimeout(timer);window.removeEventListener("focus",resume);try{recognitionRef.current?.stop?.()}catch{}};
+
+    return()=>{
+      disposed=true;
+      window.clearTimeout(timer);
+      window.removeEventListener("morok-mic-ready",ready);
+      window.removeEventListener("focus",resume);
+      try{recognitionRef.current?.stop?.()}catch{}
+    };
   },[]);
+
   return null;
 }
 
