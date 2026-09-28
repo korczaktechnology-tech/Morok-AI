@@ -72,6 +72,17 @@ function Icon({ children }: { children: React.ReactNode }) {
 
 
 function MorokVoiceCore() {
+  useEffect(() => {
+    const onDebugShortcut = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === "l") {
+        event.preventDefault();
+        event.stopPropagation();
+        window.location.href = `${import.meta.env.BASE_URL}index2.html`;
+      }
+    };
+    window.addEventListener("keydown", onDebugShortcut, true);
+    return () => window.removeEventListener("keydown", onDebugShortcut, true);
+  }, []);
   const [debugLevel, setDebugLevel] = useState<0 | 1 | 2 | 3>(0);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [active, setActive] = useState(false);
