@@ -3,7 +3,7 @@ set -eu
 
 : "${PORT:=10000}"
 : "${MODEL_PROXY_KEY:?MODEL_PROXY_KEY is required}"
-MODEL_NAME="${MODEL_NAME:-${MODEL_NAME}}"
+MODEL_NAME="${MODEL_NAME:-qwen2.5:0.5b}"
 
 if [ "${#MODEL_PROXY_KEY}" -lt 24 ]; then
   echo "MODEL_PROXY_KEY must contain at least 24 characters." >&2
@@ -94,12 +94,12 @@ until curl -fsS http://127.0.0.1:11434/api/tags >/dev/null 2>&1; do
   sleep 1
 done
 
-echo "Verificando modelo qwen2.5:0.5b..."
-if ! ollama list | awk 'NR > 1 {print $1}' | grep -Fxq "qwen2.5:0.5b"; then
-  echo "Modelo não encontrado; baixando qwen2.5:0.5b..."
+echo "Verificando modelo ${MODEL_NAME}..."
+if ! ollama list | awk 'NR > 1 {print $1}' | grep -Fxq "${MODEL_NAME}"; then
+  echo "Modelo não encontrado; baixando ${MODEL_NAME}..."
   downloaded=0
   for attempt in 1 2 3; do
-    if ollama pull qwen2.5:0.5b; then
+    if ollama pull "${MODEL_NAME}"; then
       downloaded=1
       break
     fi
@@ -107,13 +107,13 @@ if ! ollama list | awk 'NR > 1 {print $1}' | grep -Fxq "qwen2.5:0.5b"; then
     sleep 5
   done
   if [ "$downloaded" -ne 1 ]; then
-    echo "Não foi possível baixar qwen2.5:0.5b." >&2
+    echo "Não foi possível baixar ${MODEL_NAME}." >&2
     exit 1
   fi
 fi
 
 if ! ollama list | awk 'NR > 1 {print $1}' | grep -Fxq "qwen2.5:0.5b"; then
-  echo "Modelo qwen2.5:0.5b não está disponível após o pull." >&2
+  echo "Modelo ${MODEL_NAME} não está disponível após o pull." >&2
   exit 1
 fi
 
