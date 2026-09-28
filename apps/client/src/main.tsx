@@ -1348,7 +1348,7 @@ function MorokMicrophoneGate(p:{onGranted:()=>void}) {
       };
       recognition.onend=()=>{
         recognitionRef.current=null;
-        if(grantedRef.current) window.setTimeout(start,250);
+        if(!grantedRef.current) window.setTimeout(start,250);
       };
       recognitionRef.current=recognition;
       recognition.start();
