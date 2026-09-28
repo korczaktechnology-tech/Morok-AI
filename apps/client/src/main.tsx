@@ -960,34 +960,64 @@ function App() {
     try {
       const params = new URLSearchParams({ message: value, ...(conversationId ? { conversationId } : {}) });
       const r = await fetch(API + "/api/v1/messages/stream?" + params.toString(), {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Accept: "text/event-stream", Authorization: `Bearer ${token}` }
       });
-      if (!r.ok || !r.body) throw new Error("stream_failed");
+      if (!r.ok) {
+        const errorData = await r.json().catch(() => ({}));
+        throw new Error(errorData.error ?? `api_http_${r.status}`);
+      }
+      if (!r.body) throw new Error("stream_body_missing");
+
       const reader = r.body.getReader();
       const decoder = new TextDecoder();
-      let buffer = "", full = "";
+      let buffer = "", full = "", streamError = "";
+
+      const processLine = (rawLine: string) => {
+        const line = rawLine.endsWith("\r") ? rawLine.slice(0, -1) : rawLine;
+        if (line.startsWith("event: ")) {
+          if (line.slice(7).trim() === "error") streamError = "stream_failed";
+          return;
+        }
+        if (!line.startsWith("data:")) return;
+
+        const payload = line.slice(5).trim();
+        if (payload === "[DONE]") return;
+
+        try {
+          const d = JSON.parse(payload);
+          if (d.conversationId && !conversationId) {
+            setConversationId(d.conversationId);
+            localStorage.setItem("morok_conversation", d.conversationId);
+          }
+          if (d.error) streamError = String(d.error);
+          if (d.chunk) {
+            full += d.chunk;
+            setMessages(m => {
+              const copy = [...m];
+              copy[copy.length - 1] = { role: "assistant", content: full };
+              return copy;
+            });
+          }
+        } catch {
+          streamError = "stream_invalid_payload";
+        }
+      };
+
       for (;;) {
         const { done, value: chunk } = await reader.read();
         if (done) break;
         buffer += decoder.decode(chunk, { stream: true });
-        const lines = buffer.split("\n"); buffer = lines.pop() ?? "";
-        for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
-          const payload = line.slice(6);
-          if (payload === "[DONE]") continue;
-          try {
-            const d = JSON.parse(payload);
-            if (d.conversationId && !conversationId) {
-              setConversationId(d.conversationId);
-              localStorage.setItem("morok_conversation", d.conversationId);
-            }
-            if (d.chunk) {
-              full += d.chunk;
-              setMessages(m => { const copy = [...m]; copy[copy.length - 1] = { role: "assistant", content: full }; return copy; });
-            }
-          } catch {}
-        }
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+        for (const line of lines) processLine(line);
       }
+
+      buffer += decoder.decode();
+      if (buffer.trim()) processLine(buffer);
+
+      if (streamError) throw new Error(streamError);
+      if (!full.trim()) throw new Error("model_empty_response");
+
       if (speaking && full) {
         const utterance = new SpeechSynthesisUtterance(full);
         window.dispatchEvent(new CustomEvent("morok-voice-start", { detail: { text: full } }));
@@ -998,7 +1028,9 @@ function App() {
     } catch (e) {
       setNotice(e instanceof Error ? e.message : "Falha de comunicação");
       setMessages(m => m.slice(0, -1));
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   }
 
   function startVoice() {
