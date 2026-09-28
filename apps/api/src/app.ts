@@ -315,7 +315,8 @@ export function buildApp(){
     const db=await connectDatabase();const conversationId=q.conversationId??randomUUID();const now=new Date();const conversations=db.collection<ConversationDocument>("conversations");
     await conversations.updateOne({id:conversationId,userId:auth.user.id},{$set:{userId:auth.user.id,updatedAt:now},$setOnInsert:{id:conversationId,createdAt:now,messages:[]}},{upsert:true});
     const context=await new ContextService(db).create(auth.user.id,auth.sessionId,conversationId);
-    await conversations.updateOne({id:conversationId,userId:auth.user.id},{$push:{messages:{role:"user",content:q.message.trim(),createdAt:now}}});
+    // Persist the user message only after the model successfully produces a response.
+    // This keeps the client fallback path from duplicating a message when a stream dies.
     reply.hijack();
     reply.raw.writeHead(200,{"content-type":"text/event-stream; charset=utf-8","cache-control":"no-cache, no-transform","connection":"keep-alive","x-accel-buffering":"no"});
     reply.raw.write(`data: ${JSON.stringify({conversationId})}\n\n`);
@@ -326,7 +327,14 @@ export function buildApp(){
         reply.raw.write(`data: ${JSON.stringify({chunk,conversationId})}\n\n`);
       }
       if(!full.trim()) throw new Error("model_empty_response");
-      await conversations.updateOne({id:conversationId,userId:auth.user.id},{$push:{messages:{role:"assistant",content:full,model:config.modelName,createdAt:new Date()}},$set:{updatedAt:new Date()}});
+      await conversations.updateOne({id:conversationId,userId:auth.user.id},{$push:{
+        messages:{
+          $each:[
+            {role:"user",content:q.message.trim(),createdAt:now},
+            {role:"assistant",content:full,model:config.modelName,createdAt:new Date()}
+          ]
+        }
+      },$set:{updatedAt:new Date()}});
       await db.collection("audit_logs").insertOne({action:"conversation.message.stream_completed",actorId:auth.user.id,conversationId,sessionId:auth.sessionId,createdAt:new Date()});
       reply.raw.write("data: [DONE]\n\n");
       reply.raw.end();
