@@ -62,4 +62,4 @@ services:
       - key: OLLAMA_KEEP_ALIVE
         value: 5m
       - key: OLLAMA_CONTEXT_LENGTH
-        value: "2048"
+        value: "1024"
