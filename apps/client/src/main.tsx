@@ -1313,7 +1313,7 @@ function MorokMicrophoneSystem(p:{onWake:(command:string)=>void;onListening:(val
       wakeRef.current(command);
     };
 
-    const start=()=>{
+    const start=(audioTrack?:MediaStreamTrack)=>{
       if(disposedRef.current||!streamRef.current||recognitionRef.current||recognitionStarting)return;
       const Recognition=window.SpeechRecognition??window.webkitSpeechRecognition;
       if(!Recognition){setState("unsupported");return;}
@@ -1362,7 +1362,17 @@ function MorokMicrophoneSystem(p:{onWake:(command:string)=>void;onListening:(val
           if(!disposedRef.current&&streamRef.current) schedule();
         };
         recognitionRef.current=r;
-        r.start();
+        if(audioTrack && audioTrack.readyState==="live"){
+          try{
+            r.start(audioTrack);
+          }catch{
+            // Older Web Speech implementations do not accept MediaStreamTrack.
+            // Fall back to the browser microphone source without reopening getUserMedia.
+            r.start();
+          }
+        }else{
+          r.start();
+        }
       }catch{
         recognitionStarting=false;
         if(recognitionRef.current)recognitionRef.current=null;
@@ -1409,7 +1419,7 @@ function MorokMicrophoneSystem(p:{onWake:(command:string)=>void;onListening:(val
             if(!recognitionRef.current&&!recognitionStarting)schedule();
           });
         });
-        start();
+        start(audioTracks[0]);
       }catch(error){
         if(disposedRef.current)return;
         const name=error instanceof DOMException?error.name:"";
