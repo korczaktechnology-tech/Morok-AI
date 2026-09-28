@@ -75,19 +75,24 @@ async function upstreamError(response: Response, prefix: string) {
 
 async function wait(ms:number){return new Promise(resolve=>setTimeout(resolve,ms));}
 
-async function requestWithRetry(url:string, init:RequestInit, options:{attempts?:number;delayMs?:number}={}):Promise<Response>{
+async function requestWithRetry(url:string, init:RequestInit, options:{attempts?:number;delayMs?:number;timeoutMs?:number}={}):Promise<Response>{
   const attempts=options.attempts??15;
   const delayMs=options.delayMs??5000;
+  const timeoutMs=options.timeoutMs??180000;
   let last:unknown;
   for(let attempt=0;attempt<attempts;attempt++){
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),timeoutMs);
     try{
-      const response=await fetch(url,init);
+      const response=await fetch(url,{...init,signal:controller.signal});
       if(response.ok || ![408,425,429,502,503,504].includes(response.status) || attempt===attempts-1)return response;
       await wait(delayMs);
     }catch(error){
       last=error;
       if(attempt===attempts-1)throw error;
       await wait(delayMs);
+    }finally{
+      clearTimeout(timer);
     }
   }
   throw last instanceof Error?last:new Error("model_gateway_unavailable");
@@ -97,8 +102,7 @@ async function completeProvider(provider: Provider, request: ModelRequest): Prom
   const response = await requestWithRetry(endpoint(provider), {
     method: "POST",
     headers: headers(provider),
-    body: JSON.stringify(payload(request)),
-    signal: AbortSignal.timeout(90000)
+    body: JSON.stringify(payload(request))
   });
 
   if (!response.ok) await upstreamError(response, "model_gateway_http_");
@@ -145,7 +149,7 @@ export class OpenAICompatibleGateway implements ModelGateway {
           method: "POST",
           headers: headers(provider),
           body: JSON.stringify(payload(request, true)),
-          signal: AbortSignal.timeout(180000)
+          
         });
 
         if (!response.ok) await upstreamError(response, "model_gateway_stream_http_");
