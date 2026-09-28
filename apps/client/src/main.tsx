@@ -1545,9 +1545,23 @@ function MorokAlwaysListening(p:{onWake:(command:string)=>void}) {
         };
 
         recognition.onerror=(event:any)=>{
-          if(event?.error==="not-allowed"||event?.error==="service-not-allowed"||event?.error==="audio-capture"){
-            recognitionRef.current=null;
+          const error=event?.error;
+          recognitionRef.current=null;
+
+          // "audio-capture" pode ocorrer quando o serviço de reconhecimento
+          // reinicia internamente. Isso NÃO significa que a permissão foi revogada.
+          // Só bloqueamos a interface quando o navegador realmente nega a permissão.
+          if(error==="not-allowed"||error==="service-not-allowed"){
             window.dispatchEvent(new Event("morok-mic-blocked"));
+            return;
+          }
+
+          if(!disposed&&!restartingRef.current){
+            restartingRef.current=true;
+            window.setTimeout(()=>{
+              restartingRef.current=false;
+              start();
+            },350);
           }
         };
 
