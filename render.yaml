@@ -26,9 +26,9 @@ services:
       - key: MONGODB_URI
         sync: false
       - key: MONGODB_DATABASE
-        value: morok
+        value: MorokAI
       - key: MODEL_API_URL
-        sync: false
+        value: https://morok-ollama.onrender.com/v1
       - key: MODEL_API_USERNAME
         value: morok
       - key: MODEL_API_KEY
