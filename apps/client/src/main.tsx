@@ -1391,7 +1391,7 @@ function MorokAlwaysListening(p:{onWake:(command:string)=>void}) {
           const wakeIndex=normalized.indexOf("morok acorde");
           if(wakeIndex>=0){
             const command=transcript.slice(wakeIndex+"morok acorde".length).replace(/^[,.:;\s-]+/,"").trim();
-            p.onWake(command);
+            onWakeRef.current(command);
           }
         };
         recognition.onend=()=>{
