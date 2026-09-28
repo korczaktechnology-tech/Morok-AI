@@ -996,9 +996,13 @@ function App() {
 
     try {
       const params = new URLSearchParams({ message: value, ...(conversationId ? { conversationId } : {}) });
+      const streamController = new AbortController();
+      const streamTimeout = window.setTimeout(() => streamController.abort(), 180000);
       const r = await fetch(API + "/api/v1/messages/stream?" + params.toString(), {
+        signal: streamController.signal,
         headers: { Accept: "text/event-stream", Authorization: `Bearer ${token}` }
       });
+      window.clearTimeout(streamTimeout);
 
       if (!r.ok) {
         const errorData = await r.json().catch(() => ({}));
