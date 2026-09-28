@@ -5033,3 +5033,106 @@ mix-blend-mode:screen;opacity:.65}
 .morokFullDashboard .dashSystems .systemLink{display:flex!important;align-items:center!important;width:100%!important;height:100%!important;padding:0!important;margin:0!important;border:0!important;background:transparent!important;color:inherit!important;font:inherit!important;text-align:left!important;cursor:pointer!important}
 .morokFullDashboard .dashSystems .systemLink:hover{color:#fff!important}
 .morokFullDashboard .dashSystems .systemLink .sysGlyph{pointer-events:none}
+
+
+/* MOROK // ALWAYS-ON MICROPHONE + WAKE CONVERSATION */
+.morokMicGate{
+  position:fixed!important;inset:0!important;z-index:99999!important;
+  display:grid!important;place-items:center!important;
+  background:radial-gradient(circle at 50% 44%,rgba(91,39,151,.22),rgba(2,3,8,.97) 58%,#010207 100%)!important;
+  backdrop-filter:blur(18px)!important;
+}
+.morokMicGatePanel{
+  width:min(520px,calc(100vw - 36px));padding:42px 38px 34px;
+  border:1px solid rgba(164,101,255,.55);
+  background:linear-gradient(145deg,rgba(18,14,31,.96),rgba(5,7,14,.98));
+  box-shadow:0 0 80px rgba(116,61,255,.20),inset 0 0 40px rgba(120,68,255,.05);
+  clip-path:polygon(0 18px,18px 0,calc(100% - 18px) 0,100% 18px,100% calc(100% - 18px),calc(100% - 18px) 100%,18px 100%,0 calc(100% - 18px));
+  text-align:center;color:#eef0ff;
+}
+.morokMicGateIcon{
+  width:86px;height:86px;margin:0 auto 20px;display:grid;place-items:center;
+  border:1px solid rgba(165,103,255,.75);border-radius:50%;
+  box-shadow:0 0 32px rgba(127,65,255,.35);
+}
+.morokMicGateIcon img{width:56px;height:56px;object-fit:contain}
+.morokMicGatePanel small{display:block;font:700 9px/1.4 "Segoe UI",Arial,sans-serif;letter-spacing:3px;color:#a779ff}
+.morokMicGatePanel h1{margin:10px 0 12px;font:700 26px/1.1 "Segoe UI",Arial,sans-serif;letter-spacing:1px}
+.morokMicGatePanel p{margin:0 auto 24px;max-width:410px;color:#a9adbd;font:400 13px/1.7 "Segoe UI",Arial,sans-serif}
+.morokMicGatePanel button{
+  width:100%;height:48px;border:1px solid rgba(190,132,255,.8);
+  background:linear-gradient(90deg,#5625a7,#7c3fd8);color:#fff;
+  font:700 11px/1 "Segoe UI",Arial,sans-serif;letter-spacing:2px;cursor:pointer;
+  clip-path:polygon(0 8px,8px 0,calc(100% - 8px) 0,100% 8px,100% calc(100% - 8px),calc(100% - 8px) 100%,8px 100%,0 calc(100% - 8px));
+  box-shadow:0 0 20px rgba(117,54,255,.28);
+}
+.morokMicGatePanel>span{display:block;margin-top:16px;color:#64697d;font:600 8px/1.4 "Segoe UI",Arial,sans-serif;letter-spacing:1.5px}
+
+.morokConversationWindow{
+  position:fixed;right:28px;bottom:28px;z-index:9990;
+  width:min(470px,calc(100vw - 32px));height:min(650px,calc(100vh - 56px));
+  display:flex;flex-direction:column;overflow:hidden;
+  border:1px solid rgba(159,87,255,.62);
+  background:linear-gradient(155deg,rgba(13,10,23,.97),rgba(3,5,12,.98));
+  box-shadow:0 24px 90px rgba(0,0,0,.62),0 0 45px rgba(113,51,230,.16);
+  clip-path:polygon(0 18px,18px 0,calc(100% - 18px) 0,100% 18px,100% calc(100% - 18px),calc(100% - 18px) 100%,18px 100%,0 calc(100% - 18px));
+}
+.morokConversationHeader{
+  height:72px;min-height:72px;padding:0 18px;display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid rgba(154,102,255,.20);background:rgba(16,11,29,.82);
+}
+.morokConversationBrand{display:flex;align-items:center;gap:12px}
+.morokConversationIcon{width:40px;height:40px;display:grid;place-items:center;border:1px solid rgba(169,105,255,.55);border-radius:50%;box-shadow:0 0 16px rgba(118,55,255,.22)}
+.morokConversationIcon img{width:27px;height:27px}
+.morokConversationBrand b{display:block;font:800 13px/1 "Segoe UI",Arial,sans-serif;letter-spacing:2px;color:#fff}
+.morokConversationBrand small{display:block;margin-top:5px;font:700 8px/1 "Segoe UI",Arial,sans-serif;letter-spacing:1.6px;color:#9f73ee}
+.morokConversationHeader>button{
+  width:34px;height:34px;border:1px solid rgba(170,117,255,.34);background:transparent;color:#bca6df;
+  font-size:23px;line-height:1;cursor:pointer;
+}
+.morokConversationMessages{flex:1;min-height:0;overflow:auto;padding:22px 17px;display:flex;flex-direction:column;gap:12px}
+.morokConversationMessages::-webkit-scrollbar{width:5px}
+.morokConversationMessages::-webkit-scrollbar-thumb{background:rgba(147,86,255,.35);border-radius:10px}
+.morokConversationEmpty{margin:auto;text-align:center;color:#7e8192;font:600 10px/1.5 "Segoe UI",Arial,sans-serif;letter-spacing:1px}
+.morokConversationEmpty img{display:block;width:52px;height:52px;margin:0 auto 12px;opacity:.78}
+.morokConversationMessages article{max-width:84%;padding:11px 14px;position:relative}
+.morokConversationMessages article small{display:block;margin-bottom:5px;font:800 7px/1 "Segoe UI",Arial,sans-serif;letter-spacing:1.4px;opacity:.68}
+.morokConversationMessages article p{margin:0;white-space:pre-wrap;font:400 13px/1.55 "Segoe UI",Arial,sans-serif}
+.morokBubble{
+  align-self:flex-start;color:#f4edff;
+  background:linear-gradient(145deg,rgba(102,46,171,.88),rgba(63,31,112,.94));
+  border:1px solid rgba(184,126,255,.52);
+  border-radius:3px 16px 16px 16px;box-shadow:0 7px 24px rgba(69,27,126,.22);
+}
+.userBubble{
+  align-self:flex-end;color:#e8e9ee;background:linear-gradient(145deg,#090a0e,#13151b);
+  border:1px solid rgba(119,124,141,.28);border-radius:16px 3px 16px 16px;
+}
+.morokConversationComposer{
+  min-height:66px;padding:10px 11px;display:flex;gap:8px;align-items:center;
+  border-top:1px solid rgba(154,102,255,.20);background:rgba(7,8,14,.94)
+}
+.morokConversationComposer input{
+  flex:1;min-width:0;height:42px;padding:0 13px;border:1px solid rgba(125,130,153,.24);
+  background:#080a0f;color:#fff;outline:none;border-radius:2px;font:400 12px "Segoe UI",Arial,sans-serif
+}
+.morokConversationComposer input:focus{border-color:rgba(157,91,255,.65);box-shadow:0 0 15px rgba(121,55,255,.12)}
+.morokConversationMic,.morokConversationComposer>button:last-child{
+  width:42px;height:42px;flex:0 0 42px;border:1px solid rgba(153,91,255,.48);
+  background:#0b0b12;color:#caaaff;cursor:pointer
+}
+.morokConversationMic.active{background:#55269a;color:#fff;box-shadow:0 0 18px rgba(116,50,255,.42)}
+.morokConversationComposer>button:last-child{background:linear-gradient(145deg,#5726a1,#34176a);color:#fff}
+.morokConversationComposer button:disabled{opacity:.3;cursor:default}
+.morokConversationBubble{
+  position:fixed;right:28px;bottom:28px;z-index:9990;width:64px;height:64px;padding:0;
+  display:grid;place-items:center;border-radius:50%;border:1px solid rgba(176,105,255,.72);
+  background:radial-gradient(circle,#5d2da0,#160b29 72%);box-shadow:0 0 28px rgba(113,49,232,.42);
+  cursor:pointer
+}
+.morokConversationBubble img{width:38px;height:38px}
+@media(max-width:700px){
+  .morokConversationWindow{right:10px;bottom:10px;width:calc(100vw - 20px);height:min(78vh,620px)}
+  .morokConversationBubble{right:16px;bottom:16px}
+  .morokMicGatePanel{padding:34px 24px 28px}
+}
