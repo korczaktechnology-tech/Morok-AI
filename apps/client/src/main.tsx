@@ -809,7 +809,9 @@ function App() {
   const [brasiliaDate, setBrasiliaDate] = useState("00/00/0000");
   const [temperature, setTemperature] = useState<string | null>(null);
   const [weatherPlace, setWeatherPlace] = useState("LOCALIZAÇÃO NÃO DISPONÍVEL");
-  const [mobileChatOpen, setMobileChatOpen] = useState(false);\n  const [morokConversationOpen, setMorokConversationOpen] = useState(false);\n  const [morokConversationMinimized, setMorokConversationMinimized] = useState(false);
+  const [mobileChatOpen, setMobileChatOpen] = useState(false);
+  const [morokConversationOpen, setMorokConversationOpen] = useState(false);
+  const [morokConversationMinimized, setMorokConversationMinimized] = useState(false);
   const [workflowMonitorOpen, setWorkflowMonitorOpen] = useState(false);
   const [githubWorkflows, setGithubWorkflows] = useState<GithubWorkflow[]>([]);
   const [workflowLoading, setWorkflowLoading] = useState(false);
@@ -863,7 +865,8 @@ function App() {
             workflowId:workflow.id,
             name:workflow.name,
             runNumber:run?.run_number??0,
-            commit:run?.head_commit?.message?.split("\n")[0]??"SEM EXECUÇÃO",
+            commit:run?.head_commit?.message?.split("
+")[0]??"SEM EXECUÇÃO",
             sha:run?.head_sha??"",
             status:run?.status??"idle",
             conclusion:run?.conclusion??null,
@@ -1070,7 +1073,8 @@ function App() {
         const { done, value: chunk } = await reader.read();
         if (done) break;
         buffer += decoder.decode(chunk, { stream: true });
-        const lines = buffer.split("\n"); buffer = lines.pop() ?? "";
+        const lines = buffer.split("
+"); buffer = lines.pop() ?? "";
         for (const line of lines) {
           if (!line.startsWith("data: ")) continue;
           const payload = line.slice(6);
@@ -1369,12 +1373,60 @@ function MorokMicrophoneGate(p:{onGranted:()=>void}) {
 }
 
 function findMorokWake(text:string){
-  // O reconhecimento de voz pode transcrever o nome Morok de muitas formas.
-  // Aceitamos variantes fonéticas próximas, mas mantemos "acorde" como o gatilho.
-  const normalized=text.normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toLowerCase();
-  const match=normalized.match(/(?:morok|moroc|moro|moraque|moroque|mor[oa] que|mor oque|mor aqui|moro aqui)\\s*(?:,|\\s)+acorde(?:m|me)?/);
-  if(!match)return null;
-  return {end:match.index!+match[0].length};
+  const normalize=(value:string)=>value
+    .normalize("NFD")
+    .replace(/[\\u0300-\\u036f]/g,"")
+    .toLowerCase()
+    .replace(/[^a-z0-9\\s]/g," ")
+    .replace(/\\s+/g," ")
+    .trim();
+
+  const distance=(a:string,b:string)=>{
+    const row=Array.from({length:b.length+1},(_,i)=>i);
+    for(let i=1;i<=a.length;i++){
+      let diagonal=row[0];
+      row[0]=i;
+      for(let j=1;j<=b.length;j++){
+        const above=row[j];
+        row[j]=Math.min(
+          row[j]+1,
+          row[j-1]+1,
+          diagonal+(a[i-1]===b[j-1]?0:1)
+        );
+        diagonal=above;
+      }
+    }
+    return row[b.length];
+  };
+
+  const rawWords=Array.from(text.matchAll(/[A-Za-zÀ-ÿ0-9]+/g));
+  const morokVariants=new Set([
+    "morok","moroc","moro","moraque","moroque","moroki","moroki",
+    "mor aqui","moro aqui","mor oque","moro oque"
+  ]);
+  const target="morok";
+
+  for(let i=0;i<rawWords.length;i++){
+    let combined="";
+    for(let count=1;count<=3 && i+count<=rawWords.length;count++){
+      if(count>1) combined+=" ";
+      combined+=rawWords[i+count-1][0];
+      const normalized=normalize(combined);
+      const compact=normalized.replace(/\\s/g,"");
+      const isExplicit=morokVariants.has(normalized)||morokVariants.has(compact);
+      const maxDistance=compact.length<=4?1:compact.length<=7?2:3;
+      const isFuzzy=distance(compact,target)<=maxDistance;
+
+      if(isExplicit||isFuzzy){
+        const end=rawWords[i+count-1].index!+rawWords[i+count-1][0].length;
+        return {end};
+      }
+
+      if(count===1 && !isFuzzy && !["mor","moro","mora","moroq"].some(v=>compact.startsWith(v))) break;
+    }
+  }
+
+  return null;
 }
 
 function MorokAlwaysListening(p:{onWake:(command:string)=>void}) {
