@@ -2871,15 +2871,16 @@ mix-blend-mode:screen;opacity:.65}
 
   .morokFullDashboard > .assistantPanel .morokVoiceCore .voiceCoreTranscript{
     position:absolute!important;
-    left:0!important;
-    top:128px!important;
-    width:188px!important;
-    height:42px!important;
+    left:132px!important;
+    top:0!important;
+    width:56px!important;
+    height:124px!important;
     box-sizing:border-box!important;
-    padding:2px 4px 0!important;
+    padding:8px 4px!important;
     overflow:hidden!important;
     text-align:left!important;
-    background:linear-gradient(90deg,rgba(8,12,30,.78),rgba(8,12,30,.18),transparent)!important;
+    border-left:1px solid rgba(83,106,221,.42)!important;
+    background:linear-gradient(90deg,rgba(8,12,30,.42),rgba(8,12,30,.08),transparent)!important;
   }
 
   .morokFullDashboard > .assistantPanel .morokVoiceCore .voiceCoreTranscript > span{
@@ -2899,7 +2900,7 @@ mix-blend-mode:screen;opacity:.65}
     white-space:nowrap!important;
     overflow:hidden!important;
     text-overflow:ellipsis!important;
-    max-width:180px!important;
+    max-width:48px!important;
   }
 
   /* Exactly 18px between Voice Core edge and MiniStatus. */
