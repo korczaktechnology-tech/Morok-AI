@@ -4635,3 +4635,144 @@ mix-blend-mode:screen;opacity:.65}
     top:68px!important;
   }
 }
+
+
+/* MOROK // DESKTOP FIT v17 — FULL-WIDTH SHORT DESKTOP COMPOSITION */
+@media (min-width:1360px) and (max-height:760px){
+  /*
+    800px master height is the smallest clean desktop canvas that still
+    preserves the reference hierarchy. At 1365×651 it scales to ~0.814,
+    filling almost the entire width while keeping every module inside view.
+  */
+  .morokFullDashboard > .morokDashboardStage{
+    width:1664px!important;
+    height:800px!important;
+    left:50%!important;
+    top:50%!important;
+    transform:
+      translate(-50%,-50%)
+      scale(min(calc(100vw / 1664px),calc(100dvh / 800px)))!important;
+    transform-origin:center center!important;
+    overflow:hidden!important;
+  }
+
+  /* upper rail */
+  .morokDashboardStage .dashHeader{
+    top:17px!important;
+  }
+  .morokDashboardStage .dashLeft{
+    left:21px!important;
+    top:105px!important;
+    width:304px!important;
+    height:518px!important;
+  }
+  .morokDashboardStage .resourcePanel{
+    top:0!important;
+    height:270px!important;
+  }
+  .morokDashboardStage .processPanel{
+    top:282px!important;
+    height:230px!important;
+  }
+  .morokDashboardStage .dashSystems{
+    left:362px!important;
+    top:132px!important;
+    height:370px!important;
+  }
+  .morokDashboardStage .dashCore{
+    left:830px!important;
+    top:350px!important;
+    width:620px!important;
+    height:620px!important;
+    transform:translate(-50%,-50%)!important;
+  }
+  .morokDashboardStage .dashRight{
+    left:1150px!important;
+    top:111px!important;
+    width:266px!important;
+  }
+  .morokDashboardStage .notificationPanel{
+    width:266px!important;
+    height:165px!important;
+  }
+  .morokDashboardStage .activityPanel{
+    width:266px!important;
+    height:205px!important;
+    margin-top:16px!important;
+  }
+  .morokDashboardStage .dashNav{
+    left:1448px!important;
+    top:111px!important;
+    width:196px!important;
+    height:475px!important;
+  }
+  .morokDashboardStage .dashNav button{
+    height:59px!important;
+    min-height:59px!important;
+  }
+
+  /* lower rail: compacted, but still matching the reference proportions */
+  .morokDashboardStage > .assistantPanel{
+    left:21px!important;
+    top:548px!important;
+    bottom:auto!important;
+    width:470px!important;
+    height:214px!important;
+  }
+  .morokDashboardStage > .assistantPanel .morokVoiceCore{
+    left:7px!important;
+    top:2px!important;
+    width:184px!important;
+    height:184px!important;
+  }
+  .morokDashboardStage > .assistantPanel > div:last-child{
+    left:220px!important;
+    top:31px!important;
+    right:12px!important;
+  }
+
+  .morokDashboardStage > .dashMiniStatus{
+    left:430px!important;
+    top:476px!important;
+    bottom:auto!important;
+    width:170px!important;
+    height:142px!important;
+  }
+
+  .morokDashboardStage .dashGoal{
+    left:1230px!important;
+    top:548px!important;
+    right:auto!important;
+    bottom:auto!important;
+    width:414px!important;
+    height:202px!important;
+  }
+
+  .morokDashboardStage .dashActions{
+    left:830px!important;
+    top:648px!important;
+    bottom:auto!important;
+    transform:translateX(-50%)!important;
+    gap:7px!important;
+  }
+  .morokDashboardStage .dashActions button{
+    width:112px!important;
+    height:88px!important;
+  }
+
+  .morokDashboardStage .dashFooter{
+    left:536px!important;
+    top:768px!important;
+    right:auto!important;
+    bottom:auto!important;
+    width:650px!important;
+    height:30px!important;
+  }
+
+  /* no vertical scroll can be introduced by the desktop artboard */
+  .morokFullDashboard{
+    height:100dvh!important;
+    min-height:0!important;
+    overflow:hidden!important;
+  }
+}
