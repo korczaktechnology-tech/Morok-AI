@@ -31,7 +31,6 @@ http {
 
   server {
     listen ${PORT};
-    listen [::]:${PORT};
     server_name _;
 
     location = /health {
