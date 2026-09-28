@@ -27,7 +27,6 @@ class MorokMicrophoneController {
   private retryAttempt = 0;
   private blocked = false;
   private wanted = false;
-  private manualRequested = false;
   private listeners = new Set<Listener>();
   private transcriptListeners = new Set<TranscriptListener>();
 
@@ -53,7 +52,6 @@ class MorokMicrophoneController {
   }
 
   manual() {
-    this.manualRequested = true;
     this.wanted = true;
     void this.ensureStarted();
     if (this.stream && !this.recognition && !this.recognitionStarting) {
@@ -212,7 +210,7 @@ class MorokMicrophoneController {
   private scheduleRecognitionRetry() {
     if (!this.wanted || !this.track || this.track.readyState !== "live") return;
     if (this.recognitionRetryTimer !== null || this.recognitionStarting || this.recognition) return;
-    const delay = Math.min(5000, 300 * Math.max(1, this.retryAttempt + 1));
+    const delay = Math.min(5000, 800 * Math.max(1, this.retryAttempt + 1));
     this.retryAttempt = Math.min(this.retryAttempt + 1, 10);
     this.recognitionRetryTimer = window.setTimeout(() => {
       this.recognitionRetryTimer = null;
@@ -234,8 +232,8 @@ class MorokMicrophoneController {
     const recognition = new Recognition();
     recognition.lang = "pt-BR";
     recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.maxAlternatives = 5;
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
 
     recognition.onstart = () => {
       this.recognitionStarting = false;
@@ -259,7 +257,6 @@ class MorokMicrophoneController {
       const text = finalText.trim();
       if (text) {
         this.transcriptListeners.forEach(listener => listener(text));
-        this.manualRequested = false;
       }
     };
 
@@ -279,7 +276,6 @@ class MorokMicrophoneController {
         error === "service-not-allowed" ||
         error === "audio-capture" ||
         error === "network" ||
-        error === "no-speech" ||
         error === "aborted" ||
         error === "language-not-supported"
       ) {
@@ -296,6 +292,7 @@ class MorokMicrophoneController {
       if (!this.wanted || !this.track || this.track.readyState !== "live") return;
       // SpeechRecognition.end means the recognition service disconnected;
       // it does not mean that the microphone MediaStream ended.
+      // Retry with a small backoff instead of rapidly cycling the service.
       this.scheduleRecognitionRetry();
     };
 
