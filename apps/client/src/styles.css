@@ -2922,3 +2922,103 @@ mix-blend-mode:screen;opacity:.65}
     height:29px!important;
   }
 }
+
+
+/* MOROK // REFERENCE MATCH v6 — CORE SCALE / ORBITS / OBJECTIVE RADAR */
+@media (min-width:1360px){
+  .morokFullDashboard .dashCore{
+    top:39.8%!important;
+    width:min(42vw,68vh,675px)!important;
+    max-width:675px!important;
+  }
+  .morokFullDashboard .dashCore .ringD{
+    width:82%!important;height:66%!important;
+    border-color:#ff2faf!important;
+    transform:translate(-50%,-50%) rotate(18deg) scaleY(.54)!important;
+    box-shadow:0 0 13px rgba(255,47,175,.75),inset 0 0 5px rgba(255,47,175,.35)!important;
+  }
+  .morokFullDashboard .dashCore .ringE{
+    width:82%!important;height:66%!important;
+    border-color:#20d4ff!important;
+    transform:translate(-50%,-50%) rotate(-20deg) scaleY(.52)!important;
+    box-shadow:0 0 13px rgba(32,212,255,.72),inset 0 0 5px rgba(32,212,255,.32)!important;
+  }
+  .morokFullDashboard .dashCore .coreSweep{
+    width:102%!important;
+    opacity:.85!important;
+  }
+  .morokFullDashboard .dashCore .coreName{
+    top:73.8%!important;
+  }
+  .morokFullDashboard .dashCore .coreSubtitle{
+    top:83.5%!important;
+  }
+
+  /* objective radar closer to reference proportions */
+  .morokFullDashboard .dashGoal{
+    width:min(26.8vw,442px)!important;
+    height:22.8vh!important;
+    padding-left:176px!important;
+    padding-right:20px!important;
+  }
+  .morokFullDashboard .dashGoal:before{
+    left:21px!important;top:17px!important;
+    width:148px!important;height:148px!important;
+    background:
+      repeating-radial-gradient(circle at center,transparent 0 19px,rgba(60,88,218,.18) 20px 21px),
+      conic-gradient(from -25deg,rgba(47,111,255,.44),transparent 17%,rgba(190,49,255,.45) 37%,transparent 57%,rgba(0,183,255,.36) 76%,transparent 90%)!important;
+    box-shadow:0 0 23px rgba(31,79,220,.18),inset 0 0 25px rgba(62,70,170,.12)!important;
+  }
+  .morokFullDashboard .dashGoal:after{
+    left:95px!important;top:91px!important;
+    width:58px!important;height:58px!important;
+    border-color:rgba(113,91,255,.68)!important;
+    box-shadow:0 0 15px rgba(113,91,255,.40)!important;
+  }
+  .morokFullDashboard .dashGoal h3{font-size:11px!important}
+  .morokFullDashboard .dashGoal>b{font-size:9px!important}
+  .morokFullDashboard .dashGoal p{font-size:9px!important}
+  .morokFullDashboard .dashGoal strong{font-size:7px!important}
+
+  /* target-like technical accents around the lower rails */
+  .morokFullDashboard > .assistantPanel:after{
+    content:"";
+    position:absolute;
+    left:14px;right:16px;bottom:8px;height:1px;
+    background:linear-gradient(90deg,rgba(37,104,255,.35),rgba(135,61,255,.15),transparent);
+    box-shadow:0 0 7px rgba(64,105,255,.24);
+  }
+  .morokFullDashboard > .dashMiniStatus:before{
+    content:"";
+    position:absolute;
+    left:14px;right:14px;top:8px;height:1px;
+    background:linear-gradient(90deg,transparent,#5c73ff 38%,#8d46ff 72%,transparent);
+    opacity:.6;
+  }
+  .morokFullDashboard .dashFooter{
+    border-top-color:rgba(83,108,236,.55)!important;
+    border-bottom-color:rgba(83,108,236,.26)!important;
+  }
+}
+
+/* 16:9 viewport fidelity: maintain the reference lower rhythm on short desktops */
+@media (min-width:1360px) and (max-height:760px){
+  .morokFullDashboard .dashCore{
+    top:38.5%!important;
+    width:min(42vw,66vh,625px)!important;
+  }
+  .morokFullDashboard > .assistantPanel{
+    height:18.8vh!important;
+  }
+  .morokFullDashboard > .dashMiniStatus{
+    top:54.5vh!important;
+    height:14.5vh!important;
+  }
+  .morokFullDashboard .dashActions{
+    bottom:6.2vh!important;
+  }
+  .morokFullDashboard .dashGoal{
+    bottom:5.7vh!important;
+    height:19.5vh!important;
+  }
+}
