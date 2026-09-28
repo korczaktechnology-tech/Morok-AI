@@ -128,6 +128,26 @@ export function buildApp(){
   });
 
 
+  app.get("/api/v1/admin/overview",async(req,reply)=>{
+    const auth=await authenticateRequest(req.headers.authorization);
+    if(!auth)return reply.code(401).send({error:"unauthorized"});
+    if(!auth.user.roles.includes("admin"))return reply.code(403).send({error:"admin_required"});
+    const db=await connectDatabase();
+    const collections=["users","sessions","conversations","memories","tasks","tool_executions","devices","integrations","automations","audit_logs","configurations","system_events","files","notifications","calendar_events","contacts","vault_secrets","documents"];
+    const counts:Record<string,number>={};
+    for(const name of collections)counts[name]=await db.collection(name).countDocuments();
+    const adminUsers=await db.collection("users").countDocuments({roles:"admin"});
+    const regularUsers=await db.collection("users").countDocuments({roles:"user"});
+    const activeSessions=await db.collection("sessions").countDocuments({expiresAt:{$gt:new Date()}});
+    return {
+      generatedAt:new Date().toISOString(),
+      users:{total:counts.users,admin:adminUsers,user:regularUsers},
+      sessions:{total:counts.sessions,active:activeSessions},
+      collections:counts,
+      database:{status:"ok"}
+    };
+  });
+
   app.get("/api/v1/commands",async()=>({commands:coreCommands}));
   app.get("/api/v1/permissions",async()=>({permissions:corePermissions}));
   app.get("/api/v1/permissions/:id",async(req)=>{const {id}=req.params as {id:string};return {permission:id,requiresConfirmation:requiresConfirmation(id)};});
