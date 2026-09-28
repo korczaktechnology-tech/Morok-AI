@@ -217,8 +217,8 @@ export function buildApp(){
     const message=body.message.trim(); const now=new Date(); const conversationId=body.conversationId??randomUUID();
     const conversations=db.collection<ConversationDocument>("conversations");
     await conversations.updateOne({id:conversationId,userId:auth.user.id},{$set:{userId:auth.user.id,updatedAt:now},$setOnInsert:{id:conversationId,createdAt:now,messages:[]}},{upsert:true});
-    await conversations.updateOne({id:conversationId,userId:auth.user.id},{$push:{messages:{role:"user",content:message,createdAt:now}}});
-    const context=await new ContextService(db).create(auth.user.id,auth.sessionId,conversationId); const intent=detectIntent(message);
+    const context=await new ContextService(db).create(auth.user.id,auth.sessionId,conversationId);
+    await conversations.updateOne({id:conversationId,userId:auth.user.id},{$push:{messages:{role:"user",content:message,createdAt:now}}}); const intent=detectIntent(message);
     let responseContent:string|undefined;
     if(intent.kind!=="chat"){
       const registry=createCoreToolRegistry(db); const input={...intent.parameters,userId:auth.user.id};
@@ -246,11 +246,28 @@ export function buildApp(){
     const q=req.query as {message?:string;conversationId?:string};if(!q.message?.trim())return reply.code(400).send({error:"message_required"});
     const db=await connectDatabase();const conversationId=q.conversationId??randomUUID();const now=new Date();const conversations=db.collection<ConversationDocument>("conversations");
     await conversations.updateOne({id:conversationId,userId:auth.user.id},{$set:{userId:auth.user.id,updatedAt:now},$setOnInsert:{id:conversationId,createdAt:now,messages:[]}},{upsert:true});
-    await conversations.updateOne({id:conversationId,userId:auth.user.id},{$push:{messages:{role:"user",content:q.message.trim(),createdAt:now}}});
     const context=await new ContextService(db).create(auth.user.id,auth.sessionId,conversationId);
-    reply.hijack();reply.raw.writeHead(200,{"content-type":"text/event-stream; charset=utf-8","cache-control":"no-cache","connection":"keep-alive","x-accel-buffering":"no"});
+    await conversations.updateOne({id:conversationId,userId:auth.user.id},{$push:{messages:{role:"user",content:q.message.trim(),createdAt:now}}});
+    reply.hijack();
+    reply.raw.writeHead(200,{"content-type":"text/event-stream; charset=utf-8","cache-control":"no-cache, no-transform","connection":"keep-alive","x-accel-buffering":"no"});
+    reply.raw.write(`data: ${JSON.stringify({conversationId})}\n\n`);
     let full="";
-    try{for await(const chunk of gateway.stream!({message:q.message.trim(),context:context as unknown as Record<string,unknown>,history:context.history.map((item)=>({role:(item.role==="user"||item.role==="assistant"||item.role==="system")?item.role:"user",content:item.content}))})){full+=chunk;reply.raw.write(`data: ${JSON.stringify({chunk,conversationId})}\n\n`);}await conversations.updateOne({id:conversationId,userId:auth.user.id},{$push:{messages:{role:"assistant",content:full,model:config.modelName,createdAt:new Date()}},$set:{updatedAt:new Date()}});await db.collection("audit_logs").insertOne({action:"conversation.message.stream_completed",actorId:auth.user.id,conversationId,sessionId:auth.sessionId,createdAt:new Date()});reply.raw.write("data: [DONE]\n\n");reply.raw.end();}catch(error){reply.raw.write(`event: error\ndata: ${JSON.stringify({error:error instanceof Error?error.message:"stream_failed"})}\n\n`);reply.raw.end();}
+    try{
+      for await(const chunk of gateway.stream!({message:q.message.trim(),context:context as unknown as Record<string,unknown>,history:context.history.map((item)=>({role:(item.role==="user"||item.role==="assistant"||item.role==="system")?item.role:"user",content:item.content}))})){
+        full+=chunk;
+        reply.raw.write(`data: ${JSON.stringify({chunk,conversationId})}\n\n`);
+      }
+      if(!full.trim()) throw new Error("model_empty_response");
+      await conversations.updateOne({id:conversationId,userId:auth.user.id},{$push:{messages:{role:"assistant",content:full,model:config.modelName,createdAt:new Date()}},$set:{updatedAt:new Date()}});
+      await db.collection("audit_logs").insertOne({action:"conversation.message.stream_completed",actorId:auth.user.id,conversationId,sessionId:auth.sessionId,createdAt:new Date()});
+      reply.raw.write("data: [DONE]\n\n");
+      reply.raw.end();
+    }catch(error){
+      const code=error instanceof Error?error.message:"stream_failed";
+      app.log.error({error,conversationId,userId:auth.user.id},"Falha no streaming da conversa");
+      reply.raw.write(`event: error\ndata: ${JSON.stringify({error:code,conversationId})}\n\n`);
+      reply.raw.end();
+    }
   });
 
   app.get("/health/database",async(_req,reply)=>{const client=new MongoClient(config.mongodbUri,{serverSelectionTimeoutMS:3000});try{await client.connect();const db=client.db(config.mongodbDatabase);await db.command({ping:1});await initializeDatabase(db);return {status:"ok",service:"mongodb",database:config.mongodbDatabase};}catch{return reply.code(503).send({status:"error",service:"mongodb"});}finally{await client.close().catch(()=>undefined);}});
