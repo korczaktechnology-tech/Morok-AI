@@ -3376,3 +3376,79 @@ mix-blend-mode:screen;opacity:.65}
     pointer-events:none;
   }
 }
+
+
+/* MOROK // REFERENCE MATCH v9 — FINAL VERTICAL RHYTHM */
+@media (min-width:1360px){
+  /* Bottom-left assistant begins where the reference's process rail ends. */
+  .morokFullDashboard > .assistantPanel{
+    height:27.0vh!important;
+    min-height:235px!important;
+    max-height:255px!important;
+    bottom:0!important;
+  }
+  .morokFullDashboard > .assistantPanel .morokVoiceCore{
+    top:-30px!important;
+    left:1.2%!important;
+    width:min(13.0vw,190px)!important;
+    height:min(13.0vw,190px)!important;
+  }
+  .morokFullDashboard > .assistantPanel > div:last-child{
+    left:min(13.0vw,198px)!important;
+    top:10px!important;
+    right:14px!important;
+  }
+  .morokFullDashboard > .assistantPanel > div:last-child h3{
+    font-size:18px!important;
+  }
+  .morokFullDashboard > .assistantPanel > div:last-child p{
+    font-size:10px!important;
+    line-height:1.5!important;
+    margin-top:10px!important;
+  }
+
+  /* Objective vertical footprint matches the reference's 650–850px band. */
+  .morokFullDashboard .dashGoal{
+    bottom:8.2vh!important;
+    height:22.6vh!important;
+    min-height:195px!important;
+    max-height:212px!important;
+  }
+
+  /* Action buttons sit cleanly above the footer rail. */
+  .morokFullDashboard .dashActions{
+    bottom:10.1vh!important;
+  }
+  .morokFullDashboard .dashActions button{
+    height:9.4vh!important;
+    min-height:80px!important;
+    max-height:90px!important;
+  }
+
+  /* Reference lower-left circuitry line. */
+  .morokFullDashboard .dashLeft:before{
+    content:"";
+    position:absolute;
+    left:-8px;
+    right:18px;
+    top:53.2vh;
+    height:1px;
+    background:linear-gradient(90deg,#2665ff 0 7%,rgba(116,67,255,.44) 34%,transparent 72%);
+    box-shadow:0 0 8px rgba(54,92,255,.28);
+    pointer-events:none;
+  }
+
+  /* Target-like short red/purple structural marks around the right rail. */
+  .morokFullDashboard .dashRight:after{
+    content:"";
+    position:absolute;
+    right:-102px;
+    bottom:-74px;
+    width:122px;
+    height:42px;
+    border-top:1px solid rgba(255,48,92,.50);
+    border-left:1px solid rgba(137,55,255,.28);
+    transform:skewX(-28deg);
+    pointer-events:none;
+  }
+}
