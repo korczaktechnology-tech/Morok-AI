@@ -35,7 +35,13 @@ export function buildApp(){
     if(!config.modelApiUrl)return reply.code(503).send({status:"unconfigured",model:config.modelName});
     const base=config.modelApiUrl.replace(/\/v1\/?$/,"");
     try{
-      const response=await fetch(base+"/api/tags",{signal:AbortSignal.timeout(5000)});
+      const authorization = config.modelApiKey
+      ? "Basic " + Buffer.from(config.modelApiUsername + ":" + config.modelApiKey).toString("base64")
+      : undefined;
+    const response=await fetch(base+"/api/tags",{
+      headers: authorization ? {authorization} : undefined,
+      signal:AbortSignal.timeout(5000)
+    });
       if(!response.ok)return reply.code(503).send({status:"unavailable",model:config.modelName});
       const data=await response.json() as {models?:Array<{name?:string}>};
       const loaded=(data.models??[]).some(model=>model.name===config.modelName);
