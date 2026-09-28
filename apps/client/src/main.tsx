@@ -1368,6 +1368,15 @@ function MorokMicrophoneGate(p:{onGranted:()=>void}) {
   </div>;
 }
 
+function findMorokWake(text:string){
+  // O reconhecimento de voz pode transcrever o nome Morok de muitas formas.
+  // Aceitamos variantes fonéticas próximas, mas mantemos "acorde" como o gatilho.
+  const normalized=text.normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toLowerCase();
+  const match=normalized.match(/(?:morok|moroc|moro|moraque|moroque|mor[oa] que|mor oque|mor aqui|moro aqui)\\s*(?:,|\\s)+acorde(?:m|me)?/);
+  if(!match)return null;
+  return {end:match.index!+match[0].length};
+}
+
 function MorokAlwaysListening(p:{onWake:(command:string)=>void}) {
   const recognitionRef=useRef<any>(null);
   const restartingRef=useRef(false);
@@ -1388,9 +1397,9 @@ function MorokAlwaysListening(p:{onWake:(command:string)=>void}) {
           let transcript="";
           for(let i=event.resultIndex;i<event.results.length;i++) transcript+=event.results[i][0]?.transcript??"";
           const normalized=normalize(transcript);
-          const wakeIndex=normalized.indexOf("morok acorde");
-          if(wakeIndex>=0){
-            const command=transcript.slice(wakeIndex+"morok acorde".length).replace(/^[,.:;\s-]+/,"").trim();
+          const wakeMatch=findMorokWake(normalized);
+          if(wakeMatch){
+            const command=transcript.slice(wakeMatch.end).replace(/^[,.:;\s-]+/,"").trim();
             onWakeRef.current(command);
           }
         };
