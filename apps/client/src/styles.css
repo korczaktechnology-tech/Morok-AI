@@ -1480,7 +1480,7 @@ mix-blend-mode:screen;opacity:.65}
 /* ===== LEFT TELEMETRY ===== */
 .dashLeft{
   position:absolute!important;
-  left:22px!important;top:112px!important;
+  left:22px!important;top:88px!important;
   width:304px!important;height:0!important;
   bottom:auto!important;
   z-index:9!important;
@@ -1585,7 +1585,7 @@ mix-blend-mode:screen;opacity:.65}
 /* ===== SYSTEMS ===== */
 .dashSystems{
   position:absolute!important;
-  left:544px!important;top:148px!important;
+  left:326px!important;top:148px!important;
   width:190px!important;height:370px!important;
   padding:33px 17px 16px 55px!important;
   z-index:12!important;
@@ -1861,7 +1861,7 @@ mix-blend-mode:screen;opacity:.65}
 /* ===== BOTTOM LEFT / MINI STATUS ===== */
 .morokFullDashboard > .assistantPanel{
   position:absolute!important;
-  left:22px!important;right:auto!important;top:auto!important;bottom:0!important;
+  left:22px!important;right:auto!important;top:394px!important;bottom:auto!important;
   width:430px!important;height:190px!important;min-height:0!important;
   margin:0!important;padding:0!important;display:block!important;
   overflow:visible!important;
@@ -1874,7 +1874,7 @@ mix-blend-mode:screen;opacity:.65}
 }
 .morokFullDashboard > .assistantPanel .morokVoiceCore{
   position:absolute!important;
-  left:16px!important;top:7px!important;
+  left:16px!important;top:0!important;
   right:auto!important;bottom:auto!important;
   width:176px!important;height:176px!important;
   margin:0!important;flex:none!important;
@@ -1951,7 +1951,7 @@ mix-blend-mode:screen;opacity:.65}
 /* MiniStatus: a clean independent module immediately after assistant block */
 .morokFullDashboard > .dashMiniStatus{
   position:absolute!important;
-  left:468px!important;right:auto!important;top:auto!important;bottom:0!important;
+  left:214px!important;right:auto!important;top:auto!important;bottom:0!important;
   width:184px!important;height:170px!important;
   margin:0!important;box-sizing:border-box!important;
   padding:14px 13px!important;
