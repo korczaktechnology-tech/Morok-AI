@@ -21,7 +21,8 @@ class MorokMicrophoneController {
   private track: MediaStreamTrack | null = null;
   private recognition: any = null;
   private recognitionStarting = false;
-  private retryTimer: number | null = null;
+  private streamRetryTimer: number | null = null;
+  private recognitionRetryTimer: number | null = null;
   private stopTimer: number | null = null;
   private retryAttempt = 0;
   private blocked = false;
@@ -85,9 +86,13 @@ class MorokMicrophoneController {
   }
 
   private stopEverything() {
-    if (this.retryTimer !== null) {
-      window.clearTimeout(this.retryTimer);
-      this.retryTimer = null;
+    if (this.streamRetryTimer !== null) {
+      window.clearTimeout(this.streamRetryTimer);
+      this.streamRetryTimer = null;
+    }
+    if (this.recognitionRetryTimer !== null) {
+      window.clearTimeout(this.recognitionRetryTimer);
+      this.recognitionRetryTimer = null;
     }
     const recognition = this.recognition;
     this.recognition = null;
@@ -194,23 +199,23 @@ class MorokMicrophoneController {
   }
 
   private scheduleStreamRetry() {
-    if (!this.wanted || this.listeners.size === 0 || this.retryTimer !== null) return;
+    if (!this.wanted || this.listeners.size === 0 || this.streamRetryTimer !== null) return;
     const delay = Math.min(5000, 500 * Math.max(1, this.retryAttempt + 1));
     this.retryAttempt = Math.min(this.retryAttempt + 1, 10);
     this.emit();
-    this.retryTimer = window.setTimeout(() => {
-      this.retryTimer = null;
+    this.streamRetryTimer = window.setTimeout(() => {
+      this.streamRetryTimer = null;
       void this.ensureStarted();
     }, delay);
   }
 
   private scheduleRecognitionRetry() {
     if (!this.wanted || !this.track || this.track.readyState !== "live") return;
-    if (this.retryTimer !== null || this.recognitionStarting || this.recognition) return;
+    if (this.recognitionRetryTimer !== null || this.recognitionStarting || this.recognition) return;
     const delay = Math.min(5000, 300 * Math.max(1, this.retryAttempt + 1));
     this.retryAttempt = Math.min(this.retryAttempt + 1, 10);
-    this.retryTimer = window.setTimeout(() => {
-      this.retryTimer = null;
+    this.recognitionRetryTimer = window.setTimeout(() => {
+      this.recognitionRetryTimer = null;
       this.startRecognition();
     }, delay);
   }
