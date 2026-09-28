@@ -896,7 +896,7 @@ function App() {
     let last: unknown;
     for (let attempt = 0; attempt < 3; attempt++) {
       const controller = new AbortController();
-      const timer = window.setTimeout(() => controller.abort(), 30000);
+      const timer = window.setTimeout(() => controller.abort(), 180000);
       try {
         const r = await fetch(API + path, {
           ...init,
