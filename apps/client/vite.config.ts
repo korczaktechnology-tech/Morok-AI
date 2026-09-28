@@ -11,7 +11,15 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, "index.html"),
         debug: resolve(__dirname, "index2.html"),
-        svgDebug: resolve(__dirname, "3.html")
+        svgDebug: resolve(__dirname, "3.html"),
+        erp: resolve(__dirname, "erp.html"),
+        flow: resolve(__dirname, "flow.html"),
+        ops: resolve(__dirname, "ops.html"),
+        vision: resolve(__dirname, "vision.html"),
+        connect: resolve(__dirname, "connect.html"),
+        mobile: resolve(__dirname, "mobile.html"),
+        morok: resolve(__dirname, "morok.html"),
+        documents: resolve(__dirname, "documents.html")
       }
     }
   }
