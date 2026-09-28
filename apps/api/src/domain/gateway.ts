@@ -73,8 +73,26 @@ async function upstreamError(response: Response, prefix: string) {
   throw new Error(prefix + response.status + (detail ? "_" + detail.replace(/[^a-zA-Z0-9_.:-]+/g, "_") : ""));
 }
 
+async function wait(ms:number){return new Promise(resolve=>setTimeout(resolve,ms));}
+
+async function requestWithRetry(url:string, init:RequestInit):Promise<Response>{
+  let last:unknown;
+  for(let attempt=0;attempt<3;attempt++){
+    try{
+      const response=await fetch(url,init);
+      if(response.ok || ![408,425,429,502,503,504].includes(response.status) || attempt===2)return response;
+      await wait(750*(attempt+1));
+    }catch(error){
+      last=error;
+      if(attempt===2)throw error;
+      await wait(750*(attempt+1));
+    }
+  }
+  throw last instanceof Error?last:new Error("model_gateway_unavailable");
+}
+
 async function completeProvider(provider: Provider, request: ModelRequest): Promise<ModelResponse> {
-  const response = await fetch(endpoint(provider), {
+  const response = await requestWithRetry(endpoint(provider), {
     method: "POST",
     headers: headers(provider),
     body: JSON.stringify(payload(request)),
