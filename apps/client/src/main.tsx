@@ -383,7 +383,7 @@ function Dashboard() {
         if (typeof connection?.downlink === "number" && !cancelled) {
           setMetrics(current => ({
             ...current,
-            network: Math.max(0, Math.min(1024, connection.downlink)),
+            network: Math.max(0, Math.min(1024, connection.downlink ?? 0)),
             networkUnit: "Mbps"
           }));
         }
@@ -407,7 +407,7 @@ function Dashboard() {
 
       try {
         const estimate = await navigator.storage?.estimate?.();
-        if (estimate?.usage && estimate.quota && !cancelled) {
+        if (typeof estimate?.usage === "number" && typeof estimate?.quota === "number" && estimate.quota > 0 && !cancelled) {
           setMetrics(current => ({
             ...current,
             storage: Math.max(0, Math.min(100, Math.round((estimate.usage / estimate.quota) * 100)))
