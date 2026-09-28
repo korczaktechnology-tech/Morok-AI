@@ -2537,3 +2537,46 @@ mix-blend-mode:screen;opacity:.65}
 .morokVoiceCore canvas{
   transform:none!important;
 }
+
+
+/* MOROK // SPATIAL ALIGNMENT */
+@media(min-width:1360px){
+  /* CPU/RAM/etc and SYSTEMS form one continuous horizontal row. */
+  .resourcePanel{
+    left:0!important;
+    top:0!important;
+  }
+  .dashSystems{
+    left:324px!important;
+    top:112px!important;
+    transform:none!important;
+    width:210px!important;
+    height:270px!important;
+    box-sizing:border-box!important;
+  }
+
+  /* Voice Core returns to the dedicated lower-left assistant position. */
+  .dashLeft .assistantPanel{
+    left:0!important;
+    bottom:0!important;
+    top:auto!important;
+    width:400px!important;
+    height:214px!important;
+  }
+  .dashLeft .assistantPanel .morokVoiceCore{
+    width:156px!important;
+    height:156px!important;
+  }
+
+  /* Larger circle, while the frequency bars remain at their reduced size. */
+  .morokVoiceCore canvas{
+    transform:none!important;
+  }
+
+  /* Navigation touches the underside of the header. */
+  .dashNav{
+    top:112px!important;
+    right:0!important;
+    height:483px!important;
+  }
+}
