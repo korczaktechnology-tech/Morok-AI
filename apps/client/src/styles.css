@@ -2635,3 +2635,88 @@ mix-blend-mode:screen;opacity:.65}
 @media (max-width:1359px){
   .morokFullDashboard{zoom:1!important}
 }
+
+
+/* MOROK // REFERENCE MATCH v4 — DENSITY / CORE DETAIL / 16:9 RHYTHM */
+@media (min-width:1360px){
+  .morokFullDashboard{aspect-ratio:16/9!important}
+  .morokFullDashboard:before{
+    opacity:.48!important;
+    background:
+      linear-gradient(135deg,transparent 0 8.5%,rgba(73,93,198,.24) 8.58%,transparent 8.72%),
+      linear-gradient(135deg,transparent 0 12%,rgba(126,43,255,.18) 12.08%,transparent 12.22%),
+      linear-gradient(45deg,transparent 0 83%,rgba(24,137,255,.18) 83.08%,transparent 83.22%),
+      linear-gradient(45deg,transparent 0 89%,rgba(255,37,91,.17) 89.08%,transparent 89.22%),
+      linear-gradient(0deg,transparent 0 92%,rgba(63,88,178,.14) 92.08%,transparent 92.22%)!important;
+    background-size:420px 280px,520px 340px,560px 340px,500px 310px,100% 100%!important;
+  }
+  .morokFullDashboard .dashTechLines{
+    opacity:.34!important;
+    background:
+      linear-gradient(90deg,transparent 0 18%,rgba(63,95,220,.16) 18.05%,transparent 18.16%),
+      linear-gradient(90deg,transparent 0 72%,rgba(167,42,255,.12) 72.05%,transparent 72.16%),
+      linear-gradient(0deg,transparent 0 11%,rgba(65,89,178,.14) 11.04%,transparent 11.15%),
+      linear-gradient(0deg,transparent 0 84%,rgba(65,89,178,.11) 84.04%,transparent 84.15%)!important;
+    background-size:100% 100%!important;
+  }
+  .morokFullDashboard .dashHeader:after{
+    content:"";position:absolute;left:18%;right:53%;top:60px;height:2px;
+    background:linear-gradient(90deg,transparent,#5b43ff 12%,#7d4cff 56%,transparent);
+    box-shadow:0 0 8px rgba(107,69,255,.55);opacity:.8;
+  }
+  .morokFullDashboard .dashCore:before{
+    content:"";position:absolute;inset:4%;border-radius:50%;pointer-events:none;z-index:-1;
+    background:repeating-conic-gradient(from -18deg,rgba(109,139,255,0) 0deg 1.8deg,rgba(109,139,255,.48) 2deg 2.35deg,rgba(109,139,255,0) 2.5deg 5deg);
+    -webkit-mask:radial-gradient(circle,transparent 0 63%,#000 64% 66%,transparent 67% 84%,#000 85% 86%,transparent 87%);
+    mask:radial-gradient(circle,transparent 0 63%,#000 64% 66%,transparent 67% 84%,#000 85% 86%,transparent 87%);
+    opacity:.62;
+  }
+  .morokFullDashboard .dashCore:after{
+    content:"";position:absolute;inset:12%;border-radius:50%;pointer-events:none;z-index:-1;
+    background:
+      radial-gradient(circle at center,transparent 0 44%,rgba(62,117,255,.10) 44.3% 44.8%,transparent 45.2%),
+      radial-gradient(circle at center,transparent 0 57%,rgba(193,62,255,.14) 57.3% 57.7%,transparent 58%),
+      repeating-radial-gradient(circle at center,transparent 0 17px,rgba(93,108,255,.06) 17.5px 18px);
+    opacity:.85;
+  }
+  .morokFullDashboard .dashCore .ringA{
+    box-shadow:0 0 26px rgba(63,65,255,.20),0 0 3px rgba(155,179,255,.55)!important;
+  }
+  .morokFullDashboard .dashCore .ringB{
+    box-shadow:0 0 18px rgba(181,69,255,.38),inset 0 0 9px rgba(181,69,255,.12)!important;
+  }
+  .morokFullDashboard .dashCore .ringC{box-shadow:0 0 8px rgba(85,122,255,.20)!important}
+  .morokFullDashboard .dashCore .ringD,
+  .morokFullDashboard .dashCore .ringE{box-shadow:0 0 10px currentColor,inset 0 0 5px currentColor!important}
+  .morokFullDashboard .dashCore .coreStar{width:5px!important;height:5px!important}
+  .morokFullDashboard .dashCore .star1{top:19%!important}
+  .morokFullDashboard .dashCore .star2{right:20%!important}
+  .morokFullDashboard .dashCore .star3{bottom:20%!important}
+  .morokFullDashboard .dashCore .star4{left:20%!important}
+  .morokFullDashboard .dashCore .coreLogo img{
+    filter:
+      drop-shadow(0 0 6px rgba(255,255,255,.54))
+      drop-shadow(0 0 14px rgba(128,74,255,.68))
+      drop-shadow(0 0 22px rgba(0,170,255,.38))!important;
+  }
+  .morokFullDashboard > .assistantPanel{
+    height:20.5vh!important;max-height:194px!important;
+    background:linear-gradient(90deg,rgba(2,4,16,.70),rgba(2,4,16,.33) 63%,transparent)!important;
+    border-color:rgba(81,103,215,.30)!important;
+    box-shadow:inset 0 1px 0 rgba(114,138,255,.18),inset 0 0 30px rgba(39,49,128,.07)!important;
+  }
+  .morokFullDashboard > .assistantPanel .morokVoiceCore{left:1.7%!important;top:2px!important}
+  .morokFullDashboard > .assistantPanel > div:last-child{
+    left:min(13.6vw,206px)!important;top:4.0vh!important;right:12px!important;
+  }
+  .morokFullDashboard > .assistantPanel > div:last-child h3{font-size:17px!important}
+  .morokFullDashboard > .assistantPanel > div:last-child p{max-width:195px!important}
+  .morokFullDashboard .dashActions{bottom:5.5vh!important;gap:6px!important}
+  .morokFullDashboard .dashActions button{width:min(7.0vw,110px)!important;height:8.9vh!important}
+  .morokFullDashboard .dashActions button span{font-size:23px!important}
+  .morokFullDashboard .dashGoal{
+    bottom:6.4vh!important;width:min(21.5vw,286px)!important;height:20.5vh!important;max-height:193px!important;
+  }
+  .morokFullDashboard .dashRight{right:15.8vw!important}
+  .morokFullDashboard .dashNav{right:1.3vw!important}
+}
