@@ -48,6 +48,7 @@ async function readStorage(): Promise<number> {
     disks.find(d => d.mount?.startsWith(systemRoot)) ??
     disks[0];
 
+  if (!preferred) return 0;
   return clamp(Number(preferred.use), 0, 100);
 }
 
