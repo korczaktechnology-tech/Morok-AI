@@ -2580,3 +2580,30 @@ mix-blend-mode:screen;opacity:.65}
     height:483px!important;
   }
 }
+
+
+/* MOROK // DESKTOP HEADER VISIBILITY FIX */
+@media(min-width:1360px){
+  .morokFullDashboard .dashHeader{
+    position:absolute!important;
+    left:24px!important;
+    right:24px!important;
+    top:18px!important;
+    width:auto!important;
+    height:68px!important;
+    min-height:68px!important;
+    display:flex!important;
+    align-items:flex-start!important;
+    justify-content:space-between!important;
+    z-index:100!important;
+    visibility:visible!important;
+    opacity:1!important;
+    pointer-events:auto!important;
+  }
+  .morokFullDashboard .kosBrand,
+  .morokFullDashboard .dashClock,
+  .morokFullDashboard .dashWeather{
+    visibility:visible!important;
+    opacity:1!important;
+  }
+}
