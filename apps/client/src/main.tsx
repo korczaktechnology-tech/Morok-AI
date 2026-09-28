@@ -865,8 +865,7 @@ function App() {
             workflowId:workflow.id,
             name:workflow.name,
             runNumber:run?.run_number??0,
-            commit:run?.head_commit?.message?.split("
-")[0]??"SEM EXECUÇÃO",
+            commit:run?.head_commit?.message?.split("\n")[0]??"SEM EXECUÇÃO",
             sha:run?.head_sha??"",
             status:run?.status??"idle",
             conclusion:run?.conclusion??null,
@@ -1073,8 +1072,7 @@ function App() {
         const { done, value: chunk } = await reader.read();
         if (done) break;
         buffer += decoder.decode(chunk, { stream: true });
-        const lines = buffer.split("
-"); buffer = lines.pop() ?? "";
+        const lines = buffer.split("\n"); buffer = lines.pop() ?? "";
         for (const line of lines) {
           if (!line.startsWith("data: ")) continue;
           const payload = line.slice(6);
@@ -1375,10 +1373,10 @@ function MorokMicrophoneGate(p:{onGranted:()=>void}) {
 function findMorokWake(text:string){
   const normalize=(value:string)=>value
     .normalize("NFD")
-    .replace(/[\\u0300-\\u036f]/g,"")
+    .replace(/[\u0300-\u036f]/g,"")
     .toLowerCase()
-    .replace(/[^a-z0-9\\s]/g," ")
-    .replace(/\\s+/g," ")
+    .replace(/[^a-z0-9\s]/g," ")
+    .replace(/\s+/g," ")
     .trim();
 
   const distance=(a:string,b:string)=>{
@@ -1401,7 +1399,7 @@ function findMorokWake(text:string){
 
   const rawWords=Array.from(text.matchAll(/[A-Za-zÀ-ÿ0-9]+/g));
   const morokVariants=new Set([
-    "morok","moroc","moro","moraque","moroque","moroki","moroki",
+    "morok","moroc","moro","moraque","moroque","moroki",
     "mor aqui","moro aqui","mor oque","moro oque"
   ]);
   const target="morok";
@@ -1412,7 +1410,7 @@ function findMorokWake(text:string){
       if(count>1) combined+=" ";
       combined+=rawWords[i+count-1][0];
       const normalized=normalize(combined);
-      const compact=normalized.replace(/\\s/g,"");
+      const compact=normalized.replace(/\s/g,"");
       const isExplicit=morokVariants.has(normalized)||morokVariants.has(compact);
       const maxDistance=compact.length<=4?1:compact.length<=7?2:3;
       const isFuzzy=distance(compact,target)<=maxDistance;
