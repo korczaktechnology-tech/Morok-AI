@@ -1364,50 +1364,62 @@ function MorokConversationWindow(p:{messages:Msg[];input:string;setInput:(v:stri
 
 function MorokMicrophoneGate() {
   const [state,setState]=useState<"checking"|"ready"|"prompt"|"blocked"|"unsupported">("checking");
+  const streamRef=useRef<MediaStream|null>(null);
+  const requestingRef=useRef(false);
+
+  const keepMicrophoneOpen=async()=>{
+    if(streamRef.current || requestingRef.current) return true;
+    if(!navigator.mediaDevices?.getUserMedia) {
+      setState("unsupported");
+      return false;
+    }
+
+    requestingRef.current=true;
+    try{
+      // Mantemos um único MediaStream vivo durante toda a sessão.
+      // Isso evita que o dispositivo físico seja liberado/reaberto a cada
+      // reinício interno do SpeechRecognition.
+      const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+      streamRef.current=stream;
+      setState("ready");
+      window.dispatchEvent(new Event("morok-mic-request"));
+      return true;
+    }catch{
+      setState("blocked");
+      return false;
+    }finally{
+      requestingRef.current=false;
+    }
+  };
 
   const inspect=async()=>{
     const Recognition=window.SpeechRecognition ?? window.webkitSpeechRecognition;
-    if(!Recognition){ setState("unsupported"); return; }
+    if(!Recognition){
+      setState("unsupported");
+      return;
+    }
 
     try{
       const permissions=navigator.permissions;
-      if(!permissions?.query){
-        setState("prompt");
+      if(permissions?.query){
+        const status=await permissions.query({name:"microphone" as PermissionName});
+        const update=()=>{
+          if(status.state==="denied") setState("blocked");
+          else if(status.state==="granted") void keepMicrophoneOpen();
+          else setState("prompt");
+        };
+        status.addEventListener?.("change",update);
+        update();
         return;
       }
-      const status=await permissions.query({name:"microphone" as PermissionName});
-      if(status.state==="granted"){
-        setState("ready");
-        window.dispatchEvent(new Event("morok-mic-request"));
-      }else if(status.state==="denied"){
-        setState("blocked");
-      }else{
-        setState("prompt");
-      }
-    }catch{
-      setState("prompt");
-    }
+    }catch{}
+
+    setState("prompt");
   };
 
-  const request=async()=>{
-    const Recognition=window.SpeechRecognition ?? window.webkitSpeechRecognition;
-    if(!Recognition){ setState("unsupported"); return; }
-
-    // Usa getUserMedia somente para confirmar/solicitar a permissão real.
-    // O stream é fechado imediatamente; a escuta contínua fica exclusivamente
-    // com SpeechRecognition, evitando dois consumidores persistentes do microfone.
-    try{
-      const stream=await navigator.mediaDevices.getUserMedia({audio:true});
-      stream.getTracks().forEach(track=>track.stop());
-      setState("ready");
-      window.dispatchEvent(new Event("morok-mic-request"));
-    }catch{
-      setState("blocked");
-    }
-  };
+  const request=()=>void keepMicrophoneOpen();
 
   useEffect(()=>{
-    let disposed=false;
     const started=()=>setState("ready");
     const blocked=()=>setState("blocked");
     const unsupported=()=>setState("unsupported");
@@ -1419,15 +1431,18 @@ function MorokMicrophoneGate() {
     void inspect();
 
     return()=>{
-      disposed=true;
-      void disposed;
       window.removeEventListener("morok-mic-started",started);
       window.removeEventListener("morok-mic-blocked",blocked);
       window.removeEventListener("morok-mic-unsupported",unsupported);
+      try{
+        streamRef.current?.getTracks().forEach(track=>track.stop());
+      }catch{}
+      streamRef.current=null;
     };
   },[]);
 
   if(state==="ready") return null;
+
   const title=state==="unsupported"
     ?"MICROFONE NÃO SUPORTADO"
     :state==="blocked"
@@ -1435,10 +1450,10 @@ function MorokMicrophoneGate() {
       :"MICROFONE NÃO HABILITADO";
 
   const text=state==="unsupported"
-    ?"Este navegador não disponibilizou o reconhecimento de voz necessário para a escuta contínua."
+    ?"Este navegador não disponibilizou o acesso de voz necessário para a escuta contínua."
     :state==="blocked"
       ?"O navegador bloqueou o acesso ao microfone. Permita o microfone nas configurações do site e tente novamente."
-      :"O Morok verificou o estado do microfone e ele ainda não está autorizado. Clique abaixo para habilitar.";
+      :"O Morok precisa manter o microfone autorizado para permanecer em escuta contínua.";
 
   return <div className="morokMicGate" role="dialog" aria-modal="true" aria-label="Permissão de microfone">
     <div className="morokMicGatePanel">
@@ -1446,8 +1461,8 @@ function MorokMicrophoneGate() {
       <small>ACESSO DE VOZ // MOROK</small>
       <h1>{title}</h1>
       <p>{text}</p>
-      {state!=="unsupported"&&<button type="button" onClick={()=>void request()}>{state==="blocked"?"VERIFICAR MICROFONE":"HABILITAR MICROFONE"}</button>}
-      <span>ESCUTA CONTÍNUA · COMANDO: “MOROK, ACORDE”</span>
+      {state!=="unsupported"&&<button type="button" onClick={request}>{state==="blocked"?"VERIFICAR MICROFONE":"HABILITAR MICROFONE"}</button>}
+      <span>MICROFONE CONTÍNUO · COMANDO: “MOROK, ACORDE”</span>
     </div>
   </div>;
 }
