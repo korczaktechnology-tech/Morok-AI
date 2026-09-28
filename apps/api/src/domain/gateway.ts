@@ -26,6 +26,7 @@ function payload(request: ModelRequest, stream = false) {
   return {
     model: config.modelName,
     temperature: config.modelTemperature,
+    max_tokens: 256,
     stream,
     messages: [
       { role: "system", content: "Você é Morok, um assistente pessoal. Seja claro, contextual e seguro." },
@@ -73,15 +74,12 @@ async function upstreamError(response: Response, prefix: string) {
 }
 
 async function completeProvider(provider: Provider, request: ModelRequest): Promise<ModelResponse> {
-  const response = await fetch(
-    endpoint(provider),
-    {
-      method: "POST",
-      headers: headers(provider),
-      body: JSON.stringify(payload(request)),
-      signal: AbortSignal.timeout(30000)
-    }
-  );
+  const response = await fetch(endpoint(provider), {
+    method: "POST",
+    headers: headers(provider),
+    body: JSON.stringify(payload(request)),
+    signal: AbortSignal.timeout(30000)
+  });
 
   if (!response.ok) await upstreamError(response, "model_gateway_http_");
 
@@ -123,15 +121,12 @@ export class OpenAICompatibleGateway implements ModelGateway {
     let last: unknown;
     for (const provider of ps) {
       try {
-        const response = await fetch(
-          provider.url.replace(/\/$/, "") + "/chat/completions",
-          {
-            method: "POST",
-            headers: headers(provider),
-            body: JSON.stringify(payload(request, true)),
-            signal: AbortSignal.timeout(60000)
-          }
-        );
+        const response = await fetch(endpoint(provider), {
+          method: "POST",
+          headers: headers(provider),
+          body: JSON.stringify(payload(request, true)),
+          signal: AbortSignal.timeout(60000)
+        });
 
         if (!response.ok) await upstreamError(response, "model_gateway_stream_http_");
         if (!response.body) throw new Error("model_gateway_stream_empty_body");
@@ -153,6 +148,19 @@ export class OpenAICompatibleGateway implements ModelGateway {
             const raw = line.slice(5).trim();
             if (raw === "[DONE]") return;
 
+            try {
+              const parsed = JSON.parse(raw) as { choices?: Array<{ delta?: { content?: string } }> };
+              const chunk = parsed.choices?.[0]?.delta?.content;
+              if (chunk) yield chunk;
+            } catch {}
+          }
+        }
+
+        const tail = decoder.decode();
+        if (tail) buffer += tail;
+        if (buffer.startsWith("data:")) {
+          const raw = buffer.slice(5).trim();
+          if (raw && raw !== "[DONE]") {
             try {
               const parsed = JSON.parse(raw) as { choices?: Array<{ delta?: { content?: string } }> };
               const chunk = parsed.choices?.[0]?.delta?.content;
