@@ -341,62 +341,89 @@ function Dashboard() {
   useEffect(() => {
     let cancelled = false;
 
-    const readMetrics = async () => {
+    const readNative = async () => {
       try {
         const native = await window.morokDesktop?.execute?.("system.metrics");
-        if (native && typeof native === "object") {
+        if (native && typeof native === "object" && !cancelled) {
           const raw = native as Record<string, unknown>;
-          const cpu = typeof raw.cpu === "number" ? raw.cpu : null;
-          const ram = typeof raw.ram === "number" ? raw.ram : null;
-          const storage = typeof raw.storage === "number" ? raw.storage : null;
-          const network = typeof raw.network === "number" ? raw.network : null;
-          if (!cancelled && (cpu !== null || ram !== null || storage !== null || network !== null)) {
-            setMetrics({
-              cpu, ram, storage, network,
-              networkUnit: typeof raw.networkUnit === "string" ? raw.networkUnit : "Mbps"
-            });
-            return;
+          setMetrics(current => ({
+            ...current,
+            cpu: typeof raw.cpu === "number" ? Math.max(0, Math.min(100, raw.cpu)) : current.cpu,
+            ram: typeof raw.ram === "number" ? Math.max(0, Math.min(100, raw.ram)) : current.ram,
+            storage: typeof raw.storage === "number" ? Math.max(0, Math.min(100, raw.storage)) : current.storage,
+            network: typeof raw.network === "number" ? Math.max(0, Math.min(1024, raw.network)) : current.network,
+            networkUnit: "Mbps"
+          }));
+          return true;
+        }
+      } catch {}
+      return false;
+    };
+
+    const readBrowserFallback = async (kind: "ram" | "storage" | "network") => {
+      if (kind === "network") {
+        const connection = (navigator as Navigator & {
+          connection?: { downlink?: number };
+        }).connection;
+        if (typeof connection?.downlink === "number" && !cancelled) {
+          setMetrics(current => ({
+            ...current,
+            network: Math.max(0, Math.min(1024, connection.downlink)),
+            networkUnit: "Mbps"
+          }));
+        }
+        return;
+      }
+
+      if (kind === "ram") {
+        try {
+          const memory = (performance as Performance & {
+            memory?: { usedJSHeapSize: number; jsHeapSizeLimit: number };
+          }).memory;
+          if (memory?.jsHeapSizeLimit && !cancelled) {
+            setMetrics(current => ({
+              ...current,
+              ram: Math.max(0, Math.min(100, Math.round((memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100)))
+            }));
           }
-        }
-      } catch {}
-
-      const next: SystemMetrics = {
-        cpu: null,
-        ram: null,
-        storage: null,
-        network: null,
-        networkUnit: "Mbps"
-      };
-
-      const connection = (navigator as Navigator & {
-        connection?: { downlink?: number };
-      }).connection;
-      if (typeof connection?.downlink === "number") next.network = connection.downlink;
-
-      try {
-        const memory = (performance as Performance & {
-          memory?: { usedJSHeapSize: number; jsHeapSizeLimit: number };
-        }).memory;
-        if (memory?.jsHeapSizeLimit) {
-          next.ram = Math.round((memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100);
-        }
-      } catch {}
+        } catch {}
+        return;
+      }
 
       try {
         const estimate = await navigator.storage?.estimate?.();
-        if (estimate?.usage && estimate.quota) {
-          next.storage = Math.round((estimate.usage / estimate.quota) * 100);
+        if (estimate?.usage && estimate.quota && !cancelled) {
+          setMetrics(current => ({
+            ...current,
+            storage: Math.max(0, Math.min(100, Math.round((estimate.usage / estimate.quota) * 100)))
+          }));
         }
       } catch {}
-
-      if (!cancelled) setMetrics(next);
     };
 
-    void readMetrics();
-    const timer = window.setInterval(() => void readMetrics(), 5000);
+    const tickFast = async () => {
+      const nativeWorked = await readNative();
+      if (!nativeWorked) {
+        await readBrowserFallback("network");
+        await readBrowserFallback("ram");
+      }
+    };
+
+    const tickStorage = async () => {
+      const nativeWorked = await readNative();
+      if (!nativeWorked) await readBrowserFallback("storage");
+    };
+
+    void tickFast();
+    void tickStorage();
+
+    const fastTimer = window.setInterval(() => void tickFast(), 1000);
+    const storageTimer = window.setInterval(() => void tickStorage(), 600000);
+
     return () => {
       cancelled = true;
-      window.clearInterval(timer);
+      window.clearInterval(fastTimer);
+      window.clearInterval(storageTimer);
     };
   }, []);
 
@@ -467,7 +494,7 @@ function Dashboard() {
     ["CPU", metrics.cpu === null ? "N/D" : `${metrics.cpu}%`, metrics.cpu],
     ["MEMÓRIA RAM", metrics.ram === null ? "N/D" : `${metrics.ram}%`, metrics.ram],
     ["ARMAZENAMENTO", metrics.storage === null ? "N/D" : `${metrics.storage}%`, metrics.storage],
-    ["REDE", metrics.network === null ? "N/D" : `${metrics.network.toFixed(1)} ${metrics.networkUnit}`, metrics.network === null ? null : Math.min(100, metrics.network / 10 * 100)]
+    ["REDE", metrics.network === null ? "N/D" : `${metrics.network.toFixed(1)} ${metrics.networkUnit}`, metrics.network === null ? null : Math.min(100, (metrics.network / 1024) * 100)]
   ] as const;
 
   return (
