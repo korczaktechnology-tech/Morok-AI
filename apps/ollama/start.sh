@@ -52,7 +52,7 @@ http {
 }
 EOF
 
-ollama serve &
+OLLAMA_HOST=0.0.0.0:11434 ollama serve &
 OLLAMA_PID=$!
 
 echo "Aguardando Ollama..."
