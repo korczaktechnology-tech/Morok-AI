@@ -1380,21 +1380,19 @@ function findMorokWake(text:string){
     .trim();
 
   const distance=(a:string,b:string)=>{
-    const row=Array.from({length:b.length+1},(_,i)=>i);
+    const previous:number[]=Array.from({length:b.length+1},(_,i)=>i);
     for(let i=1;i<=a.length;i++){
-      let diagonal=row[0];
-      row[0]=i;
+      const current:number[]=[i];
       for(let j=1;j<=b.length;j++){
-        const above=row[j];
-        row[j]=Math.min(
-          row[j]+1,
-          row[j-1]+1,
-          diagonal+(a[i-1]===b[j-1]?0:1)
+        current[j]=Math.min(
+          previous[j]!+1,
+          current[j-1]!+1,
+          previous[j-1]!+(a[i-1]===b[j-1]?0:1)
         );
-        diagonal=above;
       }
+      for(let j=0;j<current.length;j++) previous[j]=current[j]!;
     }
-    return row[b.length];
+    return previous[b.length]!;
   };
 
   const rawWords=Array.from(text.matchAll(/[A-Za-zÀ-ÿ0-9]+/g));
@@ -1408,7 +1406,7 @@ function findMorokWake(text:string){
     let combined="";
     for(let count=1;count<=3 && i+count<=rawWords.length;count++){
       if(count>1) combined+=" ";
-      combined+=rawWords[i+count-1][0];
+      combined+=rawWords[i+count-1]![0];
       const normalized=normalize(combined);
       const compact=normalized.replace(/\s/g,"");
       const isExplicit=morokVariants.has(normalized)||morokVariants.has(compact);
@@ -1416,8 +1414,8 @@ function findMorokWake(text:string){
       const isFuzzy=distance(compact,target)<=maxDistance;
 
       if(isExplicit||isFuzzy){
-        const end=rawWords[i+count-1].index!+rawWords[i+count-1][0].length;
-        return {end};
+        const word=rawWords[i+count-1]!;
+        return {end:word.index!+word[0].length};
       }
 
       if(count===1 && !isFuzzy && !["mor","moro","mora","moroq"].some(v=>compact.startsWith(v))) break;
@@ -1430,6 +1428,8 @@ function findMorokWake(text:string){
 function MorokAlwaysListening(p:{onWake:(command:string)=>void}) {
   const recognitionRef=useRef<any>(null);
   const restartingRef=useRef(false);
+  const onWakeRef=useRef(p.onWake);
+  onWakeRef.current=p.onWake;
 
   useEffect(()=>{
     let disposed=false;
@@ -1471,7 +1471,7 @@ function MorokAlwaysListening(p:{onWake:(command:string)=>void}) {
     const resume=()=>{if(!window.speechSynthesis?.speaking)start();};
     window.addEventListener("focus",resume);
     return()=>{disposed=true;window.clearTimeout(timer);window.removeEventListener("focus",resume);try{recognitionRef.current?.stop?.()}catch{}};
-  },[p.onWake]);
+  },[]);
   return null;
 }
 
