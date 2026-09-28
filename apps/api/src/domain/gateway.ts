@@ -76,8 +76,8 @@ async function upstreamError(response: Response, prefix: string) {
 async function wait(ms:number){return new Promise(resolve=>setTimeout(resolve,ms));}
 
 async function requestWithRetry(url:string, init:RequestInit, options:{attempts?:number;delayMs?:number;timeoutMs?:number}={}):Promise<Response>{
-  const attempts=options.attempts??15;
-  const delayMs=options.delayMs??5000;
+  const attempts=options.attempts??20;
+  const delayMs=options.delayMs??3000;
   const timeoutMs=options.timeoutMs??180000;
   let last:unknown;
   for(let attempt=0;attempt<attempts;attempt++){
