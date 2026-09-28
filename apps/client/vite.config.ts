@@ -18,7 +18,7 @@ export default defineConfig({
         vision: resolve(__dirname, "vision.html"),
         connect: resolve(__dirname, "connect.html"),
         mobile: resolve(__dirname, "mobile.html"),
-        morok: resolve(__dirname, "morok.html"),
+        korczakAi: resolve(__dirname, "korczak-ai.html"),
         documents: resolve(__dirname, "documents.html")
       }
     }
