@@ -3837,3 +3837,106 @@ mix-blend-mode:screen;opacity:.65}
     transform:none!important;
   }
 }
+
+
+/* MOROK // REFERENCE MATCH v12 — CENTRAL TYPOGRAPHY / ICON LEGIBILITY */
+@media (min-width:1360px){
+  .morokDashboardStage .dashCore .coreLogo{
+    width:34%!important;height:34%!important;
+    transform:translateY(-3%)!important;
+  }
+  .morokDashboardStage .dashCore .coreName{
+    top:69%!important;
+    font-size:42px!important;
+    letter-spacing:7px!important;
+  }
+  .morokDashboardStage .dashCore .coreSubtitle{
+    top:77.4%!important;
+    font-size:10px!important;
+    line-height:1.45!important;
+  }
+  .morokDashboardStage .dashCore .coreTopLabel{
+    top:.7%!important;
+  }
+
+  /* Target navigation has a crisp, narrow icon rail and more breathing room. */
+  .morokDashboardStage .dashNav button{
+    padding-left:18px!important;
+    gap:16px!important;
+    font-size:10px!important;
+    letter-spacing:.45px!important;
+  }
+  .morokDashboardStage .dashNav button span{
+    font-size:20px!important;
+    width:21px!important;
+    opacity:.9!important;
+  }
+  .morokDashboardStage .dashNav button.active{
+    background:linear-gradient(90deg,#2942f2 0%,#244eff 57%,#5412e7 100%)!important;
+    box-shadow:0 0 24px rgba(36,72,255,.34),inset 0 0 18px rgba(132,91,255,.09)!important;
+  }
+
+  /* Thin technical side rails strengthen the target silhouette. */
+  .morokDashboardStage .dashSystems:after{
+    content:"KOS // MODULES"!important;
+    left:54px!important;bottom:10px!important;
+    color:rgba(157,92,255,.46)!important;
+    font:600 6px/1 "Segoe UI",sans-serif!important;
+    letter-spacing:1.5px!important;
+  }
+  .morokDashboardStage .dashLeft:after{
+    content:"SYSTEM LOAD // 04"!important;
+    left:7px!important;top:519px!important;
+    color:rgba(90,127,255,.38)!important;
+    font:600 6px/1 "Segoe UI",sans-serif!important;
+    letter-spacing:1.5px!important;
+  }
+
+  /* More exact target-like edge lights on the information rail. */
+  .morokDashboardStage .dashRight:after{
+    content:"LIVE DATA // SYNC"!important;
+    position:absolute!important;
+    right:2px!important;bottom:-16px!important;
+    color:rgba(92,133,255,.40)!important;
+    font:600 6px/1 "Segoe UI",sans-serif!important;
+    letter-spacing:1.5px!important;
+  }
+  .morokDashboardStage .dashNav:before{
+    content:""!important;
+    position:absolute!important;
+    left:-9px!important;top:72px!important;
+    width:9px!important;height:1px!important;
+    background:#ff315f!important;
+    box-shadow:0 0 8px rgba(255,49,95,.65)!important;
+  }
+
+  /* Resource panel bars and active process list use the reference contrast. */
+  .morokDashboardStage .resourceBar{
+    background:rgba(56,68,124,.34)!important;
+  }
+  .morokDashboardStage .resourceBar i{
+    background:linear-gradient(90deg,#6640ff,#168dff)!important;
+    box-shadow:0 0 9px rgba(31,117,255,.72)!important;
+  }
+  .morokDashboardStage .processRow{
+    color:#cbd8f5!important;
+  }
+  .morokDashboardStage .processDot{
+    box-shadow:0 0 7px currentColor!important;
+  }
+
+  /* Objective typography stays readable while its radar remains dominant. */
+  .morokDashboardStage .dashGoal h3{
+    letter-spacing:.65px!important;
+    margin-bottom:3px!important;
+  }
+  .morokDashboardStage .dashGoal>b{
+    letter-spacing:.25px!important;
+  }
+
+  /* Bottom rail should read as one coherent technical band. */
+  .morokDashboardStage .dashFooter{
+    color:#8c9bd0!important;
+    letter-spacing:1.35px!important;
+  }
+}
