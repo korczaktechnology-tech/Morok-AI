@@ -3161,3 +3161,218 @@ mix-blend-mode:screen;opacity:.65}
     mask-image:radial-gradient(ellipse at center,#000 5%,transparent 98%)!important;
   }
 }
+
+
+/* MOROK // REFERENCE MATCH v8 — PIXEL-RHYTHM PASS */
+@media (min-width:1360px){
+  /* Target: resource and process rails stay at ~300px, systems at ~190px. */
+  .morokFullDashboard .dashLeft{
+    left:1.35vw!important;
+    top:12.8vh!important;
+    width:min(18.2vw,304px)!important;
+  }
+  .morokFullDashboard .resourcePanel{
+    height:29.0vh!important;
+    min-height:205px!important;
+    max-height:272px!important;
+  }
+  .morokFullDashboard .processPanel{
+    top:30.4vh!important;
+    height:24.5vh!important;
+    min-height:174px!important;
+    max-height:230px!important;
+  }
+  .morokFullDashboard .dashSystems{
+    left:21.55vw!important;
+    top:15.8vh!important;
+    width:min(11.6vw,192px)!important;
+    height:40.2vh!important;
+    min-height:300px!important;
+    max-height:377px!important;
+    padding:31px 14px 12px 55px!important;
+  }
+  .morokFullDashboard .dashSystems h2{
+    font-size:18px!important;
+    margin-bottom:11px!important;
+  }
+  .morokFullDashboard .dashSystems li{
+    height:4.18vh!important;
+    min-height:30px!important;
+    max-height:39px!important;
+    font-size:10px!important;
+    gap:8px!important;
+  }
+
+  /* Core: target size and position, then move text upward inside it. */
+  .morokFullDashboard .dashCore{
+    left:49.9%!important;
+    top:40.2%!important;
+    width:min(43vw,68vh,690px)!important;
+    max-width:690px!important;
+  }
+  .morokFullDashboard .dashCore .coreLogo{
+    width:38%!important;
+    height:38%!important;
+    transform:translateY(1%)!important;
+  }
+  .morokFullDashboard .dashCore .coreName{
+    top:67.5%!important;
+    font-size:clamp(32px,2.65vw,44px)!important;
+    letter-spacing:7px!important;
+  }
+  .morokFullDashboard .dashCore .coreSubtitle{
+    top:77.2%!important;
+    font-size:clamp(8px,.60vw,10px)!important;
+    letter-spacing:1.35px!important;
+  }
+
+  /* Right stack: dimensions and vertical gaps from the target image. */
+  .morokFullDashboard .dashRight{
+    right:15.0vw!important;
+    top:13.45vh!important;
+    width:min(16.3vw,271px)!important;
+  }
+  .morokFullDashboard .notificationPanel{
+    height:18.5vh!important;
+    min-height:150px!important;
+    max-height:179px!important;
+  }
+  .morokFullDashboard .activityPanel{
+    height:23.5vh!important;
+    min-height:200px!important;
+    max-height:221px!important;
+    margin-top:2.0vh!important;
+  }
+
+  .morokFullDashboard .dashNav{
+    right:1.35vw!important;
+    top:13.45vh!important;
+    width:min(11.6vw,193px)!important;
+    height:46.0vh!important;
+    min-height:394px!important;
+    max-height:431px!important;
+  }
+  .morokFullDashboard .dashNav button{
+    height:6.25vh!important;
+    min-height:47px!important;
+    max-height:59px!important;
+    padding:0 15px!important;
+    gap:12px!important;
+    font-size:10px!important;
+  }
+  .morokFullDashboard .dashNav button span{font-size:19px!important}
+
+  /* Bottom assistant matches the target's radar placement. */
+  .morokFullDashboard > .assistantPanel{
+    left:1.35vw!important;
+    width:min(28.8vw,480px)!important;
+    height:22.0vh!important;
+    min-height:176px!important;
+    max-height:206px!important;
+  }
+  .morokFullDashboard > .assistantPanel .morokVoiceCore{
+    left:1.6%!important;
+    top:-31px!important;
+    width:min(13.0vw,186px)!important;
+    height:min(13.0vw,186px)!important;
+  }
+  .morokFullDashboard > .assistantPanel > div:last-child{
+    left:min(13.0vw,194px)!important;
+    top:10px!important;
+    right:14px!important;
+  }
+  .morokFullDashboard > .assistantPanel > div:last-child p{
+    max-width:190px!important;
+    font-size:10px!important;
+  }
+
+  /* Target's compact operations module sits just above the action row. */
+  .morokFullDashboard > .dashMiniStatus{
+    left:25.1vw!important;
+    top:55.7vh!important;
+    width:min(11.1vw,184px)!important;
+    height:15.0vh!important;
+    min-height:126px!important;
+    max-height:141px!important;
+  }
+
+  /* Objective: same long horizontal card with radar on the left. */
+  .morokFullDashboard .dashGoal{
+    right:1.35vw!important;
+    bottom:8.0vh!important;
+    width:min(26.3vw,438px)!important;
+    height:21.4vh!important;
+    min-height:185px!important;
+    max-height:201px!important;
+    padding-left:181px!important;
+  }
+  .morokFullDashboard .dashGoal:before{
+    left:20px!important;
+    top:16px!important;
+    width:158px!important;
+    height:158px!important;
+  }
+  .morokFullDashboard .dashGoal:after{
+    left:99px!important;
+    top:95px!important;
+    width:57px!important;
+    height:57px!important;
+  }
+
+  /* Action rail: exactly between core and footer, never touching the bottom edge. */
+  .morokFullDashboard .dashActions{
+    left:49.9%!important;
+    bottom:10.2vh!important;
+    gap:7px!important;
+  }
+  .morokFullDashboard .dashActions button{
+    width:min(6.65vw,110px)!important;
+    height:9.2vh!important;
+    min-height:76px!important;
+    max-height:87px!important;
+  }
+  .morokFullDashboard .dashActions button span{font-size:23px!important}
+
+  .morokFullDashboard .dashFooter{
+    left:29%!important;
+    right:29%!important;
+    bottom:4px!important;
+    height:29px!important;
+  }
+
+  /* Fine reference accents: strong corners and long rails, but restrained brightness. */
+  .morokFullDashboard .dashRight:before{
+    content:"";
+    position:absolute;
+    left:-74px;
+    top:-31px;
+    width:120px;
+    height:52px;
+    border-top:1px solid rgba(88,117,255,.20);
+    border-right:1px solid rgba(88,117,255,.14);
+    transform:skewX(-28deg);
+    pointer-events:none;
+  }
+  .morokFullDashboard .dashNav:before{
+    content:"";
+    position:absolute;
+    left:-22px;
+    top:44%;
+    width:24px;
+    height:1px;
+    background:#ff315f;
+    box-shadow:0 0 9px rgba(255,49,95,.65);
+    pointer-events:none;
+  }
+  .morokFullDashboard > .assistantPanel:before{
+    content:"";
+    position:absolute;
+    right:8px;
+    top:-8px;
+    width:76px;
+    height:1px;
+    background:linear-gradient(90deg,transparent,#6d78ff,#c048ff);
+    box-shadow:0 0 8px rgba(117,74,255,.5);
+    pointer-events:none;
+  }
+}
