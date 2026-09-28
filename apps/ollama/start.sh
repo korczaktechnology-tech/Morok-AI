@@ -34,6 +34,7 @@ http {
     server_name _;
 
     location = /health {
+      if (!-f /tmp/morok-ready) { return 503; }
       proxy_http_version 1.1;
       proxy_set_header Host \$host;
       proxy_set_header X-Real-IP \$remote_addr;
@@ -44,6 +45,7 @@ http {
     }
 
     location = /ready {
+      if (!-f /tmp/morok-ready) { return 503; }
       proxy_http_version 1.1;
       proxy_set_header Host \$host;
       proxy_pass http://127.0.0.1:11434/api/tags;
@@ -102,6 +104,7 @@ if ! ollama list | awk 'NR > 1 {print $1}' | grep -Fxq "qwen2.5:0.5b"; then
   exit 1
 fi
 
+touch /tmp/morok-ready
 echo "Morok Ollama pronto."
 while kill -0 "${OLLAMA_PID}" 2>/dev/null && kill -0 "${NGINX_PID}" 2>/dev/null; do
   sleep 2
