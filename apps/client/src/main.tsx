@@ -2,7 +2,7 @@ import { createRoot } from "react-dom/client";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Capacitor } from "@capacitor/core";
 import "./styles.css";
-import { morokMicrophone, type MorokMicrophoneState } from "./microphone";
+import { morokMicrophone, type MorokMicrophoneState } from "./microphone.js";
 
 const API = import.meta.env.VITE_API_URL ?? "https://morok-ai.onrender.com";
 const MOROK_SUB_ICON = `${import.meta.env.BASE_URL}MorokSubIcon.svg`;
