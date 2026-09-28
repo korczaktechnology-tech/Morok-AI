@@ -3,9 +3,17 @@ services:
     name: morok-api
     runtime: node
     plan: free
-    buildCommand: npm install --workspaces --include=dev && npm run build --workspace=@morok/api
+    buildCommand: npm install --workspaces --include=dev --no-audit --no-fund && npm run build --workspace=@morok/api
     startCommand: npm run start --workspace=@morok/api
     healthCheckPath: /health
+    buildFilter:
+      paths:
+        - apps/api/**
+        - packages/**
+        - package.json
+        - tsconfig.base.json
+        - .nvmrc
+        - render.yaml
     envVars:
       - key: NODE_ENV
         value: production
@@ -33,7 +41,12 @@ services:
     runtime: docker
     plan: free
     rootDir: apps/ollama
+    dockerContext: apps/ollama
     healthCheckPath: /health
+    buildFilter:
+      paths:
+        - apps/ollama/**
+        - render.yaml
     envVars:
       - key: MODEL_PROXY_KEY
         sync: false
@@ -49,7 +62,3 @@ services:
         value: 5m
       - key: OLLAMA_CONTEXT_LENGTH
         value: "2048"
-    disk:
-      name: ollama-models
-      mountPath: /data
-      sizeGB: 1
