@@ -2,1094 +2,403 @@
 
 ## Morok
 
-Morok é um assistente pessoal inteligente projetado para atuar como uma interface central entre o usuário, seus dispositivos, aplicações, arquivos, serviços e sistemas.
+Morok é um assistente pessoal inteligente desenvolvido para centralizar conversação, memória, ferramentas, arquivos, automações e integrações em uma única aplicação.
 
-O desenvolvimento será realizado em cinco fases: **0, 1, 2, 4 e 5**. A numeração mantém a organização planejada do projeto, reservando a **Fase 4** para a implementação, integração e revisão geral das funcionalidades e a **Fase 5** para o encerramento e preparação da aplicação para operação contínua.
+O projeto está organizado nas fases **0, 1, 2, 4 e 5**. A numeração mantém o planejamento original do projeto.
 
 ### Legenda de status
 
 - 🔴 **Não implementado**
-- 🟡 **Em andamento**
-- 🟢 **Concluído**
+- 🟡 **Em andamento / parcialmente implementado**
+- 🟢 **Concluído e validado**
+
+> **Regra de leitura:** um recurso só é considerado concluído quando existe implementação correspondente no repositório e sua execução foi validada. A existência de arquivos, rotas ou configurações isoladas não é suficiente.
 
 ---
 
-# FASE 0 — FUNDAÇÃO DO APLICATIVO
+# FASE 0 — FUNDAÇÃO
 
-**Status: 🟢 Concluído — 100% da fundação implementável no repositório**
+**Status: 🟢 Concluída no código-base**
 
-Objetivo: preparar todo o terreno técnico do Morok antes da implementação das funcionalidades. A estrutura deve ser organizada, simples de manter e sem excesso de arquivos, pastas ou documentação duplicada.
+A fundação do monorepo está implementada. O repositório possui frontend React/Vite, backend Fastify/TypeScript, pacote compartilhado, persistência MongoDB, configuração de ambiente, testes e workflows de CI.
 
-## 0.1 — Definição tecnológica
+### O que realmente existe
 
-- Linguagem principal
-- Linguagem do backend
-- Linguagem da interface
-- Linguagem de automação
-- Framework principal
-- Framework de interface
-- Runtime
-- Gerenciador de pacotes
-- Sistema de módulos
-- Sistema de build
-- Estratégia multiplataforma
-- Estratégia de exportação para aplicativos
-
-## 0.2 — Arquitetura
-
-- Morok Core
-- Morok Interface
-- Morok Gateway
-- Morok Harness
-- Morok Memory
-- Morok Tools
-- Morok Skills
-- Morok Security
-- Morok Automation
-- Morok Devices
-- Morok Integrations
-- Morok Monitoring
-- Morok Configuration
-
-## 0.3 — Estrutura do projeto
-
-- Estrutura principal de pastas
-- Estrutura de frontend
-- Estrutura de backend
-- Estrutura de serviços
-- Estrutura de componentes
-- Estrutura de ferramentas
-- Estrutura de integrações
-- Estrutura de memória
-- Estrutura de automações
-- Estrutura de segurança
-- Estrutura de configuração
-- Estrutura de testes
-- Estrutura de assets
-- Estrutura de scripts
-
-## 0.4 — Repositório
-
-- Configuração do Git
-- Branch principal
-- Branches de desenvolvimento
-- .gitignore
-- Configuração do projeto
-- Dependências iniciais
-- Scripts de desenvolvimento
-- Scripts de produção
-- Versionamento
-- Controle de releases
-- Política de commits
-- Organização do código
-- README.md único e central
-
-## 0.5 — Render
-
-- Criação do serviço
-- Configuração do ambiente
-- Variáveis de ambiente
-- Secrets
-- Build
-- Deploy
-- Start command
-- Health check
-- Logs
-- Reinicialização automática
-- Configuração de produção
-- Configuração de desenvolvimento
-
-## 0.6 — MongoDB
-
-- Criação do banco
-- Conexão segura
-- Variáveis de ambiente
-- Estrutura inicial
-- Collections principais
-- Índices
-- Modelos
-- Sistema de migração
-- Backup
-- Recuperação
-- Controle de acesso
-
-## 0.7 — Backend inicial
-
-- Servidor
-- API
-- Rotas
-- Middleware
-- Tratamento de erros
-- Validação
-- Logs
-- Health endpoint
-- Configuração
-- Segurança básica
-
-## 0.8 — Frontend inicial
-
-- Aplicação web
-- Sistema de rotas
-- Layout base
-- Sistema de componentes
-- Sistema de estado
-- Comunicação com API
-- Tratamento de erros
-- Loading
-- Notificações
-- Configuração visual
-
-## 0.9 — Base do Morok
-
-- Identidade do Morok
-- Configuração do assistente
-- Sistema de mensagens
-- Sistema de comandos
-- Sistema de eventos
-- Sistema de contexto
-- Sistema de sessões
-- Sistema de ferramentas
-- Sistema de permissões
-- Sistema de logs
-
----
-
-## Fase 0 — Validação de conclusão
-
-A Fase 0 foi implementada no repositório com a fundação técnica necessária para iniciar a aplicação.
-
-### Itens concluídos
-
-- 🟢 Monorepo configurado com npm Workspaces
-- 🟢 TypeScript centralizado
-- 🟢 Node.js 22 definido
-- 🟢 React + Vite configurados para o cliente
-- 🟢 Fastify configurado para a API
-- 🟢 MongoDB configurado para persistência
-- 🟢 Pacote compartilhado criado
-- 🟢 Estrutura de frontend criada
-- 🟢 Estrutura de backend criada
-- 🟢 Configuração de ambiente criada
-- 🟢 .gitignore configurado
-- 🟢 EditorConfig configurado
-- 🟢 Prettier configurado
-- 🟢 GitHub Actions configurado para typecheck e build
-- 🟢 Endpoint de health da API criado
-- 🟢 Endpoint de health do MongoDB criado
-- 🟢 Encerramento seguro do backend configurado
+- 🟢 Monorepo com npm Workspaces
+- 🟢 Node.js 22+
+- 🟢 TypeScript
+- 🟢 React 19
+- 🟢 Vite
+- 🟢 Fastify
+- 🟢 MongoDB
+- 🟢 Pacote compartilhado
+- 🟢 Configuração central do backend
 - 🟢 CORS configurável
-- 🟢 Render configurado por render.yaml
-- 🟢 Health check do Render configurado
-- 🟢 Variáveis de produção separadas por ambiente
-- 🟢 Interface web inicial funcionando como base da Fase 1
-- 🟢 Arquitetura preparada para expansão multiplataforma
-- 🟢 README.md centralizado
-- 🟢 Estrutura mantida deliberadamente enxuta
+- 🟢 Health check da API
+- 🟢 Health check do MongoDB
+- 🟢 Encerramento seguro do backend
+- 🟢 Testes unitários/de domínio
+- 🟢 Testes de integração
+- 🟢 Typecheck/build automatizados
+- 🟢 Prettier
+- 🟢 EditorConfig
+- 🟢 .gitignore
+- 🟢 GitHub Actions
+- 🟢 Estrutura de frontend e backend
+- 🟢 Base para expansão multiplataforma
 
-### Validação final da fundação
+### Infraestrutura
 
-A fundação implementável no repositório foi concluída: API base, contrato do Model Gateway, mensagens, comandos, permissões, ferramentas, sessões, eventos, contexto, memória, identidade, auditoria, persistência inicial, health checks, cliente web inicial e testes dos serviços centrais estão presentes no `main`.
+- 🟢 Configuração para Render no repositório
+- 🟢 Variáveis de ambiente sem secrets versionados
+- 🟢 MongoDB configurável por `MONGODB_URI`
+- 🟢 Serviço Ollama separado em `apps/ollama`
+- 🟢 Dockerfile para Ollama
+- 🟢 Script de inicialização do Ollama
+- 🟢 Proxy Nginx com autenticação para o Ollama
+- 🟢 Modelo padrão definido como `qwen2.5:0.5b`
 
-### Limite externo da fundação
+### Observação sobre produção
 
-O repositório contém toda a configuração necessária para Render e MongoDB. A ativação efetiva desses serviços depende das credenciais e dos serviços externos associados ao ambiente de produção; nenhum segredo ou credencial é armazenado no repositório.
+A infraestrutura externa não é considerada concluída apenas pela existência da configuração no Git. Render, MongoDB, credenciais, secrets e disponibilidade do modelo precisam ser validados no ambiente de produção.
 
-A Fase 1 pode começar diretamente sobre esta fundação.
+O `render.yaml` presente no repositório ainda contém a configuração declarativa antiga do serviço privado do Ollama. A arquitetura atualmente preparada para Render Free usa o serviço público `morok-ollama.onrender.com`, protegido por autenticação, e deve ser considerada a configuração operacional atual.
 
 ---
 
 # FASE 1 — INÍCIO DA APLICAÇÃO
 
-**Status: 🟢 Implementado no repositório — aguardando validação externa de credenciais de provedores**
+**Status: 🟡 Em andamento — núcleo funcional implementado, validação e integração ainda em andamento**
 
-Objetivo: construir o primeiro Morok funcional no navegador. A interface web será a primeira versão, mas a arquitetura será preparada desde o início para permitir a transformação em aplicativos posteriormente, evitando reconstruir o sistema.
+A maior parte do núcleo da primeira aplicação já existe no repositório. A Fase 1 **não deve ser marcada como 100% concluída** enquanto as integrações externas, produção e todos os fluxos da interface não estiverem validados.
 
-## 1.1 — Interface principal
+## 1.1 — Interface web
 
-- Interface principal
-- Área de conversa
-- Campo de comando
-- Entrada por voz
-- Saída por voz
-- Histórico
-- Indicador de processamento
-- Indicador de execução
-- Indicador de erro
-- Sistema de notificações
-- Menu principal
-- Configurações
-- Perfil
-- Status do Morok
+- 🟢 Aplicação React/Vite
+- 🟢 Interface principal
+- 🟢 Área de conversa
+- 🟢 Campo de comando
+- 🟢 Histórico/conversa
+- 🟢 Estados de processamento
+- 🟢 Estados de execução
+- 🟢 Estados de erro
+- 🟢 Configurações e estados da aplicação
+- 🟢 Interface responsiva
+- 🟢 Identidade visual do Morok
+- 🟢 Elementos visuais do núcleo/holograma
+- 🟢 Assets do Morok
+- 🟢 Ícone/logo do aplicativo
 
 ## 1.2 — Conversação
 
-- Conversação textual
-- Conversação por voz
-- Reconhecimento de linguagem
-- Interpretação de intenção
-- Contexto da conversa
-- Conversas contínuas
-- Comandos compostos
-- Perguntas de esclarecimento
-- Respostas contextuais
-- Histórico de conversa
-- Resumos
-- Cancelamento de resposta
-- Interrupção de execução
+- 🟢 Mensagens de usuário e assistente
+- 🟢 Histórico de conversa
+- 🟢 Contexto de conversa
+- 🟢 Detecção de intenção
+- 🟢 Comandos
+- 🟢 Respostas contextuais
+- 🟢 Streaming de resposta
+- 🟢 Cancelamento/interrupção de execução no fluxo da interface
+- 🟡 Validação completa com modelo remoto/local em produção
 
-## 1.3 — Inteligência
+## 1.3 — Voz
 
-- Integração com modelo de IA
-- Model Gateway
-- Seleção de modelo
-- Configuração de modelo
-- Controle de contexto
-- Controle de tokens
-- Streaming
-- Tratamento de respostas
-- Fallback de modelo
-- Verificação de resposta
+- 🟢 Entrada por voz com APIs nativas do navegador
+- 🟢 `SpeechRecognition` / `webkitSpeechRecognition`
+- 🟢 Captura persistente de `MediaStream`
+- 🟢 Controle centralizado do microfone
+- 🟢 Recuperação do serviço de reconhecimento
+- 🟢 Saída por voz com `speechSynthesis`
+- 🟡 Compatibilidade depende do navegador e das APIs de voz disponíveis
+- 🟡 Validação completa em dispositivos móveis ainda pendente
 
-## 1.4 — Memória
+## 1.4 — Inteligência e Model Gateway
 
-- Memória de sessão
-- Memória persistente
-- Preferências
-- Histórico
-- Contexto do usuário
-- Memória seletiva
-- Atualização de memória
-- Exclusão de memória
-- Pesquisa de memória
+- 🟢 Contrato de Model Gateway
+- 🟢 API compatível com OpenAI Chat Completions
+- 🟢 Mensagens de sistema, usuário e assistente
+- 🟢 Histórico enviado ao modelo
+- 🟢 Contexto/memórias enviado ao modelo
+- 🟢 Streaming
+- 🟢 Fallback de provedor
+- 🟢 Configuração de temperatura
+- 🟢 Timeout
+- 🟢 Autenticação Basic Auth para o gateway Ollama
+- 🟢 Modelo padrão `qwen2.5:0.5b`
+- 🟢 Endpoint de status do modelo
+- 🟡 Serviço Ollama em Render ainda depende de configuração/secrets e validação de deploy
 
-## 1.5 — Sistema de ferramentas
+## 1.5 — Autenticação e sessões
 
-- Registro de ferramentas
-- Execução de ferramentas
-- Parâmetros
-- Validação
-- Permissões
-- Resultado de ferramentas
-- Falhas
-- Timeout
-- Cancelamento
-- Logs de ferramentas
+- 🟢 Autenticação
+- 🟢 Sessões
+- 🟢 Tokens de sessão
+- 🟢 Associação de sessão ao usuário
+- 🟢 Verificação de autorização nas rotas protegidas
+- 🟢 Permissões
+- 🟢 Auditoria
 
-## 1.6 — Navegador
+## 1.6 — Memória e contexto
 
-- Pesquisa web
-- Abertura de páginas
-- Leitura de páginas
-- Extração de informações
-- Downloads
-- Uploads
-- Navegação
-- Abas
-- Histórico
-- Favoritos
-- Interação com websites
-- Preenchimento de formulários
-- Monitoramento de páginas
+- 🟢 Memória persistente
+- 🟢 Contexto
+- 🟢 Identidade do Morok
+- 🟢 Preferências/contexto de usuário
+- 🟢 Histórico
+- 🟢 Pesquisa/recuperação de memória
+- 🟡 Validação completa dos fluxos de retenção e gerenciamento de memória
 
-## 1.7 — Arquivos e documentos
+## 1.7 — Ferramentas e comandos
 
-- Upload
-- Download
-- Leitura
-- Pesquisa
-- Organização
-- Criação
-- Exclusão
-- Renomeação
-- Conversão
-- Compartilhamento
-- Criação de documentos
-- Edição de documentos
-- Leitura de PDFs
-- OCR
-- Processamento de planilhas
-- Processamento de apresentações
-- Geração de relatórios
+- 🟢 Registro/estrutura de ferramentas
+- 🟢 Comandos
+- 🟢 Permissões
+- 🟢 Execução através das estruturas do backend
+- 🟢 Tratamento de erros
+- 🟢 Auditoria
 
-## 1.8 — Comunicação e organização
+## 1.8 — Arquivos e documentos
 
-- E-mail
-- Mensagens
-- Notificações
-- Calendário
-- Agenda
-- Tarefas
-- Lembretes
-- Contatos
-- Planejamento diário
-- Planejamento semanal
-- Priorização
+- 🟢 Arquivos
+- 🟢 Listagem
+- 🟢 Criação
+- 🟢 Leitura/uso pelo backend
+- 🟢 Documentos
+- 🟢 Criação de documentos
+- 🟢 Leitura de documentos
+- 🟢 Atualização
+- 🟢 Exclusão
+- 🟢 Formatos text, Markdown, JSON, CSV e HTML
+- 🟢 Limite configurável de tamanho de arquivo
+- 🟡 Upload/download e fluxos avançados ainda precisam de validação completa na aplicação
 
-## 1.9 — Automação inicial
+## 1.9 — Web
 
-- Criador de tarefas
-- Agendamento
-- Rotinas
-- Gatilhos
-- Ações
-- Condições
-- Execução automática
-- Execução em segundo plano
-- Histórico
-- Cancelamento
-- Recuperação de falhas
+- 🟢 Pesquisa web
+- 🟢 Abertura/leitura web
+- 🟢 Timeout configurável
+- 🟡 Automação completa de navegador, abas, formulários e interação visual ainda não pertence à Fase 1 implementada
 
-## 1.10 — Segurança inicial
+## 1.10 — Organização
 
-- Autenticação
-- Sessões
-- Permissões
-- Confirmação de ações
-- Cofre de credenciais
-- Criptografia
-- Controle de acesso
-- Registro de atividades
-- Auditoria
+- 🟢 Tarefas
+- 🟢 Conclusão de tarefas
+- 🟢 Exclusão de tarefas
+- 🟢 Planejamento
+- 🟢 Agenda/calendário na camada de domínio
+- 🟢 Contatos na camada de integração
+- 🟢 Notificações na camada de integração
+- 🟢 Agendamento de automações
+- 🟢 Histórico de execuções
+- 🟡 Integrações externas reais dependem das credenciais e serviços correspondentes
+
+## 1.11 — Cofre e segurança
+
+- 🟢 Cofre de credenciais
+- 🟢 Criptografia de valores armazenados
+- 🟢 Controle por usuário
+- 🟢 Permissões
+- 🟢 Auditoria
+- 🟢 Configuração por secret de ambiente
+- 🟡 Validação de produção ainda necessária
+
+## 1.12 — Integrações
+
+- 🟢 Estrutura de integrações
+- 🟢 Cadastro de integração
+- 🟢 Ativação/desativação
+- 🟢 Envio através de integração
+- 🟢 Armazenamento protegido de segredo
+- 🟡 Conectores reais de provedores externos ainda dependem de configuração e validação
+
+## 1.13 — Android
+
+- 🟢 Capacitor configurado
+- 🟢 Dependência Android do Capacitor
+- 🟢 Workflow de build Android
+- 🟢 Geração de projeto Android durante o workflow
+- 🟢 Build de APK debug
+- 🟢 Upload do APK como artefato
+- 🟢 Publicação de Release pelo workflow
+- 🟢 Configuração do `MorokLogo.png` como ícone quando presente
+- 🟡 Aplicativo Android ainda é principalmente o cliente web empacotado; os recursos de assistente de sistema da Fase 2 ainda não estão implementados
+
+## 1.14 — Atualizações
+
+- 🟢 Estrutura de verificação de versão para o aplicativo nativo existe no cliente
+- 🟢 Verificação é direcionada às plataformas nativas
+- 🟡 Sistema completo de atualização automática ainda não deve ser considerado concluído
+
+### Resultado atual da Fase 1
+
+A Fase 1 possui um **núcleo funcional amplo**, mas permanece 🟡 porque ainda existem dependências externas e fluxos que precisam de validação real. O código já cobre autenticação, sessões, conversa, memória, contexto, intenção, gateway de modelo, streaming, voz, tarefas, planejamento, arquivos, documentos, integrações, automações, auditoria e preparação Android.
 
 ---
 
 # FASE 2 — TRANSFORMAÇÃO EM ASSISTENTE DE SISTEMA
 
-**Status: 🔴 Não implementado**
+**Status: 🔴 Não implementada — apenas preparação multiplataforma existente**
 
-Objetivo: transformar o Morok de uma aplicação web em um assistente capaz de operar o computador, dispositivos e ambiente do usuário.
+A Fase 2 começa quando o Morok passa a operar efetivamente o sistema operacional e dispositivos autorizados.
 
-## 2.1 — Aplicativos
+### Preparação já existente
 
-- Aplicativo desktop
-- Aplicativo Linux
-- Aplicativo Crostini
-- Aplicativo Android
-- Aplicativo iOS
-- Empacotamento multiplataforma
-- Atualização automática
-- Inicialização automática
-- Execução em segundo plano
+- 🟢 Capacitor/Android preparado
+- 🟢 Build automatizado de APK
+- 🟢 Estrutura web reutilizável em aplicativo
+- 🟢 Base de integração para dispositivos
 
-## 2.2 — Interface sobreposta
+### Ainda não implementado
 
-- Overlay
-- Janela flutuante
-- Janela compacta
-- Janela expandida
-- Ativação global
-- Atalho global
-- Interface sobreposta ao sistema
-- Painel rápido
-- Central de comandos
-
-## 2.3 — Controle do computador
-
-- Controle de teclado
-- Controle de mouse
-- Controle de janelas
-- Controle de aplicativos
-- Controle do sistema operacional
-- Controle da área de trabalho
-- Controle de menus
-- Controle de botões
-- Controle de campos
-- Cliques automatizados
-- Digitação automatizada
-- Seleção de texto
-- Arrastar e soltar
-- Copiar e colar
-- Captura de tela
-- Gravação de tela
-
-## 2.4 — Visão computacional
-
-- Leitura da tela
-- OCR
-- Reconhecimento de objetos
-- Reconhecimento de interfaces
-- Reconhecimento de elementos
-- Análise visual
-- Análise de imagens
-- Análise de vídeo
-- Leitura de gráficos
-- Leitura de documentos
-- Comparação visual
-- Detecção de alterações
-
-## 2.5 — Sistema operacional
-
-- Gerenciamento de processos
-- Gerenciamento de serviços
-- Monitoramento de CPU
-- Monitoramento de RAM
-- Monitoramento de armazenamento
-- Monitoramento de rede
-- Monitoramento de bateria
-- Monitoramento de temperatura
-- Gerenciamento de dispositivos
-- Controle de configurações
-- Terminal
-- Scripts
-- Pacotes
-- Logs
-
-## 2.6 — Dispositivos
-
-- Android
-- iOS
-- Computador
-- Tablet
-- Smartwatch
-- Bluetooth
-- Wi-Fi
-- Câmera
-- Microfone
-- Alto-falantes
-- Fones
-- Dispositivos externos
-
-## 2.7 — Controle remoto
-
-- Controle remoto do computador
-- Controle remoto do celular
-- Execução remota
-- Monitoramento remoto
-- Transferência remota
-- Sincronização remota
-- Bloqueio remoto
-- Notificações remotas
-- Controle entre dispositivos
-- Espelhamento de dispositivos
-- Continuidade de tarefas
+- 🔴 Controle de teclado
+- 🔴 Controle de mouse
+- 🔴 Controle de janelas
+- 🔴 Controle de aplicativos do sistema
+- 🔴 Controle completo do sistema operacional
+- 🔴 Overlay desktop
+- 🔴 Atalhos globais
+- 🔴 Execução nativa em segundo plano
+- 🔴 Controle completo de terminal
+- 🔴 Visão computacional operacional para controle do computador
+- 🔴 Controle remoto entre dispositivos
+- 🔴 Integração nativa completa Android
+- 🔴 Integração nativa iOS
+- 🔴 Aplicativo desktop Linux/Crostini completo
 
 ---
 
 # FASE 4 — IMPLEMENTAÇÃO, EXPANSÃO E REVISÃO GERAL
 
-**Status: 🔴 Não implementado**
+**Status: 🔴 Não iniciada como fase de expansão**
 
-Objetivo: implementar todas as funcionalidades planejadas, integrar os componentes, revisar o funcionamento completo e adicionar novas capacidades necessárias descobertas durante o desenvolvimento.
+A Fase 4 será usada para ampliar o Morok além do núcleo inicial, integrar recursos avançados e revisar todo o sistema.
 
-## 4.1 — Inteligência
+### Planejado
 
-- Inteligência conversacional
-- Raciocínio contextual
-- Planejamento
-- Interpretação de intenções
-- Execução de tarefas
-- Verificação de resultados
-- Memória contextual
-- Memória persistente
-- Personalidade configurável
-- Aprendizado por preferências
-- Respostas contextuais
-- Resumos automáticos
-- Explicações
-- Perguntas de esclarecimento
-- Recuperação de contexto
-
-## 4.2 — Voz e áudio
-
-- Comandos de voz
-- Reconhecimento de voz
-- Síntese de voz
-- Conversação por voz
-- Ativação por palavra-chave
-- Detecção de fala
-- Cancelamento de ruído
-- Detecção de interrupção
-- Resposta em tempo real
-- Seleção de voz
-- Velocidade de fala
-- Múltiplos idiomas
-- Tradução por voz
-- Ditado
-- Leitura por voz
-- Transcrição de áudio
-- Identificação de áudio
-- Controle de mídia
-
-## 4.3 — Computador
-
-- Controle do sistema
-- Controle de aplicativos
-- Controle de janelas
-- Controle de teclado
-- Controle de mouse
-- Controle de arquivos
-- Controle do navegador
-- Controle do terminal
-- Execução de comandos
-- Execução de scripts
-- Gerenciamento de processos
-- Gerenciamento de serviços
-- Monitoramento de recursos
-- Configuração do sistema
-- Captura de tela
-- Gravação de tela
-- Automação de interface
-
-## 4.4 — Internet e navegador
-
-- Pesquisa na internet
-- Pesquisa avançada
-- Pesquisa por voz
-- Navegação web
-- Leitura de páginas
-- Extração de informações
-- Comparação de fontes
-- Verificação de informações
-- Abertura de sites
-- Gerenciamento de abas
-- Gerenciamento de janelas
-- Histórico
-- Favoritos
-- Downloads
-- Uploads
-- Preenchimento de formulários
-- Interação com websites
-- Monitoramento de páginas
-- Detecção de alterações
-- Alertas de pesquisa
-
-## 4.5 — Arquivos e documentos
-
-- Gerenciamento de arquivos
-- Gerenciamento de pastas
-- Pesquisa de arquivos
-- Criação de arquivos
-- Exclusão de arquivos
-- Renomeação
-- Movimentação
-- Cópia
-- Compactação
-- Descompactação
-- Conversão
-- Sincronização
-- Compartilhamento
-- Pré-visualização
-- Detecção de duplicados
-- Limpeza
-- Criação de documentos
-- Edição de documentos
-- PDF
-- OCR
-- Planilhas
-- Apresentações
-- Relatórios
-
-## 4.6 — Comunicação
-
-- E-mail
-- Mensagens
-- SMS
-- Chamadas
-- Contatos
-- Grupos
-- Videoconferências
-- Calendário
-- Agenda
-- Notificações
-- Respostas automáticas
-- Mensagens programadas
-- Transcrição de mensagens
-- Resumo de conversas
-
-## 4.7 — Celular
-
-- Integração Android
-- Integração iOS
-- Controle de aplicativos móveis
-- Controle de notificações
-- Controle de chamadas
-- Controle de contatos
-- Controle de mensagens
-- Controle de câmera
-- Controle de microfone
-- Controle de áudio
-- Controle de mídia
-- Controle de brilho
-- Controle de volume
-- Controle de Wi-Fi
-- Controle de Bluetooth
-- Controle de dados móveis
-- Controle de bateria
-- Localização
-- Arquivos móveis
-
-## 4.8 — Continuidade entre dispositivos
-
-- Sincronização de sessões
-- Sincronização de preferências
-- Sincronização de memória
-- Sincronização de arquivos
-- Transferência de arquivos
-- Área de transferência compartilhada
-- Continuidade de tarefas
-- Controle cruzado
-- Descoberta de dispositivos
-- Pareamento
-- Gerenciamento de dispositivos
-- Status dos dispositivos
-- Localização de dispositivos
-- Bloqueio remoto
-- Ações remotas
-
-## 4.9 — Programação
-
-- Geração de código
-- Explicação de código
-- Correção de código
-- Refatoração
-- Depuração
-- Testes
-- Documentação
-- Estruturação de projetos
-- Criação de arquivos
-- Gerenciamento de dependências
-- Execução de projetos
-- Análise de erros
-- Análise de logs
-- Terminal assistido
-- Compilação
-- Build
-- Deploy
-
-## 4.10 — GitHub e desenvolvimento
-
-- Git
-- GitHub
-- Repositórios
-- Commits
-- Branches
-- Issues
-- Pull requests
-- Releases
-- Tags
-- Workflows
-- CI/CD
-- Builds
-- Deploys
-- Monitoramento de builds
-- Revisão de código
-
-## 4.11 — Automação
-
-- Rotinas
-- Gatilhos
-- Ações encadeadas
-- Condições
-- Agendamento
-- Execução recorrente
-- Execução automática
-- Execução em segundo plano
-- Execução paralela
-- Workflows personalizados
-- Workflows condicionais
-- Workflows dependentes
-- Gatilhos externos
-- Gatilhos temporais
-- Gatilhos por evento
-- Gatilhos por estado
-- Monitoramento
-- Recuperação automática
-- Cancelamento
-- Retomada
-
-## 4.12 — APIs e integrações
-
-- APIs externas
-- Webhooks
-- Serviços externos
-- Serviços de nuvem
-- Bancos de dados
-- Serviços de comunicação
-- Serviços de produtividade
-- Serviços de mídia
-- Serviços de mapas
-- Serviços financeiros
-- Serviços empresariais
-- Serviços de arquivos
-- Serviços de automação
-- Gerenciamento de integrações
-
-## 4.13 — Plugins e Skills
-
-- Sistema de plugins
-- Sistema de skills
-- Registro de capacidades
-- Instalação de plugins
-- Remoção de plugins
-- Atualização de plugins
-- Permissões de plugins
-- Isolamento de plugins
-- Ferramentas externas
-- Marketplace de capacidades
-- Skills personalizadas
-- Combinação de skills
-
-## 4.14 — Automação de ambiente
-
-- IoT
-- Automação residencial
-- Iluminação
-- Climatização
-- Televisores
-- Áudio
-- Câmeras
-- Sensores
-- Tomadas inteligentes
-- Dispositivos conectados
-- Cenas
-- Rotinas residenciais
-- Monitoramento de ambiente
-
-## 4.15 — Segurança
-
-- Autenticação
-- Autorização
-- Permissões
-- Confirmação de ações críticas
-- Controle por aplicativo
-- Controle por dispositivo
-- Controle por ferramenta
-- Controle por usuário
-- Controle por sessão
-- Auditoria
-- Histórico de ações
-- Registro de eventos
-- Criptografia
-- Proteção de credenciais
-- Cofre de segredos
-- Bloqueio de ações
-- Modo emergência
-- Parada imediata
-- Revogação de acesso
-
-## 4.16 — Privacidade
-
-- Modo privado
-- Modo temporário
-- Modo offline
-- Processamento local
-- Processamento híbrido
-- Controle de memória
-- Controle de armazenamento
-- Exclusão de histórico
-- Exclusão de dados
-- Isolamento de informações sensíveis
-- Controle de compartilhamento
-
-## 4.17 — Monitoramento
-
-- Monitoramento do sistema
-- Monitoramento de aplicativos
-- Monitoramento de processos
-- Monitoramento de servidores
-- Monitoramento de APIs
-- Monitoramento de sites
-- Monitoramento de serviços
-- Monitoramento de armazenamento
-- Monitoramento de rede
-- Monitoramento de bateria
-- Monitoramento de memória
-- Monitoramento de CPU
-- Monitoramento de temperatura
-- Alertas
-- Detecção de falhas
-- Detecção de indisponibilidade
-- Relatórios
-- Histórico
-- Painel de status
-
-## 4.18 — Interface
-
-- Interface desktop
-- Interface web
-- Interface mobile
-- Interface Linux
-- Interface Crostini
-- Interface Android
-- Interface iOS
-- Interface por voz
-- Interface sobreposta
-- Interface flutuante
-- Painel central
-- Central de comandos
-- Histórico visual
-- Central de notificações
-- Central de tarefas
-- Central de dispositivos
-- Central de automações
-- Central de permissões
-- Terminal integrado
-- Visualizador de arquivos
-- Painel de monitoramento
-- Temas
-- Aparência configurável
-- Acessibilidade
-
-## 4.19 — Modos de operação
-
-- Modo assistente
-- Modo operador
-- Modo observador
-- Modo desenvolvedor
-- Modo administrador
-- Modo privado
-- Modo offline
-- Modo emergência
-- Modo autônomo
-- Modo silencioso
-
-## 4.20 — Autonomia
-
-- Execução autônoma
-- Monitoramento contínuo
-- Detecção proativa
-- Sugestões proativas
-- Acompanhamento de tarefas
-- Retomada automática
-- Autocorreção
-- Verificação pós-execução
-- Relatórios de conclusão
-- Aprimoramento de workflows
-- Execução contínua
-- Operação em segundo plano
-
-## 4.21 — Revisão completa
-
-- Revisão de inteligência
-- Revisão de interface
-- Revisão de voz
-- Revisão de computador
-- Revisão de navegador
-- Revisão de arquivos
-- Revisão de comunicação
-- Revisão de dispositivos
-- Revisão de automações
-- Revisão de integrações
-- Revisão de segurança
-- Revisão de privacidade
-- Revisão de monitoramento
-- Revisão de desempenho
-- Revisão de estabilidade
-- Revisão multiplataforma
-- Revisão de permissões
-- Revisão de logs
-- Revisão de recuperação
-- Revisão de todas as funcionalidades
-
-## 4.22 — Expansão
-
-- Funcionalidades adicionais
-- Novas integrações
-- Novos dispositivos
-- Novos plugins
-- Novas skills
-- Novas automações
-- Novos comandos
-- Novos modos
-- Novos recursos de voz
-- Novos recursos de visão
-- Melhorias descobertas durante o desenvolvimento
+- 🔴 Inteligência avançada
+- 🔴 Autonomia
+- 🔴 Visão computacional
+- 🔴 Controle avançado de computador
+- 🔴 Automação avançada
+- 🔴 Integrações externas em escala
+- 🔴 Plugins
+- 🔴 Skills
+- 🔴 IoT
+- 🔴 Automação residencial
+- 🔴 Controle avançado de dispositivos
+- 🔴 Continuidade entre dispositivos
+- 🔴 Programação assistida
+- 🔴 Git/GitHub operacional pelo Morok
+- 🔴 Monitoramento avançado
+- 🔴 Modos de operação
+- 🔴 Privacidade avançada
+- 🔴 Modo offline/local completo
+- 🔴 Autonomia contínua
+- 🔴 Revisão completa de todas as funcionalidades
 
 ---
 
 # FASE 5 — TÉRMINO DA APLICAÇÃO
 
-**Status: 🔴 Não implementado**
+**Status: 🔴 Não iniciada**
 
-Objetivo: finalizar, estabilizar, testar, proteger, empacotar, publicar e preparar o Morok para operação contínua.
+A Fase 5 será executada quando as funcionalidades principais estiverem completas.
 
-## 5.1 — Estabilização
+### Planejado
 
-- Correção de bugs
-- Correção de falhas
-- Otimização
-- Redução de consumo
-- Otimização de memória
-- Otimização de rede
-- Otimização de banco
-- Otimização de interface
-- Otimização de inicialização
-- Otimização de respostas
-
-## 5.2 — Testes
-
-- Testes unitários
-- Testes de integração
-- Testes de API
-- Testes de interface
-- Testes de voz
-- Testes de visão
-- Testes de automação
-- Testes de arquivos
-- Testes de dispositivos
-- Testes remotos
-- Testes multiplataforma
-- Testes de carga
-- Testes de recuperação
-- Testes de segurança
-- Testes de privacidade
-- Testes de estabilidade
-
-## 5.3 — Segurança final
-
-- Auditoria de segurança
-- Revisão de permissões
-- Revisão de credenciais
-- Revisão de APIs
-- Revisão de banco
-- Revisão de sessões
-- Revisão de logs
-- Revisão de privacidade
-- Testes de segurança
-- Proteção contra abuso
-- Verificação de criptografia
-- Verificação de isolamento
-
-## 5.4 — Produção
-
-- Configuração definitiva do Render
-- Configuração definitiva do MongoDB
-- Variáveis de produção
-- Secrets de produção
-- Domínio
-- HTTPS
-- Deploy automático
-- Monitoramento
-- Backup
-- Recuperação
-- Health checks
-- Alertas
-- Métricas
-
-## 5.5 — Aplicativos
-
-- Build desktop
-- Build Linux
-- Build Crostini
-- Build Android
-- Build iOS
-- Assinatura dos aplicativos
-- Atualizações automáticas
-- Distribuição
-- Recuperação de versão
-- Versionamento de releases
-
-## 5.6 — Experiência final
-
-- Onboarding
-- Configuração inicial
-- Tutorial
-- Permissões iniciais
-- Configuração de voz
-- Configuração de dispositivos
-- Configuração de memória
-- Configuração de integrações
-- Configuração de automações
-- Configuração de segurança
-- Configuração de aparência
-- Configuração de perfil
-
-## 5.7 — Operação contínua
-
-- Monitoramento 24/7
-- Health checks
-- Alertas
-- Logs
-- Métricas
-- Detecção de falhas
-- Recuperação automática
-- Atualizações
-- Backup automático
-- Verificação de integridade
-- Rotinas de manutenção
-
-## 5.8 — Documentação
-
-- Documentação do usuário
-- Documentação técnica
-- Documentação da API
-- Documentação de ferramentas
-- Documentação de plugins
-- Documentação de skills
-- Documentação de instalação
-- Documentação de configuração
-- Documentação de segurança
-- Documentação de manutenção
-- Guia de solução de problemas
-
-## 5.9 — Validação final
-
-- Teste completo do Morok
-- Teste de voz
-- Teste de interface
-- Teste de computador
-- Teste de celular
-- Teste de internet
-- Teste de arquivos
-- Teste de automações
-- Teste remoto
-- Teste multiplataforma
-- Teste de recuperação
-- Teste de atualização
-- Teste de segurança
-
-## 5.10 — Entrega
-
-- Versão estável
-- Versão de produção
-- Release oficial
-- Build final
-- Deploy final
-- Banco final
-- Backup inicial
-- Monitoramento ativo
-- Sistema de atualização
-- Sistema de recuperação
-- Preparação para manutenção
+- 🔴 Estabilização
+- 🔴 Otimização
+- 🔴 Testes completos
+- 🔴 Testes multiplataforma
+- 🔴 Auditoria de segurança
+- 🔴 Auditoria de privacidade
+- 🔴 Produção definitiva
+- 🔴 Backups
+- 🔴 Recuperação
+- 🔴 Monitoramento contínuo
+- 🔴 Builds finais
+- 🔴 Assinatura dos aplicativos
+- 🔴 Distribuição
+- 🔴 Onboarding
+- 🔴 Documentação final
+- 🔴 Release estável
+- 🔴 Operação contínua
 
 ---
 
-# STATUS GERAL DO PROJETO
+# STATUS REAL ATUAL
 
-| Fase | Status |
-|---|---|
-| Fase 0 — Fundação | 🟢 Concluído |
-| Fase 1 — Início da aplicação | 🟢 Implementado |
-| Fase 2 — Assistente de sistema | 🔴 Não implementado |
-| Fase 4 — Funcionalidades e revisão | 🔴 Não implementado |
-| Fase 5 — Término da aplicação | 🔴 Não implementado |
+| Fase | Status | Situação real |
+|---|---|---|
+| **Fase 0 — Fundação** | 🟢 | Fundação do código concluída |
+| **Fase 1 — Início da aplicação** | 🟡 | Núcleo amplo implementado; integração/validação ainda em andamento |
+| **Fase 2 — Assistente de sistema** | 🔴 | Preparação Android existente, controle do sistema ainda não implementado |
+| **Fase 4 — Expansão e revisão** | 🔴 | Ainda não iniciada |
+| **Fase 5 — Término** | 🔴 | Ainda não iniciada |
+
+## O que já existe de forma concreta
+
+O repositório atualmente possui:
+
+- 🟢 Frontend React/Vite
+- 🟢 Backend Fastify/TypeScript
+- 🟢 MongoDB
+- 🟢 Autenticação e sessões
+- 🟢 Memória e contexto
+- 🟢 Intenção e comandos
+- 🟢 Permissões
+- 🟢 Auditoria
+- 🟢 Model Gateway
+- 🟢 Streaming
+- 🟢 Ollama/Qwen 2.5 0.5B preparado
+- 🟢 Proxy autenticado para Ollama
+- 🟢 Conversação por voz
+- 🟢 Síntese de voz
+- 🟢 Tarefas
+- 🟢 Planejamento
+- 🟢 Calendário
+- 🟢 Contatos
+- 🟢 Notificações
+- 🟢 Arquivos
+- 🟢 Documentos
+- 🟢 Pesquisa/leitura web
+- 🟢 Automações e agendamento
+- 🟢 Cofre de credenciais
+- 🟢 Integrações
+- 🟢 Cliente Android via Capacitor
+- 🟢 Workflow de APK
+- 🟢 GitHub Actions para CI
+- 🟢 GitHub Pages
+- 🟢 Assets visuais do Morok
+
+## O que não deve ser considerado pronto ainda
+
+- 🔴 Assistente de sistema completo
+- 🔴 Controle nativo de computador
+- 🔴 Controle remoto de dispositivos
+- 🔴 Visão computacional operacional para automação
+- 🔴 Desktop nativo completo
+- 🔴 iOS nativo completo
+- 🔴 Ecossistema completo de plugins/skills
+- 🔴 IoT e automação residencial
+- 🔴 Autonomia contínua
+- 🔴 Produção final
+- 🔴 Release estável multiplataforma
 
 ## Princípios do projeto
 
-- O Morok deve ser construído de forma modular.
-- A estrutura deve evitar arquivos e pastas desnecessários.
-- Deve existir apenas documentação realmente necessária.
-- O README.md principal deve permanecer centralizado.
-- A aplicação web será a primeira interface.
-- A arquitetura deve permitir a transformação posterior em aplicativos.
-- O núcleo do Morok deve permanecer independente da interface.
-- O sistema deve separar inteligência, execução, ferramentas, memória, segurança e interfaces.
-- Funcionalidades críticas devem respeitar permissões e exigir confirmação quando necessário.
-- O sistema deve registrar ações relevantes.
-- O Morok deve conseguir recuperar-se de falhas quando isso for seguro.
-- Cada fase deve ser validada antes de ser considerada concluída.
-- Nenhuma fase deve ser marcada como concluída apenas porque seus arquivos foram criados.
-- Uma fase somente será considerada concluída quando suas funcionalidades, integrações e testes correspondentes estiverem funcionando.
+- O Morok deve permanecer modular.
+- O núcleo deve ser independente da interface.
+- Inteligência, execução, memória, ferramentas, segurança e interfaces devem permanecer separadas.
+- Secrets nunca devem ser versionados.
+- Recursos críticos devem respeitar permissões e confirmações apropriadas.
+- Ações relevantes devem ser auditáveis.
+- Falhas devem possuir recuperação segura quando possível.
+- Uma funcionalidade só deve ser marcada como concluída após validação.
+- O README deve refletir o estado real do repositório, e não apenas o planejamento.
+- A aplicação web é a primeira interface; a arquitetura deve permitir evolução para aplicativos.
+- O desenvolvimento deve priorizar implementação real sobre arquivos de demonstração.
 
 ## Visão
 
-Construir o Morok como um assistente pessoal multiplataforma capaz de compreender o usuário, conversar naturalmente, utilizar ferramentas, controlar dispositivos autorizados, operar aplicações, acessar informações, executar tarefas, automatizar processos e acompanhar seus resultados em um único ecossistema.
-
-
-## FASE 1 — VALIDAÇÃO DE IMPLEMENTAÇÃO
-
-A Fase 1 agora possui implementação no repositório para interface de conversa, autenticação e sessões, memória persistente, detecção de intenção, Model Gateway compatível com APIs de chat, streaming, ferramentas, pesquisa e leitura web, arquivos, tarefas, notificações, calendário, contatos e automações. A interface web inclui conversa, autenticação, estados operacionais e entrada por voz via APIs nativas do navegador.
-
-### Limites de ambiente
-
-Credenciais de provedores externos de IA, SMTP, APIs de terceiros e recursos de navegador que dependem de permissões do próprio navegador continuam sendo configurados no ambiente, nunca versionados no Git. A implementação fornece os pontos de integração e fallback local; a validação final desses serviços depende das credenciais e permissões efetivamente disponíveis no ambiente de execução.
+Construir o Morok como um assistente pessoal multiplataforma capaz de conversar, compreender contexto, utilizar ferramentas, acessar informações, executar tarefas, automatizar processos e, posteriormente, operar dispositivos e sistemas autorizados em um único ecossistema.
