@@ -11,7 +11,8 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, "index.html"),
         debug: resolve(__dirname, "index2.html"),
-        svgDebug: resolve(__dirname, "3.html")
+        svgDebug: resolve(__dirname, "3.html"),
+        svgDebug4: resolve(__dirname, "4.html")
       }
     }
   }
