@@ -4877,3 +4877,19 @@ mix-blend-mode:screen;opacity:.65}
     left:-12px!important;top:68px!important;width:12px!important;height:1px!important;
   }
 }
+
+
+/* ===== INDEX BOX GEOMETRY // INSPIRED BY 3.HTML ONLY ===== */
+.morokFullDashboard .dashPanel,
+.morokFullDashboard .dashSystems,
+.morokFullDashboard .dashNav,
+.morokFullDashboard .dashMiniStatus,
+.morokFullDashboard .dashGoal,
+.morokFullDashboard .dashActions button{
+  clip-path:polygon(
+    0 12px,12px 0,
+    calc(100% - 12px) 0,100% 12px,
+    100% calc(100% - 12px),calc(100% - 12px) 100%,
+    12px 100%,0 calc(100% - 12px)
+  )!important;
+}
