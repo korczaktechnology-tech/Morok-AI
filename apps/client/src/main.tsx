@@ -1303,7 +1303,7 @@ function App() {
       )}
 
 
-      <MorokMicrophoneGate onGranted={()=>{}} />
+      <MorokMicrophoneGate />
       <MorokAlwaysListening onWake={(command)=>{
         setMorokConversationOpen(true);
         setMorokConversationMinimized(false);
@@ -1362,7 +1362,7 @@ function MorokConversationWindow(p:{messages:Msg[];input:string;setInput:(v:stri
   </div>;
 }
 
-function MorokMicrophoneGate(p:{onGranted:()=>void}) {
+function MorokMicrophoneGate() {
   const [state,setState]=useState<"checking"|"ready"|"blocked"|"unsupported">("checking");
 
   const request=()=>{
@@ -1382,7 +1382,6 @@ function MorokMicrophoneGate(p:{onGranted:()=>void}) {
   useEffect(()=>{
     const started=()=>{
       setState("ready");
-      p.onGranted();
     };
     const blocked=()=>setState("blocked");
     const unsupported=()=>setState("unsupported");
@@ -1399,7 +1398,7 @@ function MorokMicrophoneGate(p:{onGranted:()=>void}) {
       window.removeEventListener("morok-mic-blocked",blocked);
       window.removeEventListener("morok-mic-unsupported",unsupported);
     };
-  },[p]);
+  },[]);
 
   if(state==="ready") return null;
   return <div className="morokMicGate" role="dialog" aria-modal="true" aria-label="Permissão de microfone">
