@@ -71,13 +71,18 @@ export function buildApp(){
       }
 
       if(!response.ok){
+        const body=await response.text().catch(()=> "");
         return reply.code(503).send({
           status:"upstream_error",
           provider:"ollama",
           model:config.modelName,
           latencyMs,
           checks:{configuration:configured,reachable:true,authenticated:Boolean(authorization),ollama:false,model:false},
-          upstream:{status:response.status}
+          upstream:{
+            status:response.status,
+            statusText:response.statusText,
+            error:body.slice(0,500)||undefined
+          }
         });
       }
 
