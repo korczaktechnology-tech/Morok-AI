@@ -1289,7 +1289,7 @@ function MorokMicrophoneSystem(p:{onWake:(command:string)=>void;onListening:(val
       if(disposedRef.current||!streamRef.current||recognitionRef.current||recognitionStarting||retryRef.current!==null)return;
       retryRef.current=window.setTimeout(()=>{
         retryRef.current=null;
-        start();
+        start(audioTrackRef.current??undefined);
       },500);
     };
 
@@ -1347,7 +1347,6 @@ function MorokMicrophoneSystem(p:{onWake:(command:string)=>void;onListening:(val
           const error=event?.error;
           if(error==="not-allowed"||error==="service-not-allowed"){
             recognitionRef.current=null;
-            listening(false);
             setState("blocked");
             return;
           }
@@ -1374,7 +1373,6 @@ function MorokMicrophoneSystem(p:{onWake:(command:string)=>void;onListening:(val
       }catch{
         recognitionStarting=false;
         if(recognitionRef.current)recognitionRef.current=null;
-        listening(false);
         schedule();
       }
     };
