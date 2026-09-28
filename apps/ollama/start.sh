@@ -3,6 +3,7 @@ set -eu
 
 : "${PORT:=10000}"
 : "${MODEL_PROXY_KEY:?MODEL_PROXY_KEY is required}"
+MODEL_NAME="${MODEL_NAME:-${MODEL_NAME}}"
 
 if [ "${#MODEL_PROXY_KEY}" -lt 24 ]; then
   echo "MODEL_PROXY_KEY must contain at least 24 characters." >&2
