@@ -10,7 +10,7 @@ ENV OLLAMA_CONTEXT_LENGTH=2048
 EXPOSE 10000
 COPY start.sh /start.sh
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends nginx apache2-utils \
+  && apt-get install -y --no-install-recommends nginx apache2-utils curl \
   && rm -rf /var/lib/apt/lists/* \
   && chmod +x /start.sh
 ENTRYPOINT ["/bin/sh", "/start.sh"]
