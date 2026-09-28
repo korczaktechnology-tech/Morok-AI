@@ -2,6 +2,7 @@ import { createRoot } from "react-dom/client";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Capacitor } from "@capacitor/core";
 import "./styles.css";
+import { morokMicrophone, type MorokMicrophoneState } from "./microphone";
 
 const API = import.meta.env.VITE_API_URL ?? "https://morok-ai.onrender.com";
 const MOROK_SUB_ICON = `${import.meta.env.BASE_URL}MorokSubIcon.svg`;
@@ -1001,7 +1002,7 @@ function App() {
   }
 
   function startVoice() {
-    window.dispatchEvent(new Event("morok-mic-manual"));
+    morokMicrophone.manual();
   }
 
   async function addTask() {
@@ -1245,214 +1246,45 @@ function MorokConversationWindow(p:{messages:Msg[];input:string;setInput:(v:stri
 }
 
 function MorokMicrophoneSystem(p:{onWake:(command:string)=>void;onListening:(value:boolean)=>void}) {
-  const [state,setState]=useState<"starting"|"ready"|"blocked"|"unsupported">("starting");
-  const streamRef=useRef<MediaStream|null>(null);
-  const recognitionRef=useRef<any>(null);
-  const retryRef=useRef<number|null>(null);
-  const manualRef=useRef(false);
-  const disposedRef=useRef(false);
-  const listeningRef=useRef(false);
-  const audioTrackRef=useRef<MediaStreamTrack|null>(null);
+  const [state,setState]=useState<MorokMicrophoneState>("starting");
   const wakeRef=useRef(p.onWake);
-  const listeningCallbackRef=useRef(p.onListening);
+  const listeningRef=useRef(p.onListening);
+  const bufferRef=useRef("");
+  const lastWakeRef=useRef(0);
+
   wakeRef.current=p.onWake;
-  listeningCallbackRef.current=p.onListening;
+  listeningRef.current=p.onListening;
 
   useEffect(()=>{
-    disposedRef.current=false;
-    let buffer="";
-    let lastWake=0;
-    let recognitionStarting=false;
-
-    const listening=(value:boolean)=>{
-      if(listeningRef.current===value)return;
-      listeningRef.current=value;
-      listeningCallbackRef.current(value);
+    const onState=(next:MorokMicrophoneState)=>{
+      setState(next);
+      listeningRef.current(next==="live");
     };
-
-    const clearRetry=()=>{
-      if(retryRef.current!==null){
-        window.clearTimeout(retryRef.current);
-        retryRef.current=null;
-      }
-    };
-
-    const stopRecognition=()=>{
-      clearRetry();
-      const r=recognitionRef.current;
-      recognitionRef.current=null;
-      recognitionStarting=false;
-      try{r?.stop?.()}catch{}
-    };
-
-    const schedule=()=>{
-      if(disposedRef.current||!streamRef.current||recognitionRef.current||recognitionStarting||retryRef.current!==null)return;
-      retryRef.current=window.setTimeout(()=>{
-        retryRef.current=null;
-        start(audioTrackRef.current??undefined);
-      },500);
-    };
-
-    const deliver=(text:string)=>{
+    const onTranscript=(text:string)=>{
       const clean=text.trim();
       if(!clean)return;
-      if(manualRef.current){
-        manualRef.current=false;
-        buffer="";
-        wakeRef.current(clean);
-        return;
-      }
-      buffer=(buffer+" "+clean).slice(-320);
+      const buffer=(bufferRef.current+" "+clean).slice(-320);
+      bufferRef.current=buffer;
       const wake=findMorokWake(buffer);
       if(!wake)return;
       const now=Date.now();
-      if(now-lastWake<1800)return;
-      lastWake=now;
+      if(now-lastWakeRef.current<1800)return;
+      lastWakeRef.current=now;
       const command=buffer.slice(wake.end).replace(/^[,.:;!?\s-]+/,"").trim();
-      buffer="";
+      bufferRef.current="";
       wakeRef.current(command);
     };
 
-    const start=(audioTrack?:MediaStreamTrack)=>{
-      if(disposedRef.current||!streamRef.current||recognitionRef.current||recognitionStarting)return;
-      const Recognition=window.SpeechRecognition??window.webkitSpeechRecognition;
-      if(!Recognition){setState("unsupported");return;}
-      recognitionStarting=true;
-      try{
-        const r=new Recognition();
-        r.lang="pt-BR";
-        r.continuous=true;
-        r.interimResults=true;
-        r.maxAlternatives=5;
-        r.onstart=()=>{
-          recognitionStarting=false;
-          if(disposedRef.current){
-            try{r.stop()}catch{}
-            return;
-          }
-          recognitionRef.current=r;
-          setState("ready");
-          listening(true);
-        };
-        r.onresult=(event:any)=>{
-          let finalText="";
-          for(let i=event.resultIndex;i<event.results.length;i++){
-            const result=event.results[i];
-            if(result?.isFinal)finalText+=" "+(result[0]?.transcript??"");
-          }
-          deliver(finalText);
-        };
-        r.onerror=(event:any)=>{
-          recognitionStarting=false;
-          const error=event?.error;
-          if(error==="not-allowed"||error==="service-not-allowed"){
-            recognitionRef.current=null;
-            setState("blocked");
-            return;
-          }
-          if(recognitionRef.current===r)recognitionRef.current=null;
-          schedule();
-        };
-        r.onend=()=>{
-          recognitionStarting=false;
-          if(recognitionRef.current===r)recognitionRef.current=null;
-          if(!disposedRef.current&&streamRef.current) schedule();
-        };
-        recognitionRef.current=r;
-        if(audioTrack && audioTrack.readyState==="live"){
-          try{
-            r.start(audioTrack);
-          }catch{
-            // Older Web Speech implementations do not accept MediaStreamTrack.
-            // Fall back to the browser microphone source without reopening getUserMedia.
-            r.start();
-          }
-        }else{
-          r.start();
-        }
-      }catch{
-        recognitionStarting=false;
-        if(recognitionRef.current)recognitionRef.current=null;
-        schedule();
-      }
-    };
-
-    const open=async()=>{
-      if(disposedRef.current||streamRef.current)return;
-      if(!navigator.mediaDevices?.getUserMedia){setState("unsupported");return;}
-      try{
-        const stream=await navigator.mediaDevices.getUserMedia({
-          audio:{
-            echoCancellation:true,
-            noiseSuppression:true,
-            autoGainControl:true,
-            channelCount:1
-          },
-          video:false
-        });
-        if(disposedRef.current){
-          stream.getTracks().forEach(t=>t.stop());
-          return;
-        }
-        streamRef.current=stream;
-        const audioTracks=stream.getAudioTracks();
-        audioTrackRef.current=audioTracks[0]??null;
-        setState("ready");
-        listening(true);
-        audioTracks.forEach(track=>{
-          track.addEventListener("ended",()=>{
-            if(disposedRef.current||streamRef.current!==stream)return;
-            streamRef.current=null;
-            stopRecognition();
-            setState("blocked");
-          });
-          track.addEventListener("mute",()=>{
-            if(disposedRef.current||streamRef.current!==stream)return;
-            // A temporary hardware/browser mute is not permission loss.
-            // Keep the stream and recognition alive and let the browser recover it.
-          });
-          track.addEventListener("unmute",()=>{
-            if(disposedRef.current||streamRef.current!==stream)return;
-            if(!recognitionRef.current&&!recognitionStarting)schedule();
-          });
-        });
-        start(audioTrackRef.current??undefined);
-      }catch(error){
-        if(disposedRef.current)return;
-        const name=error instanceof DOMException?error.name:"";
-        if(name==="NotAllowedError"||name==="SecurityError"||name==="PermissionDeniedError"){
-          setState("blocked");
-        }else if(name==="NotFoundError"||name==="NotReadableError"){
-          setState("blocked");
-        }else{
-          setState("blocked");
-        }
-      }
-    };
-
-    const manual=()=>{
-      manualRef.current=true;
-      buffer="";
-      if(!recognitionRef.current&&!recognitionStarting)start(audioTrackRef.current??undefined);
-    };
-
-    window.addEventListener("morok-mic-manual",manual);
-    void open();
-
-    return()=>{
-      disposedRef.current=true;
-      window.removeEventListener("morok-mic-manual",manual);
-      stopRecognition();
-      try{streamRef.current?.getTracks().forEach(t=>t.stop())}catch{}
-      streamRef.current=null;
-      listening(false);
-      audioTrackRef.current=null;
-    };
+    return morokMicrophone.subscribe(onState,onTranscript);
   },[]);
 
-  if(state==="ready")return null;
+  if(state==="live")return null;
   const title=state==="blocked"?"MICROFONE BLOQUEADO":state==="unsupported"?"VOZ NÃO SUPORTADA":"HABILITANDO MICROFONE";
-  const text=state==="blocked"?"O acesso contínuo ao microfone foi interrompido. Permita o microfone para continuar.":state==="unsupported"?"Este navegador não oferece o reconhecimento de voz necessário.":"O Morok está abrindo o canal de áudio contínuo.";
+  const text=state==="blocked"
+    ?"O acesso contínuo ao microfone foi interrompido. Permita o microfone e recarregue a página."
+    :state==="unsupported"
+      ?"Este navegador não oferece reconhecimento de voz compatível."
+      :"O Morok está abrindo o canal de áudio contínuo.";
   return <div className="morokMicGate" role="dialog" aria-modal="true" aria-label="Acesso ao microfone">
     <div className="morokMicGatePanel">
       <div className="morokMicGateIcon"><img src={MOROK_SUB_ICON} alt="Morok"/></div>
