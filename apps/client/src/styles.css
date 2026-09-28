@@ -2828,7 +2828,7 @@ mix-blend-mode:screen;opacity:.65}
 /* MOROK // VOICE CORE + MINI STATUS — FINAL ADJACENCY / VISUAL CLEANUP */
 @media(min-width:1360px){
   .morokFullDashboard > .assistantPanel{
-    width:142px!important;
+    width:188px!important;
     height:170px!important;
     overflow:visible!important;
   }
@@ -2903,12 +2903,13 @@ mix-blend-mode:screen;opacity:.65}
     max-width:48px!important;
   }
 
-  /* Exactly 18px between Voice Core edge and MiniStatus. */
+  /* MiniStatus fica depois de todo o Voice Core, sem passar por cima da transcrição. */
   .morokFullDashboard > .dashMiniStatus{
-    left:142px!important;
+    left:206px!important;
     bottom:0!important;
     width:188px!important;
     height:170px!important;
+    z-index:29!important;
   }
 
   .morokFullDashboard > .assistantPanel .morokVoiceCore .voiceCoreVisual canvas{
