@@ -2411,3 +2411,129 @@ mix-blend-mode:screen;opacity:.65}
     min-height:100vh!important;
   }
 }
+
+
+/* MOROK // FINAL HUD SPATIAL CLEANUP — 360° voice core + balanced information zones */
+@media(min-width:1360px){
+  /* Left telemetry column: CPU/RAM/storage/network first, processes directly below. */
+  .dashLeft{
+    left:22px!important;
+    top:112px!important;
+    width:302px!important;
+    height:calc(100vh - 112px)!important;
+    bottom:0!important;
+  }
+  .resourcePanel{
+    position:absolute!important;
+    left:0!important;
+    top:0!important;
+    width:302px!important;
+    height:270px!important;
+    margin:0!important;
+  }
+  .processPanel{
+    position:absolute!important;
+    left:0!important;
+    top:282px!important;
+    width:302px!important;
+    height:228px!important;
+    margin:0!important;
+  }
+
+  /* Assistant stays isolated at the bottom-left without invading SYSTEMS. */
+  .dashLeft .assistantPanel{
+    left:0!important;
+    bottom:0!important;
+    width:400px!important;
+    height:214px!important;
+  }
+
+  /* SYSTEMS gets a dedicated lane between telemetry and the central core. */
+  .dashSystems{
+    left:calc(50% - 570px)!important;
+    top:50%!important;
+    transform:translateY(-50%)!important;
+    width:210px!important;
+    height:360px!important;
+    padding:24px 16px 16px 56px!important;
+    z-index:12!important;
+  }
+  .dashSystems h2{font-size:18px!important;margin-bottom:12px!important}
+  .dashSystems li{height:37px!important;font-size:11px!important;gap:8px!important}
+
+  /* Notifications/activity occupy one clean right-side information lane. */
+  .dashRight{
+    left:auto!important;
+    right:274px!important;
+    top:130px!important;
+    width:360px!important;
+    z-index:11!important;
+  }
+  .notificationPanel{
+    width:360px!important;
+    height:185px!important;
+    padding:17px 20px!important;
+  }
+  .activityPanel{
+    width:360px!important;
+    height:235px!important;
+    margin-top:16px!important;
+    padding:17px 20px!important;
+  }
+
+  /* Enlarged objective sits below the right information lane, before navigation. */
+  .dashGoal{
+    right:274px!important;
+    bottom:0!important;
+    width:360px!important;
+    height:250px!important;
+    padding:22px 24px!important;
+    z-index:11!important;
+  }
+  .dashGoal h3{font-size:13px!important}
+  .dashGoal>b{font-size:11px!important}
+  .dashGoal p{font-size:12px!important;line-height:1.55!important}
+  .dashGoal strong{font-size:9px!important}
+  .goalBar{height:10px!important;margin:20px 0 19px!important}
+
+  /* Keep navigation independent on the far right, preventing visual collisions. */
+  .dashNav{
+    right:0!important;
+    top:112px!important;
+    width:244px!important;
+    height:483px!important;
+    bottom:auto!important;
+    z-index:14!important;
+  }
+
+  /* Static operations remains next to the voice box, but no longer crowds SYSTEMS. */
+  .dashMiniStatus{
+    left:calc(22px + 400px + 18px)!important;
+    bottom:0!important;
+    width:188px!important;
+    height:214px!important;
+  }
+
+  /* Voice Core visual field: 50% scale while preserving the 156px housing. */
+  .dashLeft .morokVoiceCore{
+    width:156px!important;
+    height:156px!important;
+    flex:0 0 156px!important;
+  }
+  .morokVoiceCore{
+    background:none!important;
+    box-shadow:none!important;
+  }
+  .morokVoiceCore .voiceCoreCenter{
+    width:5.5px!important;
+    height:5.5px!important;
+  }
+  .morokVoiceCore.debug-level-1 .voiceCoreCenter{transform:translate(-50%,-50%) scale(.43)!important}
+  .morokVoiceCore.debug-level-2 .voiceCoreCenter{transform:translate(-50%,-50%) scale(.50)!important}
+  .morokVoiceCore.debug-level-3 .voiceCoreCenter{transform:translate(-50%,-50%) scale(.59)!important}
+}
+
+/* Full 360-degree circular frequency field — no elliptical compression. */
+.morokVoiceCore canvas{
+  transform:none!important;
+}
