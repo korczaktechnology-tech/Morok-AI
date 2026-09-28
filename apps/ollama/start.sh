@@ -24,9 +24,9 @@ events {
 http {
   access_log /dev/stdout;
   client_max_body_size 10m;
-  proxy_connect_timeout 5s;
-  proxy_read_timeout 120s;
-  proxy_send_timeout 120s;
+  proxy_connect_timeout 10s;
+  proxy_read_timeout 300s;
+  proxy_send_timeout 300s;
   proxy_buffering off;
 
   server {
@@ -40,6 +40,13 @@ http {
       proxy_set_header X-Real-IP \$remote_addr;
       proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
       proxy_set_header X-Forwarded-Proto \$scheme;
+      proxy_pass http://127.0.0.1:11434/api/tags;
+      proxy_intercept_errors off;
+    }
+
+    location = /ready {
+      proxy_http_version 1.1;
+      proxy_set_header Host $host;
       proxy_pass http://127.0.0.1:11434/api/tags;
       proxy_intercept_errors off;
     }
@@ -97,4 +104,12 @@ if ! ollama list | awk 'NR > 1 {print $1}' | grep -Fxq "qwen2.5:0.5b"; then
 fi
 
 echo "Morok Ollama pronto."
-wait "${OLLAMA_PID}"
+while kill -0 "${OLLAMA_PID}" 2>/dev/null && kill -0 "${NGINX_PID}" 2>/dev/null; do
+  sleep 2
+done
+if ! kill -0 "${OLLAMA_PID}" 2>/dev/null; then
+  echo "Ollama encerrou inesperadamente." >&2
+else
+  echo "Nginx encerrou inesperadamente." >&2
+fi
+exit 1
