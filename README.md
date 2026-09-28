@@ -62,7 +62,7 @@ A fundação do monorepo está implementada. O repositório possui frontend Reac
 
 A infraestrutura externa não é considerada concluída apenas pela existência da configuração no Git. Render, MongoDB, credenciais, secrets e disponibilidade do modelo precisam ser validados no ambiente de produção.
 
-O `render.yaml` presente no repositório ainda contém a configuração declarativa antiga do serviço privado do Ollama. A arquitetura atualmente preparada para Render Free usa o serviço público `morok-ollama.onrender.com`, protegido por autenticação, e deve ser considerada a configuração operacional atual.
+O `render.yaml` usa o serviço público `morok-ollama.onrender.com`, protegido por autenticação, porque serviços Web Free do Render não recebem tráfego privado. A API aponta explicitamente para esse endpoint e o ambiente de produção usa o banco `MorokAI`.
 
 ---
 
