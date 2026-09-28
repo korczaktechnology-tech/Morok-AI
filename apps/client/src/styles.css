@@ -2696,3 +2696,29 @@ mix-blend-mode:screen;opacity:.65}
 .resourcePanel .resourceBar span{
   max-width:100%!important;
 }
+
+
+/* MOROK // VOICE CORE — LOWER + BOTTOM EDGE / MINI STATUS ADJACENCY */
+@media(min-width:1360px){
+  .dashLeft .assistantPanel{
+    height:170px!important;
+    bottom:0!important;
+    align-items:flex-end!important;
+    padding-bottom:0!important;
+  }
+  .dashLeft .assistantPanel .morokVoiceCore{
+    width:124px!important;
+    height:124px!important;
+    flex:0 0 124px!important;
+    align-self:flex-end!important;
+    margin-bottom:0!important;
+  }
+  .dashMiniStatus{
+    left:418px!important;
+    right:auto!important;
+    bottom:0!important;
+    width:188px!important;
+    height:170px!important;
+    box-sizing:border-box!important;
+  }
+}
