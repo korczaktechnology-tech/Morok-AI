@@ -143,7 +143,7 @@ function MorokVoiceCore() {
       const h = rect.height;
       const cx = w / 2;
       const cy = h / 2;
-      const radius = Math.min(w, h) * 0.31;
+      const radius = Math.min(w, h) * 0.155;
 
       const debugMode = debugLevel > 0;
       const seed = debugMode
@@ -173,20 +173,20 @@ function MorokVoiceCore() {
           Math.abs(Math.sin(a * (9 + (seed % 6)) - frame * (3.8 + debugLevel * 0.9))) * 0.3 +
           Math.abs(Math.sin(a * 17 + frame * 2.3)) * 0.2;
 
-        const idle = 3 + 5 * (0.5 + 0.5 * Math.sin(a * 8 - frame * 1.7));
-        const debugLength = 3 + harmonic * (8 + levelGain * 28);
+        const idle = 1.5 + 2.5 * (0.5 + 0.5 * Math.sin(a * 8 - frame * 1.7));
+        const debugLength = 1.5 + harmonic * (4 + levelGain * 14);
         const length = debugMode
           ? debugLength
           : speakingNow
-            ? 5 + harmonic * (13 + intensity * 22)
+            ? 2.5 + harmonic * (6.5 + intensity * 11)
             : idle;
 
         const inner = radius * 1.03;
         const outer = inner + length;
         const x1 = Math.cos(a) * inner;
-        const y1 = Math.sin(a) * inner * 0.72;
+        const y1 = Math.sin(a) * inner;
         const x2 = Math.cos(a) * outer;
-        const y2 = Math.sin(a) * outer * 0.72;
+        const y2 = Math.sin(a) * outer;
 
         ctx.beginPath();
         ctx.moveTo(x1, y1);
