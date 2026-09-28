@@ -1105,10 +1105,23 @@ function App() {
 
   function startVoice() {
     if (!speech) { setNotice("Reconhecimento de voz não suportado neste navegador"); return; }
+    // O listener contínuo é o único dono do microfone. Pausamos apenas
+    // enquanto o comando manual é capturado, evitando duas sessões concorrentes.
+    window.dispatchEvent(new Event("morok-voice-pause"));
     speech.lang = "pt-BR"; speech.continuous = false; speech.interimResults = false;
-    speech.onstart = () => setListening(true); speech.onend = () => setListening(false);
-    speech.onresult = (e: any) => { const text = e.results[0]?.[0]?.transcript ?? ""; setInput(text); void send(text); };
-    speech.start();
+    speech.onstart = () => setListening(true);
+    speech.onend = () => {
+      setListening(false);
+      window.dispatchEvent(new Event("morok-voice-resume"));
+    };
+    speech.onerror = () => {
+      setListening(false);
+      window.dispatchEvent(new Event("morok-voice-resume"));
+    };
+    try { speech.start(); } catch {
+      setListening(false);
+      window.dispatchEvent(new Event("morok-voice-resume"));
+    }
   }
 
   async function addTask() {
@@ -1290,7 +1303,7 @@ function App() {
       )}
 
 
-      <MorokMicrophoneGate onGranted={()=>window.dispatchEvent(new Event("morok-mic-ready"))} />
+      <MorokMicrophoneGate onGranted={()=>{}} />
       <MorokAlwaysListening onWake={(command)=>{
         setMorokConversationOpen(true);
         setMorokConversationMinimized(false);
@@ -1351,53 +1364,42 @@ function MorokConversationWindow(p:{messages:Msg[];input:string;setInput:(v:stri
 
 function MorokMicrophoneGate(p:{onGranted:()=>void}) {
   const [state,setState]=useState<"checking"|"ready"|"blocked"|"unsupported">("checking");
-  const streamRef=useRef<MediaStream|null>(null);
-  const grantedRef=useRef(false);
 
-  const start=async()=>{
-    if(grantedRef.current&&streamRef.current) return;
-
+  const request=()=>{
     const Recognition=window.SpeechRecognition ?? window.webkitSpeechRecognition;
-    if(!Recognition || !navigator.mediaDevices?.getUserMedia){
+    if(!Recognition){
       setState("unsupported");
       return;
     }
 
-    try{
-      // A permissão é solicitada pelo getUserMedia e o stream permanece aberto.
-      // Não iniciamos/paralisamos um SpeechRecognition temporário só para testar a permissão.
-      const stream=await navigator.mediaDevices.getUserMedia({audio:true});
-      streamRef.current=stream;
-      grantedRef.current=true;
-      setState("ready");
-      p.onGranted();
-
-      stream.getAudioTracks().forEach(track=>{
-        track.onended=()=>{
-          grantedRef.current=false;
-          streamRef.current=null;
-          setState("blocked");
-        };
-      });
-    }catch{
-      grantedRef.current=false;
-      streamRef.current=null;
-      setState("blocked");
-    }
+    // Importante: não usamos getUserMedia em paralelo com SpeechRecognition.
+    // Os dois mecanismos capturam o microfone de forma independente e podem
+    // fazer o indicador do navegador piscar/alternar. O próprio SpeechRecognition
+    // será o único consumidor do microfone do Morok.
+    window.dispatchEvent(new Event("morok-mic-request"));
   };
 
   useEffect(()=>{
+    const started=()=>{
+      setState("ready");
+      p.onGranted();
+    };
     const blocked=()=>setState("blocked");
+    const unsupported=()=>setState("unsupported");
+
+    window.addEventListener("morok-mic-started",started);
     window.addEventListener("morok-mic-blocked",blocked);
-    void start();
+    window.addEventListener("morok-mic-unsupported",unsupported);
+
+    const Recognition=window.SpeechRecognition ?? window.webkitSpeechRecognition;
+    setState(Recognition ? "blocked" : "unsupported");
 
     return()=>{
+      window.removeEventListener("morok-mic-started",started);
       window.removeEventListener("morok-mic-blocked",blocked);
-      try{streamRef.current?.getTracks().forEach(track=>track.stop())}catch{}
-      streamRef.current=null;
-      grantedRef.current=false;
+      window.removeEventListener("morok-mic-unsupported",unsupported);
     };
-  },[]);
+  },[p]);
 
   if(state==="ready") return null;
   return <div className="morokMicGate" role="dialog" aria-modal="true" aria-label="Permissão de microfone">
@@ -1405,8 +1407,10 @@ function MorokMicrophoneGate(p:{onGranted:()=>void}) {
       <div className="morokMicGateIcon"><img src={MOROK_SUB_ICON} alt="Morok" /></div>
       <small>ACESSO DE VOZ // MOROK</small>
       <h1>{state==="unsupported"?"MICROFONE NÃO SUPORTADO":"MICROFONE DESATIVADO"}</h1>
-      <p>{state==="unsupported"?"Este navegador não disponibilizou captura de microfone ou reconhecimento de voz. Use um navegador compatível para manter a escuta contínua.":"O Morok precisa do microfone habilitado para permanecer em escuta. Habilite o microfone no navegador e tente novamente."}</p>
-      {state!=="unsupported"&&<button type="button" onClick={()=>void start()}>HABILITAR MICROFONE</button>}
+      <p>{state==="unsupported"
+        ?"Este navegador não disponibilizou o reconhecimento de voz necessário para a escuta contínua."
+        :"O Morok precisa do microfone habilitado para permanecer em escuta. Clique abaixo e permita o acesso quando o navegador solicitar."}</p>
+      {state!=="unsupported"&&<button type="button" onClick={request}>HABILITAR MICROFONE</button>}
       <span>ESCUTA CONTÍNUA · COMANDO: “MOROK, ACORDE”</span>
     </div>
   </div>;
@@ -1477,11 +1481,25 @@ function MorokAlwaysListening(p:{onWake:(command:string)=>void}) {
     let disposed=false;
     let transcriptBuffer="";
     let lastWakeAt=0;
+    let userRequested=false;
+
+    const scheduleStart=(delay:number)=>{
+      if(disposed||restartingRef.current)return;
+      restartingRef.current=true;
+      window.setTimeout(()=>{
+        restartingRef.current=false;
+        start();
+      },delay);
+    };
 
     const start=()=>{
-      if(disposed||recognitionRef.current||window.speechSynthesis?.speaking)return;
+      if(disposed||recognitionRef.current)return;
+
       const Recognition=window.SpeechRecognition ?? window.webkitSpeechRecognition;
-      if(!Recognition)return;
+      if(!Recognition){
+        window.dispatchEvent(new Event("morok-mic-unsupported"));
+        return;
+      }
 
       try{
         const recognition=new Recognition();
@@ -1489,6 +1507,11 @@ function MorokAlwaysListening(p:{onWake:(command:string)=>void}) {
         recognition.continuous=true;
         recognition.interimResults=true;
         recognition.maxAlternatives=5;
+
+        recognition.onstart=()=>{
+          recognitionRef.current=recognition;
+          window.dispatchEvent(new Event("morok-mic-started"));
+        };
 
         recognition.onresult=(event:any)=>{
           let fresh="";
@@ -1534,50 +1557,68 @@ function MorokAlwaysListening(p:{onWake:(command:string)=>void}) {
         };
 
         recognition.onend=()=>{
-          recognitionRef.current=null;
-          if(!disposed&&!restartingRef.current){
-            restartingRef.current=true;
-            window.setTimeout(()=>{
-              restartingRef.current=false;
-              start();
-            },250);
+          if(recognitionRef.current===recognition) recognitionRef.current=null;
+
+          // O Web Speech pode encerrar uma sessão mesmo com continuous=true.
+          // Isso é uma troca de sessão do serviço, não revogação da permissão.
+          if(!disposed && userRequested){
+            scheduleStart(220);
           }
         };
 
         recognition.onerror=(event:any)=>{
           const error=event?.error;
-          recognitionRef.current=null;
+          if(recognitionRef.current===recognition) recognitionRef.current=null;
 
-          // "audio-capture" pode ocorrer quando o serviço de reconhecimento
-          // reinicia internamente. Isso NÃO significa que a permissão foi revogada.
-          // Só bloqueamos a interface quando o navegador realmente nega a permissão.
           if(error==="not-allowed"||error==="service-not-allowed"){
             window.dispatchEvent(new Event("morok-mic-blocked"));
+            userRequested=false;
             return;
           }
 
-          if(!disposed&&!restartingRef.current){
-            restartingRef.current=true;
-            window.setTimeout(()=>{
-              restartingRef.current=false;
-              start();
-            },350);
+          if(error==="audio-capture"){
+            // Não derruba o gate: esse erro pode acontecer durante a
+            // renovação interna da sessão de reconhecimento.
+            if(!disposed && userRequested) scheduleStart(320);
+            return;
           }
+
+          if(!disposed && userRequested) scheduleStart(350);
         };
 
         recognitionRef.current=recognition;
         recognition.start();
       }catch{
         recognitionRef.current=null;
+        if(!disposed && userRequested) scheduleStart(500);
       }
     };
 
-    const ready=()=>start();
-    window.addEventListener("morok-mic-ready",ready);
+    const request=()=>{
+      userRequested=true;
+      transcriptBuffer="";
+      start();
+    };
+
+    const stopForSpeech=()=>{
+      try{recognitionRef.current?.stop?.()}catch{}
+    };
+
+    const resumeAfterSpeech=()=>{
+      if(!userRequested||disposed)return;
+      scheduleStart(180);
+    };
+
+    window.addEventListener("morok-mic-request",request);
+    window.addEventListener("morok-voice-pause",stopForSpeech);
+    window.addEventListener("morok-voice-resume",resumeAfterSpeech);
 
     return()=>{
       disposed=true;
-      window.removeEventListener("morok-mic-ready",ready);
+      userRequested=false;
+      window.removeEventListener("morok-mic-request",request);
+      window.removeEventListener("morok-voice-pause",stopForSpeech);
+      window.removeEventListener("morok-voice-resume",resumeAfterSpeech);
       try{recognitionRef.current?.stop?.()}catch{}
       recognitionRef.current=null;
     };
