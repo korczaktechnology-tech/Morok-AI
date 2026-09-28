@@ -4776,3 +4776,104 @@ mix-blend-mode:screen;opacity:.65}
     overflow:hidden!important;
   }
 }
+
+
+/* MOROK // REFERENCE MATCH v18 — MASTER ARTBOARD LOCK */
+@media (min-width:1360px) and (min-height:761px){
+  .morokFullDashboard > .morokDashboardStage{
+    width:1664px!important;
+    height:936px!important;
+    left:50%!important;
+    top:50%!important;
+    transform:translate(-50%,-50%) scale(var(--dashboard-scale,1))!important;
+    transform-origin:center center!important;
+    overflow:hidden!important;
+  }
+
+  .morokDashboardStage .dashHeader{
+    left:24px!important;right:24px!important;top:17px!important;height:64px!important;
+  }
+  .morokDashboardStage .dashLeft{
+    left:21px!important;top:111px!important;width:304px!important;height:512px!important;
+  }
+  .morokDashboardStage .resourcePanel{
+    left:0!important;top:0!important;width:304px!important;height:270px!important;padding:14px 20px!important;
+  }
+  .morokDashboardStage .processPanel{
+    left:0!important;top:282px!important;width:304px!important;height:230px!important;padding:15px 20px!important;
+  }
+
+  .morokDashboardStage .dashSystems{
+    left:362px!important;top:148px!important;width:176px!important;height:370px!important;
+    padding:33px 13px 13px 54px!important;
+  }
+
+  .morokDashboardStage .dashCore{
+    left:830px!important;top:366px!important;
+    width:620px!important;height:620px!important;
+    transform:translate(-50%,-50%)!important;
+  }
+
+  .morokDashboardStage .dashRight{
+    left:1150px!important;right:auto!important;top:124px!important;width:266px!important;
+  }
+  .morokDashboardStage .notificationPanel{
+    width:266px!important;height:179px!important;padding:15px 18px!important;
+  }
+  .morokDashboardStage .activityPanel{
+    width:266px!important;height:224px!important;margin-top:18px!important;padding:15px 18px!important;
+  }
+
+  .morokDashboardStage .dashNav{
+    left:1448px!important;right:auto!important;top:124px!important;
+    width:196px!important;height:480px!important;
+  }
+  .morokDashboardStage .dashNav button{
+    height:60px!important;min-height:60px!important;
+    padding:0 17px!important;gap:15px!important;font-size:10px!important;
+  }
+
+  .morokDashboardStage > .assistantPanel{
+    left:22px!important;top:649px!important;bottom:auto!important;
+    width:470px!important;height:214px!important;
+  }
+  .morokDashboardStage > .assistantPanel .morokVoiceCore{
+    left:7px!important;top:2px!important;width:184px!important;height:184px!important;
+  }
+  .morokDashboardStage > .assistantPanel > div:last-child{
+    left:220px!important;top:31px!important;right:12px!important;
+  }
+  .morokDashboardStage > .dashMiniStatus{
+    left:430px!important;top:518px!important;bottom:auto!important;
+    width:170px!important;height:142px!important;
+  }
+
+  .morokDashboardStage .dashGoal{
+    left:1230px!important;top:648px!important;right:auto!important;bottom:auto!important;
+    width:414px!important;height:202px!important;padding-left:167px!important;
+  }
+
+  .morokDashboardStage .dashActions{
+    left:830px!important;top:744px!important;bottom:auto!important;
+    transform:translateX(-50%)!important;gap:7px!important;
+  }
+  .morokDashboardStage .dashActions button{
+    width:112px!important;height:88px!important;
+  }
+
+  .morokDashboardStage .dashFooter{
+    left:536px!important;top:864px!important;right:auto!important;bottom:auto!important;
+    width:650px!important;height:32px!important;
+  }
+
+  .morokDashboardStage .dashHeader:after{left:156px!important;top:61px!important;width:420px!important}
+  .morokDashboardStage .dashLeft:before{
+    left:-2px!important;top:274px!important;width:308px!important;height:1px!important;
+  }
+  .morokDashboardStage .dashRight:before{
+    left:-34px!important;top:-35px!important;width:132px!important;height:52px!important;
+  }
+  .morokDashboardStage .dashNav:before{
+    left:-12px!important;top:68px!important;width:12px!important;height:1px!important;
+  }
+}
