@@ -410,7 +410,7 @@ function Dashboard() {
         if (typeof estimate?.usage === "number" && typeof estimate?.quota === "number" && estimate.quota > 0 && !cancelled) {
           setMetrics(current => ({
             ...current,
-            storage: Math.max(0, Math.min(100, Math.round((estimate.usage / estimate.quota) * 100)))
+            storage: Math.max(0, Math.min(100, Math.round(((estimate.usage ?? 0) / (estimate.quota ?? 1)) * 100)))
           }));
         }
       } catch {}
