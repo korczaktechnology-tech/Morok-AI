@@ -1353,7 +1353,7 @@ function MorokMicrophoneGate(p:{onGranted:()=>void}) {
     }catch{setState("blocked");}
   };
 
-  useEffect(()=>{start();return()=>{try{recognitionRef.current?.stop?.()}catch{}}},[]);
+  useEffect(()=>{const blocked=()=>setState("blocked");window.addEventListener("morok-mic-blocked",blocked);start();return()=>{window.removeEventListener("morok-mic-blocked",blocked);try{recognitionRef.current?.stop?.()}catch{}}},[]);
 
   if(state==="ready") return null;
   return <div className="morokMicGate" role="dialog" aria-modal="true" aria-label="Permissão de microfone">
@@ -1402,7 +1402,7 @@ function MorokAlwaysListening(p:{onWake:(command:string)=>void}) {
           }
         };
         recognition.onerror=(event:any)=>{
-          if(event?.error==="not-allowed"||event?.error==="service-not-allowed"){recognitionRef.current=null;return;}
+          if(event?.error==="not-allowed"||event?.error==="service-not-allowed"||event?.error==="audio-capture"){recognitionRef.current=null;window.dispatchEvent(new Event("morok-mic-blocked"));return;}
         };
         recognitionRef.current=recognition;
         recognition.start();
