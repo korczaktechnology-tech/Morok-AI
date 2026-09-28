@@ -364,7 +364,7 @@ function Dashboard() {
     return () => window.removeEventListener("resize", syncScale);
   }, []);
 
-  const systems = ["ERP","FLOW","OPS","VISION","CONNECT","MOBILE","DOCUMENTS","AI"];
+  const systems = ["ERP","AI"];
   const [now, setNow] = useState(() => new Date());
   const [metrics, setMetrics] = useState<SystemMetrics>({
     cpu: null, ram: null, storage: null, network: null, networkUnit: "Mbps"
@@ -555,7 +555,7 @@ function Dashboard() {
       <div className="dashSystems">
         <div className="systemsEdge"/>
         <h2>SISTEMAS</h2>
-        <ul>{systems.map((x,i)=><li key={x}><button type="button" className="systemLink" onClick={() => { const routes: Record<string,string> = { ERP:"./erp.html", FLOW:"./flow.html", OPS:"./ops.html", VISION:"./vision.html", CONNECT:"./connect.html", MOBILE:"./mobile.html", DOCUMENTS:"./documents.html", AI:"./morok.html" }; window.location.href = routes[x] ?? "./index.html"; }}><span className={"sysGlyph g"+i}>{["◉","♧","◌","◎","♧","□","▣","♧"][i]}</span>{x}</button></li>)}</ul>
+        <ul>{systems.map((x,i)=><li key={x}><button type="button" className="systemLink" onClick={() => { const routes: Record<string,string> = { ERP:"./erp.html", FLOW:"./flow.html", OPS:"./ops.html", VISION:"./vision.html", CONNECT:"./connect.html", MOBILE:"./mobile.html", DOCUMENTS:"./documents.html", AI:"./korczak-ai.html" }; window.location.href = routes[x] ?? "./index.html"; }}><span className={"sysGlyph g"+i}>{["◉","♧","◌","◎","♧","□","▣","♧"][i]}</span>{x}</button></li>)}</ul>
       </div>
 
       <main className="dashCore">
