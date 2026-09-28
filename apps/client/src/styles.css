@@ -4893,3 +4893,71 @@ mix-blend-mode:screen;opacity:.65}
     12px 100%,0 calc(100% - 12px)
   )!important;
 }
+
+/* ===== INDEX BOX ALIGNMENT // FINAL POSITION LOCK ===== */
+
+@media (min-width:1360px) and (min-height:761px){
+  .morokDashboardStage .dashHeader{
+    top:17px!important;
+    height:64px!important;
+  }
+  .morokDashboardStage .dashLeft{
+    left:21px!important;
+    top:81px!important;
+  }
+  .morokDashboardStage .resourcePanel{
+    left:0!important;
+    top:0!important;
+  }
+  .morokDashboardStage .dashSystems{
+    left:325px!important;
+    top:148px!important;
+  }
+  .morokDashboardStage > .assistantPanel{
+    left:22px!important;
+    top:621px!important;
+    bottom:auto!important;
+  }
+  .morokDashboardStage > .assistantPanel .morokVoiceCore{
+    left:7px!important;
+    top:0!important;
+  }
+  .morokDashboardStage > .dashMiniStatus{
+    left:213px!important;
+    top:518px!important;
+    bottom:auto!important;
+  }
+}
+
+@media (min-width:1360px) and (max-height:760px){
+  .morokDashboardStage .dashHeader{
+    top:17px!important;
+    height:64px!important;
+  }
+  .morokDashboardStage .dashLeft{
+    left:21px!important;
+    top:81px!important;
+  }
+  .morokDashboardStage .resourcePanel{
+    left:0!important;
+    top:0!important;
+  }
+  .morokDashboardStage .dashSystems{
+    left:325px!important;
+    top:132px!important;
+  }
+  .morokDashboardStage > .assistantPanel{
+    left:21px!important;
+    top:593px!important;
+    bottom:auto!important;
+  }
+  .morokDashboardStage > .assistantPanel .morokVoiceCore{
+    left:7px!important;
+    top:0!important;
+  }
+  .morokDashboardStage > .dashMiniStatus{
+    left:212px!important;
+    top:476px!important;
+    bottom:auto!important;
+  }
+}
