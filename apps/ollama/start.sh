@@ -42,10 +42,10 @@ http {
       auth_basic_user_file /etc/nginx/.htpasswd;
 
       proxy_http_version 1.1;
-      proxy_set_header Host $host;
-      proxy_set_header X-Real-IP $remote_addr;
-      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_set_header Host \$host;
+      proxy_set_header X-Real-IP \$remote_addr;
+      proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto \$scheme;
       proxy_pass http://127.0.0.1:11434;
     }
   }
@@ -53,7 +53,7 @@ http {
 EOF
 
 ollama serve &
-OLLAMA_PID=!
+OLLAMA_PID=$!
 
 echo "Aguardando Ollama..."
 until ollama list >/dev/null 2>&1; do
@@ -62,7 +62,7 @@ done
 
 nginx -t
 nginx -g 'daemon off;' &
-NGINX_PID=!
+NGINX_PID=$!
 
 echo "Garantindo modelo qwen2.5:0.5b..."
 ollama pull qwen2.5:0.5b
