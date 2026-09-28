@@ -243,7 +243,6 @@ class MorokMicrophoneController {
       }
       this.recognition = recognition;
       this.retryAttempt = 0;
-      this.emit();
     };
 
     recognition.onresult = (event: any) => {
@@ -328,16 +327,12 @@ class MorokMicrophoneController {
   };
 
   private handleTrackMute = () => {
-    // A muted MediaStreamTrack is temporarily unable to provide data.
-    // It is not equivalent to permission revocation and must not stop
-    // the microphone controller.
-    this.emit();
+    // Mute is temporary. Keep the same track and do not cause a React render.
   };
 
   private handleTrackUnmute = () => {
     if (!this.wanted) return;
     if (!this.recognition && !this.recognitionStarting) this.startRecognition();
-    this.emit();
   };
 }
 
