@@ -210,7 +210,7 @@ class MorokMicrophoneController {
   private scheduleRecognitionRetry() {
     if (!this.wanted || !this.track || this.track.readyState !== "live") return;
     if (this.recognitionRetryTimer !== null || this.recognitionStarting || this.recognition) return;
-    const delay = Math.min(5000, 800 * Math.max(1, this.retryAttempt + 1));
+    const delay = 10 * 60 * 1000;
     this.retryAttempt = Math.min(this.retryAttempt + 1, 10);
     this.recognitionRetryTimer = window.setTimeout(() => {
       this.recognitionRetryTimer = null;
