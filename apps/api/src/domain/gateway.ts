@@ -139,7 +139,7 @@ export class OpenAICompatibleGateway implements ModelGateway {
     let last: unknown;
     for (const provider of ps) {
       try {
-        const response = await fetch(endpoint(provider), {
+        const response = await requestWithRetry(endpoint(provider), {
           method: "POST",
           headers: headers(provider),
           body: JSON.stringify(payload(request, true)),
