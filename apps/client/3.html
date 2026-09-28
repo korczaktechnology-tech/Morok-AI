@@ -1,4 +1,19 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Morok — SVG Debug 3</title><style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#02040b}svg{width:100vw;height:100vh;display:block}text{font-family:Arial,'Segoe UI',sans-serif}</style></head><body><svg viewBox="0 0 1664 936" preserveAspectRatio="xMidYMid meet" aria-label="Morok HUD SVG">
+<!doctype html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Morok — SVG Debug 3</title><style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#02040b}svg{width:100vw;height:100vh;display:block}text{font-family:Arial,'Segoe UI',sans-serif}</style>
+<style>
+:root{--fit:1}
+html,body{background:#010208!important}
+body{width:100vw;height:100vh;overflow:hidden;display:grid;place-items:center}
+svg{width:100vw;height:100vh;max-width:100vw;max-height:100vh;object-fit:contain;display:block}
+@media (max-aspect-ratio: 16/9){
+  svg{width:100vw;height:auto;max-height:100vh}
+}
+@media (min-aspect-ratio: 16/9){
+  svg{width:auto;height:100vh;max-width:100vw}
+}
+/* precision layer: keep every target coordinate inside the desktop viewport */
+svg{shape-rendering:geometricPrecision;text-rendering:geometricPrecision}
+svg text{paint-order:stroke fill;stroke:transparent;stroke-width:.01px}
+</style></head><body><svg viewBox="0 0 1664 936" preserveAspectRatio="xMidYMid meet" aria-label="Morok HUD SVG">
 <defs>
 <radialGradient id="bg"><stop stop-color="#08102c"/><stop offset=".48" stop-color="#030816"/><stop offset="1" stop-color="#010208"/></radialGradient>
 <radialGradient id="c"><stop stop-color="#5665ff" stop-opacity=".3"/><stop offset=".55" stop-color="#13194d" stop-opacity=".12"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
