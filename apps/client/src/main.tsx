@@ -1290,7 +1290,28 @@ function App() {
       )}
 
 
+      <MorokMicrophoneGate onGranted={()=>window.dispatchEvent(new Event("morok-mic-ready"))} />
+      <MorokAlwaysListening onWake={(command)=>{
+        setMorokConversationOpen(true);
+        setMorokConversationMinimized(false);
+        if(command) void send(command);
+      }} />
       <UpdateChecker />
+      {morokConversationOpen && !morokConversationMinimized &&
+        <MorokConversationWindow
+          messages={messages}
+          input={input}
+          setInput={setInput}
+          send={(v)=>void send(v)}
+          loading={loading}
+          onMinimize={()=>setMorokConversationMinimized(true)}
+          listening={listening}
+          startVoice={startVoice}
+        />}
+      {morokConversationOpen && morokConversationMinimized &&
+        <button type="button" className="morokConversationBubble" onClick={()=>setMorokConversationMinimized(false)} aria-label="Abrir conversa com Morok">
+          <img src={MOROK_SUB_ICON} alt="Morok" />
+        </button>}
       <main className="appShell">
         <section className="mainStage">
           <div className="desktopDashboard"><Dashboard /></div><div className="mobileDashboard"><MobileDashboard onOpenChat={()=>setMobileChatOpen(true)} /></div>
@@ -1553,15 +1574,9 @@ function MorokAlwaysListening(p:{onWake:(command:string)=>void}) {
 
     const ready=()=>start();
     window.addEventListener("morok-mic-ready",ready);
-    const timer=window.setTimeout(start,1200);
-    const resume=()=>{if(!window.speechSynthesis?.speaking)start();};
-    window.addEventListener("focus",resume);
-
     return()=>{
       disposed=true;
-      window.clearTimeout(timer);
       window.removeEventListener("morok-mic-ready",ready);
-      window.removeEventListener("focus",resume);
       try{recognitionRef.current?.stop?.()}catch{}
     };
   },[]);
