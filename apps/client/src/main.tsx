@@ -375,45 +375,8 @@ function Dashboard() {
       return false;
     };
 
-    const readBrowserFallback = async (kind: "ram" | "storage" | "network") => {
-      if (kind === "network") {
-        const connection = (navigator as Navigator & {
-          connection?: { downlink?: number };
-        }).connection;
-        if (typeof connection?.downlink === "number" && !cancelled) {
-          setMetrics(current => ({
-            ...current,
-            network: Math.max(0, Math.min(1024, connection.downlink ?? 0)),
-            networkUnit: "Mbps"
-          }));
-        }
-        return;
-      }
-
-      if (kind === "ram") {
-        try {
-          const memory = (performance as Performance & {
-            memory?: { usedJSHeapSize: number; jsHeapSizeLimit: number };
-          }).memory;
-          if (memory?.jsHeapSizeLimit && !cancelled) {
-            setMetrics(current => ({
-              ...current,
-              ram: Math.max(0, Math.min(100, Math.round((memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100)))
-            }));
-          }
-        } catch {}
-        return;
-      }
-
-      try {
-        const estimate = await navigator.storage?.estimate?.();
-        if (typeof estimate?.usage === "number" && typeof estimate?.quota === "number" && estimate.quota > 0 && !cancelled) {
-          setMetrics(current => ({
-            ...current,
-            storage: Math.max(0, Math.min(100, Math.round(((estimate.usage ?? 0) / (estimate.quota ?? 1)) * 100)))
-          }));
-        }
-      } catch {}
+    const readBrowserFallback = async (_kind: "ram" | "storage" | "network") => {
+      if (!cancelled) setMetrics(current => ({ ...current, cpu: null, ram: null, storage: null, network: null, networkUnit: "Mbps" }));
     };
 
     const tickFast = async () => {
