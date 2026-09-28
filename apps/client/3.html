@@ -9,7 +9,16 @@
 <filter id="s"><feGaussianBlur stdDeviation="2" result="x"/><feMerge><feMergeNode in="x"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
 <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M0 10h20M10 0v20" stroke="#2b438f" opacity=".09"/></pattern>
 </defs>
-<rect width="1664" height="936" fill="url(#bg)"/><rect width="1664" height="936" fill="url(#grid)"/>
+<rect width="1664" height="936" fill="url(#bg)"/>
+<rect width="1664" height="936" fill="url(#grid)" opacity=".55"/>
+<g opacity=".7" fill="none" stroke-linecap="square">
+<path d="M0 150h180l28-28h190l24-24h180" stroke="#3f59d8" stroke-width="1"/>
+<path d="M0 174h238l32-32h170" stroke="#7438ff" stroke-width="1"/>
+<path d="M1664 145h-180l-30-30h-210l-22-22h-150" stroke="#315fff" stroke-width="1"/>
+<path d="M1664 174h-240l-30-30h-170" stroke="#ff3158" stroke-width="1"/>
+<path d="M0 792h210l28 28h180l26 26h170" stroke="#315fff" stroke-width="1"/>
+<path d="M1664 794h-210l-28 28h-185l-25 25h-165" stroke="#7b3dff" stroke-width="1"/>
+</g>
 <!-- background circuitry -->
 <g fill="none" stroke-linecap="square"><path d="M0 88h250l45-45h260M0 112h300l30-30h175M410 0l55 55v30h120" stroke="#344ca8"/><path d="M268 77h286l15-12h170" stroke="#8c2cff" stroke-width="3" filter="url(#s)"/><path d="M1060 72h215l35-34h210M1108 86h250l40-40" stroke="#ff3158" stroke-width="3" filter="url(#s)"/><path d="M1220 84h160M1410 67h170M0 864h270l30-32h120M1664 865h-260l-40 38h-190" stroke="#315fff"/><path d="M0 910h380l25-25h175M1664 911h-385l-28-28h-180" stroke="#ff3158"/></g>
 <!-- header -->
