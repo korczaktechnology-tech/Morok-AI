@@ -248,84 +248,6 @@ function MorokVoiceCore() {
     </div>
   );
 }
-type MicrophoneDebug = {
-  open: boolean;
-  listening: boolean;
-  transcript: string;
-  supported: boolean;
-};
-
-function MicrophoneDebugWindow({state,onClose,onToggle}:{state:MicrophoneDebug;onClose:()=>void;onToggle:()=>void}) {
-  if(!state.open) return null;
-  return (
-    <div className="microphoneDebugOverlay" role="dialog" aria-modal="true" aria-label="Teste de microfone">
-      <section className="microphoneDebugBox">
-        <div className="microphoneDebugHeader">
-          <div><b>MICROFONE // DEBUG</b><small>CAPTURA DE ÁUDIO EM TEMPO REAL</small></div>
-          <button type="button" onClick={onClose} aria-label="Fechar">×</button>
-        </div>
-        <div className="microphoneDebugBody">
-          <div className={`micDebugOrb ${state.listening ? "is-listening" : ""}`}><i/><span>MIC</span></div>
-          <div className="microphoneDebugText">
-            <small>{state.supported ? (state.listening ? "ESCUTANDO..." : "MICROFONE PRONTO") : "CAPTURA NÃO SUPORTADA PELO NAVEGADOR"}</small>
-            <p>{state.transcript || (state.supported ? "Fale alguma coisa para testar a captura de áudio." : "Use um navegador com Speech Recognition habilitado.")}</p>
-          </div>
-        </div>
-        <div className="microphoneDebugFooter">
-          <span className={state.listening ? "live" : ""}><i/> {state.listening ? "CAPTURANDO" : "AGUARDANDO"}</span>
-          <button type="button" disabled={!state.supported} onClick={onToggle}>{state.listening ? "PARAR TESTE" : "INICIAR TESTE"}</button>
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function useMicrophoneDebug() {
-  const [state,setState]=useState<MicrophoneDebug>({open:false,listening:false,transcript:"",supported:false});
-  const recognitionRef=useRef<any>(null);
-
-  const stop=()=> {
-    try { recognitionRef.current?.stop?.(); } catch {}
-    recognitionRef.current=null;
-    setState(s=>({...s,listening:false}));
-  };
-
-  const start=()=> {
-    if (recognitionRef.current) return;
-    const Recognition=window.SpeechRecognition || window.webkitSpeechRecognition;
-    if(!Recognition){ setState(s=>({...s,open:true,supported:false,listening:false})); return; }
-    try {
-      const recognition=new Recognition();
-      recognition.lang="pt-BR";
-      recognition.continuous=true;
-      recognition.interimResults=true;
-      recognition.onstart=()=>setState(s=>({...s,open:true,supported:true,listening:true,transcript:""}));
-      recognition.onresult=(event:any)=>{
-        let text="";
-        for(let i=event.resultIndex;i<event.results.length;i++) text+=event.results[i][0]?.transcript ?? "";
-        if(text) setState(s=>({...s,transcript:text}));
-      };
-      recognition.onerror=()=>setState(s=>({...s,listening:false}));
-      recognition.onend=()=>setState(s=>({...s,listening:false}));
-      recognitionRef.current=recognition;
-      setState(s=>({...s,open:true,supported:true,listening:true,transcript:""}));
-      recognition.start();
-    } catch {
-      setState(s=>({...s,open:true,supported:true,listening:false}));
-    }
-  };
-
-  const toggle=()=>state.listening ? stop() : start();
-  const close=()=> {
-    try { recognitionRef.current?.stop?.(); } catch {}
-    recognitionRef.current=null;
-    setState(s=>({...s,open:false,listening:false}));
-  };
-
-  useEffect(()=>()=>stop(),[]);
-  return {state,start,stop,toggle,close,setState};
-}
-
 type SystemMetrics = {
   cpu: number | null;
   ram: number | null;
@@ -497,17 +419,6 @@ function Dashboard() {
   ];
   const actions = [["⌕","ANALISAR"],["▦","PLANEJAR"],["▶","EXECUTAR"],["▥","MONITORAR"],["⚙","OTIMIZAR"]];
 
-  const microphoneDebug = useMicrophoneDebug();
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.ctrlKey && event.code === "Space") {
-        event.preventDefault();
-        microphoneDebug.start();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
   const resourceRows = [
     ["CPU", metrics.cpu === null ? "N/D" : `${metrics.cpu}%`, metrics.cpu],
     ["MEMÓRIA RAM", metrics.ram === null ? "N/D" : `${metrics.ram}%`, metrics.ram],
@@ -826,11 +737,6 @@ function App() {
   const workflowDragRef = useRef<{ pointerId:number; offsetX:number; offsetY:number } | null>(null);
   const workflowRequestRef = useRef<AbortController | null>(null);
 
-  const speech = useMemo(() => {
-    const C = window.SpeechRecognition ?? window.webkitSpeechRecognition;
-    return C ? new C() : null;
-  }, []);
-
   useEffect(() => {
     const tick = () => {
       const now = new Date();
@@ -1104,24 +1010,7 @@ function App() {
   }
 
   function startVoice() {
-    if (!speech) { setNotice("Reconhecimento de voz não suportado neste navegador"); return; }
-    // O listener contínuo é o único dono do microfone. Pausamos apenas
-    // enquanto o comando manual é capturado, evitando duas sessões concorrentes.
-    window.dispatchEvent(new Event("morok-voice-pause"));
-    speech.lang = "pt-BR"; speech.continuous = false; speech.interimResults = false;
-    speech.onstart = () => setListening(true);
-    speech.onend = () => {
-      setListening(false);
-      window.dispatchEvent(new Event("morok-voice-resume"));
-    };
-    speech.onerror = () => {
-      setListening(false);
-      window.dispatchEvent(new Event("morok-voice-resume"));
-    };
-    try { speech.start(); } catch {
-      setListening(false);
-      window.dispatchEvent(new Event("morok-voice-resume"));
-    }
+    window.dispatchEvent(new Event("morok-mic-manual"));
   }
 
   async function addTask() {
@@ -1303,12 +1192,14 @@ function App() {
       )}
 
 
-      <MorokMicrophoneGate />
-      <MorokAlwaysListening onWake={(command)=>{
-        setMorokConversationOpen(true);
-        setMorokConversationMinimized(false);
-        if(command) void send(command);
-      }} />
+      <MorokMicrophoneSystem
+        onWake={(command)=>{
+          setMorokConversationOpen(true);
+          setMorokConversationMinimized(false);
+          if(command) void send(command);
+        }}
+        onListening={setListening}
+      />
       <UpdateChecker />
       {morokConversationOpen && !morokConversationMinimized &&
         <MorokConversationWindow
@@ -1362,319 +1253,149 @@ function MorokConversationWindow(p:{messages:Msg[];input:string;setInput:(v:stri
   </div>;
 }
 
-function MorokMicrophoneGate() {
-  const [state,setState]=useState<"checking"|"ready"|"prompt"|"blocked"|"unsupported">("checking");
+function MorokMicrophoneSystem(p:{onWake:(command:string)=>void;onListening:(value:boolean)=>void}) {
+  const [state,setState]=useState<"starting"|"ready"|"blocked"|"unsupported">("starting");
   const streamRef=useRef<MediaStream|null>(null);
-  const requestingRef=useRef(false);
-
-  const keepMicrophoneOpen=async()=>{
-    if(streamRef.current || requestingRef.current) return true;
-    if(!navigator.mediaDevices?.getUserMedia) {
-      setState("unsupported");
-      return false;
-    }
-
-    requestingRef.current=true;
-    try{
-      // Mantemos um único MediaStream vivo durante toda a sessão.
-      // Isso evita que o dispositivo físico seja liberado/reaberto a cada
-      // reinício interno do SpeechRecognition.
-      const stream=await navigator.mediaDevices.getUserMedia({audio:true});
-      streamRef.current=stream;
-      setState("ready");
-      window.dispatchEvent(new Event("morok-mic-request"));
-      return true;
-    }catch{
-      setState("blocked");
-      return false;
-    }finally{
-      requestingRef.current=false;
-    }
-  };
-
-  const inspect=async()=>{
-    const Recognition=window.SpeechRecognition ?? window.webkitSpeechRecognition;
-    if(!Recognition){
-      setState("unsupported");
-      return;
-    }
-
-    try{
-      const permissions=navigator.permissions;
-      if(permissions?.query){
-        const status=await permissions.query({name:"microphone" as PermissionName});
-        const update=()=>{
-          if(status.state==="denied") setState("blocked");
-          else if(status.state==="granted") void keepMicrophoneOpen();
-          else setState("prompt");
-        };
-        status.addEventListener?.("change",update);
-        update();
-        return;
-      }
-    }catch{}
-
-    setState("prompt");
-  };
-
-  const request=()=>void keepMicrophoneOpen();
+  const recognitionRef=useRef<any>(null);
+  const retryRef=useRef<number|null>(null);
+  const manualRef=useRef(false);
+  const disposedRef=useRef(false);
+  const wakeRef=useRef(p.onWake);
+  wakeRef.current=p.onWake;
 
   useEffect(()=>{
-    const started=()=>setState("ready");
-    const blocked=()=>setState("blocked");
-    const unsupported=()=>setState("unsupported");
+    disposedRef.current=false;
+    let buffer="";
+    let lastWake=0;
 
-    window.addEventListener("morok-mic-started",started);
-    window.addEventListener("morok-mic-blocked",blocked);
-    window.addEventListener("morok-mic-unsupported",unsupported);
-
-    void inspect();
-
-    return()=>{
-      window.removeEventListener("morok-mic-started",started);
-      window.removeEventListener("morok-mic-blocked",blocked);
-      window.removeEventListener("morok-mic-unsupported",unsupported);
+    const listening=(value:boolean)=>p.onListening(value);
+    const stop=()=>{
+      if(retryRef.current!==null){window.clearTimeout(retryRef.current);retryRef.current=null;}
+      const r=recognitionRef.current;
+      recognitionRef.current=null;
+      listening(false);
+      try{r?.stop?.()}catch{}
+    };
+    const schedule=()=>{
+      if(disposedRef.current||!streamRef.current||recognitionRef.current||retryRef.current!==null)return;
+      retryRef.current=window.setTimeout(()=>{retryRef.current=null;start()},300);
+    };
+    const deliver=(text:string)=>{
+      const clean=text.trim();
+      if(!clean)return;
+      if(manualRef.current){
+        manualRef.current=false;
+        buffer="";
+        wakeRef.current(clean);
+        return;
+      }
+      buffer=(buffer+" "+clean).slice(-320);
+      const wake=findMorokWake(buffer);
+      if(!wake)return;
+      const now=Date.now();
+      if(now-lastWake<1800)return;
+      lastWake=now;
+      const command=buffer.slice(wake.end).replace(/^[,.:;!?\s-]+/,"").trim();
+      buffer="";
+      wakeRef.current(command);
+    };
+    const start=()=>{
+      if(disposedRef.current||!streamRef.current||recognitionRef.current)return;
+      const Recognition=window.SpeechRecognition??window.webkitSpeechRecognition;
+      if(!Recognition){setState("unsupported");return;}
       try{
-        streamRef.current?.getTracks().forEach(track=>track.stop());
-      }catch{}
+        const r=new Recognition();
+        r.lang="pt-BR";
+        r.continuous=true;
+        r.interimResults=true;
+        r.maxAlternatives=5;
+        r.onstart=()=>{if(disposedRef.current){try{r.stop()}catch{};return;}recognitionRef.current=r;listening(true);};
+        r.onresult=(event:any)=>{
+          let finalText="";
+          for(let i=event.resultIndex;i<event.results.length;i++){
+            const result=event.results[i];
+            if(result?.isFinal)finalText+=" "+(result[0]?.transcript??"");
+          }
+          deliver(finalText);
+        };
+        r.onerror=(event:any)=>{
+          if(event?.error==="not-allowed"||event?.error==="service-not-allowed"){listening(false);setState("blocked");return;}
+          listening(false);schedule();
+        };
+        r.onend=()=>{if(recognitionRef.current===r)recognitionRef.current=null;listening(false);schedule();};
+        recognitionRef.current=r;
+        r.start();
+      }catch{recognitionRef.current=null;listening(false);schedule();}
+    };
+    const open=async()=>{
+      if(disposedRef.current||streamRef.current)return;
+      if(!navigator.mediaDevices?.getUserMedia){setState("unsupported");return;}
+      try{
+        const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1},video:false});
+        if(disposedRef.current){stream.getTracks().forEach(t=>t.stop());return;}
+        streamRef.current=stream;
+        setState("ready");
+        stream.getAudioTracks().forEach(track=>track.addEventListener("ended",()=>{
+          if(disposedRef.current)return;
+          streamRef.current=null;
+          stop();
+          setState("blocked");
+        }));
+        start();
+      }catch{if(!disposedRef.current)setState("blocked");}
+    };
+    const manual=()=>{manualRef.current=true;buffer="";if(!recognitionRef.current)start();};
+
+    window.addEventListener("morok-mic-manual",manual);
+    void open();
+    return()=>{
+      disposedRef.current=true;
+      window.removeEventListener("morok-mic-manual",manual);
+      stop();
+      try{streamRef.current?.getTracks().forEach(t=>t.stop())}catch{}
       streamRef.current=null;
     };
-  },[]);
+  },[p.onListening]);
 
-  if(state==="ready") return null;
-
-  const title=state==="unsupported"
-    ?"MICROFONE NÃO SUPORTADO"
-    :state==="blocked"
-      ?"MICROFONE BLOQUEADO"
-      :"MICROFONE NÃO HABILITADO";
-
-  const text=state==="unsupported"
-    ?"Este navegador não disponibilizou o acesso de voz necessário para a escuta contínua."
-    :state==="blocked"
-      ?"O navegador bloqueou o acesso ao microfone. Permita o microfone nas configurações do site e tente novamente."
-      :"O Morok precisa manter o microfone autorizado para permanecer em escuta contínua.";
-
-  return <div className="morokMicGate" role="dialog" aria-modal="true" aria-label="Permissão de microfone">
+  if(state==="ready")return null;
+  const title=state==="blocked"?"MICROFONE BLOQUEADO":state==="unsupported"?"VOZ NÃO SUPORTADA":"HABILITANDO MICROFONE";
+  const text=state==="blocked"?"O acesso contínuo ao microfone foi interrompido. Permita o microfone para continuar.":state==="unsupported"?"Este navegador não oferece o reconhecimento de voz necessário.":"O Morok está abrindo o canal de áudio contínuo.";
+  return <div className="morokMicGate" role="dialog" aria-modal="true" aria-label="Acesso ao microfone">
     <div className="morokMicGatePanel">
-      <div className="morokMicGateIcon"><img src={MOROK_SUB_ICON} alt="Morok" /></div>
-      <small>ACESSO DE VOZ // MOROK</small>
-      <h1>{title}</h1>
-      <p>{text}</p>
-      {state!=="unsupported"&&<button type="button" onClick={request}>{state==="blocked"?"VERIFICAR MICROFONE":"HABILITAR MICROFONE"}</button>}
-      <span>MICROFONE CONTÍNUO · COMANDO: “MOROK, ACORDE”</span>
+      <div className="morokMicGateIcon"><img src={MOROK_SUB_ICON} alt="Morok"/></div>
+      <small>CANAL DE ÁUDIO // MOROK</small><h1>{title}</h1><p>{text}</p>
+      {state==="blocked"&&<button type="button" onClick={()=>window.location.reload()}>HABILITAR MICROFONE</button>}
+      <span>ESCUTA CONTÍNUA · COMANDO: “MOROK, ACORDE”</span>
     </div>
   </div>;
 }
 
 function findMorokWake(text:string){
-  const normalize=(value:string)=>value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g,"")
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g," ")
-    .replace(/\s+/g," ")
-    .trim();
-
+  const normalize=(v:string)=>v.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9\s]/g," ").replace(/\s+/g," ").trim();
   const distance=(a:string,b:string)=>{
-    const previous:number[]=Array.from({length:b.length+1},(_,i)=>i);
+    const prev:number[]=Array.from({length:b.length+1},(_,i)=>i);
     for(let i=1;i<=a.length;i++){
-      const current:number[]=[i];
-      for(let j=1;j<=b.length;j++){
-        current[j]=Math.min(
-          previous[j]!+1,
-          current[j-1]!+1,
-          previous[j-1]!+(a[i-1]===b[j-1]?0:1)
-        );
-      }
-      for(let j=0;j<current.length;j++) previous[j]=current[j]!;
+      const cur:number[]=[i];
+      for(let j=1;j<=b.length;j++)cur[j]=Math.min(prev[j]!+1,cur[j-1]!+1,prev[j-1]!+(a[i-1]===b[j-1]?0:1));
+      for(let j=0;j<cur.length;j++)prev[j]=cur[j]!;
     }
-    return previous[b.length]!;
+    return prev[b.length]!;
   };
-
-  const rawWords=Array.from(text.matchAll(/[A-Za-zÀ-ÿ0-9]+/g));
-  const morokVariants=new Set([
-    "morok","moroc","moro","moraque","moroque","moroki",
-    "mor aqui","moro aqui","mor oque","moro oque"
-  ]);
-  const target="morok";
-
-  for(let i=0;i<rawWords.length;i++){
+  const words=Array.from(text.matchAll(/[A-Za-zÀ-ÿ0-9]+/g));
+  const variants=new Set(["morok","moroc","moro","moraque","moroque","moroki","mor aqui","moro aqui","mor oque","moro oque"]);
+  for(let i=0;i<words.length;i++){
     let combined="";
-    for(let count=1;count<=3 && i+count<=rawWords.length;count++){
-      if(count>1) combined+=" ";
-      combined+=rawWords[i+count-1]![0];
-      const normalized=normalize(combined);
-      const compact=normalized.replace(/\s/g,"");
-      const isExplicit=morokVariants.has(normalized)||morokVariants.has(compact);
-      const maxDistance=compact.length<=4?1:compact.length<=7?2:3;
-      const isFuzzy=distance(compact,target)<=maxDistance;
-
-      if(isExplicit||isFuzzy){
-        const word=rawWords[i+count-1]!;
+    for(let count=1;count<=3&&i+count<=words.length;count++){
+      if(count>1)combined+=" ";
+      combined+=words[i+count-1]![0];
+      const n=normalize(combined), compact=n.replace(/\s/g,"");
+      if(variants.has(n)||variants.has(compact)||distance(compact,"morok")<=(compact.length<=4?1:compact.length<=7?2:3)){
+        const word=words[i+count-1]!;
         return {end:word.index!+word[0].length};
       }
-
-      if(count===1 && !isFuzzy && !["mor","moro","mora","moroq"].some(v=>compact.startsWith(v))) break;
+      if(count===1&&!["mor","moro","mora","moroq"].some(v=>compact.startsWith(v)))break;
     }
   }
-
-  return null;
-}
-
-function MorokAlwaysListening(p:{onWake:(command:string)=>void}) {
-  const recognitionRef=useRef<any>(null);
-  const restartingRef=useRef(false);
-  const onWakeRef=useRef(p.onWake);
-  onWakeRef.current=p.onWake;
-
-  useEffect(()=>{
-    let disposed=false;
-    let transcriptBuffer="";
-    let lastWakeAt=0;
-    let userRequested=false;
-
-    const scheduleStart=(delay:number)=>{
-      if(disposed||restartingRef.current)return;
-      restartingRef.current=true;
-      window.setTimeout(()=>{
-        restartingRef.current=false;
-        start();
-      },delay);
-    };
-
-    const start=()=>{
-      if(disposed||recognitionRef.current)return;
-
-      const Recognition=window.SpeechRecognition ?? window.webkitSpeechRecognition;
-      if(!Recognition){
-        window.dispatchEvent(new Event("morok-mic-unsupported"));
-        return;
-      }
-
-      try{
-        const recognition=new Recognition();
-        recognition.lang="pt-BR";
-        recognition.continuous=true;
-        recognition.interimResults=true;
-        recognition.maxAlternatives=5;
-
-        recognition.onstart=()=>{
-          recognitionRef.current=recognition;
-          window.dispatchEvent(new Event("morok-mic-started"));
-        };
-
-        recognition.onresult=(event:any)=>{
-          let fresh="";
-          let detectedWakeEnd=-1;
-
-          for(let i=event.resultIndex;i<event.results.length;i++){
-            const result=event.results[i];
-            if(!result)continue;
-
-            let selected=result[0]?.transcript ?? "";
-            for(let alternativeIndex=0;alternativeIndex<Math.min(result.length,5);alternativeIndex++){
-              const candidate=result[alternativeIndex]?.transcript ?? "";
-              const candidateBuffer=(transcriptBuffer+" "+candidate).slice(-240);
-              const candidateWake=findMorokWake(candidateBuffer);
-              if(candidateWake){
-                selected=candidate;
-                detectedWakeEnd=candidateWake.end;
-                break;
-              }
-            }
-            fresh+=(selected+" ");
-          }
-
-          if(!fresh.trim())return;
-
-          transcriptBuffer=(transcriptBuffer+" "+fresh).slice(-240);
-          const wake=detectedWakeEnd>=0
-            ? {end:detectedWakeEnd}
-            : findMorokWake(transcriptBuffer);
-          if(!wake)return;
-
-          const now=Date.now();
-          if(now-lastWakeAt<1800)return;
-          lastWakeAt=now;
-
-          const command=transcriptBuffer
-            .slice(wake.end)
-            .replace(/^[,.:;!?\\s-]+/,"")
-            .trim();
-
-          transcriptBuffer="";
-          onWakeRef.current(command);
-        };
-
-        recognition.onend=()=>{
-          if(recognitionRef.current===recognition) recognitionRef.current=null;
-
-          // O Web Speech pode encerrar uma sessão mesmo com continuous=true.
-          // Isso é uma troca de sessão do serviço, não revogação da permissão.
-          if(!disposed && userRequested){
-            scheduleStart(220);
-          }
-        };
-
-        recognition.onerror=(event:any)=>{
-          const error=event?.error;
-          if(recognitionRef.current===recognition) recognitionRef.current=null;
-
-          if(error==="not-allowed"||error==="service-not-allowed"){
-            window.dispatchEvent(new Event("morok-mic-blocked"));
-            userRequested=false;
-            return;
-          }
-
-          if(error==="audio-capture"){
-            // Não derruba o gate: esse erro pode acontecer durante a
-            // renovação interna da sessão de reconhecimento.
-            if(!disposed && userRequested) scheduleStart(320);
-            return;
-          }
-
-          if(!disposed && userRequested) scheduleStart(350);
-        };
-
-        recognitionRef.current=recognition;
-        recognition.start();
-      }catch{
-        recognitionRef.current=null;
-        if(!disposed && userRequested) scheduleStart(500);
-      }
-    };
-
-    const request=()=>{
-      userRequested=true;
-      transcriptBuffer="";
-      start();
-    };
-
-    const stopForSpeech=()=>{
-      try{recognitionRef.current?.stop?.()}catch{}
-    };
-
-    const resumeAfterSpeech=()=>{
-      if(!userRequested||disposed)return;
-      scheduleStart(180);
-    };
-
-    window.addEventListener("morok-mic-request",request);
-    window.addEventListener("morok-voice-pause",stopForSpeech);
-    window.addEventListener("morok-voice-resume",resumeAfterSpeech);
-
-    return()=>{
-      disposed=true;
-      userRequested=false;
-      window.removeEventListener("morok-mic-request",request);
-      window.removeEventListener("morok-voice-pause",stopForSpeech);
-      window.removeEventListener("morok-voice-resume",resumeAfterSpeech);
-      try{recognitionRef.current?.stop?.()}catch{}
-      recognitionRef.current=null;
-    };
-  },[]);
-
   return null;
 }
 
