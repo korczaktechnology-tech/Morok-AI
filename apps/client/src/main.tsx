@@ -143,7 +143,7 @@ function MorokVoiceCore() {
       const h = rect.height;
       const cx = w / 2;
       const cy = h / 2;
-      const radius = Math.min(w, h) * 0.155;
+      const radius = Math.min(w, h) * 0.23;
 
       const debugMode = debugLevel > 0;
       const seed = debugMode
