@@ -19,24 +19,36 @@ services:
         sync: false
       - key: MONGODB_DATABASE
         value: morok
-      - key: OLLAMA_HOSTPORT
-        fromService:
-          name: morok-ollama
-          type: pserv
-          property: hostport
+      - key: MODEL_API_URL
+        sync: false
+      - key: MODEL_API_USERNAME
+        value: morok
+      - key: MODEL_API_KEY
+        sync: false
       - key: MODEL_NAME
         value: qwen2.5:0.5b
 
-  - type: pserv
+  - type: web
     name: morok-ollama
     runtime: docker
-    plan: 0.5c-512mb
+    plan: free
     rootDir: apps/ollama
+    healthCheckPath: /health
     envVars:
+      - key: MODEL_PROXY_KEY
+        sync: false
       - key: OLLAMA_HOST
         value: 0.0.0.0:11434
       - key: OLLAMA_MODELS
         value: /data/models
+      - key: OLLAMA_NUM_PARALLEL
+        value: "1"
+      - key: OLLAMA_MAX_LOADED_MODELS
+        value: "1"
+      - key: OLLAMA_KEEP_ALIVE
+        value: 5m
+      - key: OLLAMA_CONTEXT_LENGTH
+        value: "2048"
     disk:
       name: ollama-models
       mountPath: /data
