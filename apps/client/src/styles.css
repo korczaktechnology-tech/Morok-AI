@@ -1488,7 +1488,7 @@ mix-blend-mode:screen;opacity:.65}
 }
 .resourcePanel{
   position:absolute!important;
-  left:0!important;top:0!important;
+  left:0!important;top:-4px!important;
   width:304px!important;height:270px!important;
   padding:15px 20px!important;
 }
@@ -1585,7 +1585,7 @@ mix-blend-mode:screen;opacity:.65}
 /* ===== SYSTEMS ===== */
 .dashSystems{
   position:absolute!important;
-  left:350px!important;top:148px!important;
+  left:544px!important;top:148px!important;
   width:190px!important;height:370px!important;
   padding:33px 17px 16px 55px!important;
   z-index:12!important;
