@@ -315,6 +315,18 @@ export function buildApp(){
     const db=await connectDatabase();const conversationId=q.conversationId??randomUUID();const now=new Date();const conversations=db.collection<ConversationDocument>("conversations");
     await conversations.updateOne({id:conversationId,userId:auth.user.id},{$set:{userId:auth.user.id,updatedAt:now},$setOnInsert:{id:conversationId,createdAt:now,messages:[]}},{upsert:true});
     const context=await new ContextService(db).create(auth.user.id,auth.sessionId,conversationId);
+    const intent=detectIntent(q.message.trim());
+    const toolMap:Record<string,string>={"memory.save":"memory.save","memory.search":"memory.search","task.create":"task.create","task.list":"task.list","web.search":"web.search","web.open":"web.open","file.search":"file.search","notification.create":"notification.create","calendar.create":"calendar.create"};
+    const toolId=intent.kind!=="chat"?toolMap[intent.kind]:undefined;
+    if(toolId){
+      const decision=decidePermission(auth.user.roles,"tool.execute",false);
+      if(!decision.allowed){
+        return reply.code(decision.reason==="confirmation_required"?409:403).send({
+          error:decision.reason==="confirmation_required"?"confirmation_required":"permission_denied",
+          confirmationRequired:decision.requiresConfirmation,intent,toolId,conversationId
+        });
+      }
+    }
     // Persist the user message only after the model successfully produces a response.
     // This keeps the client fallback path from duplicating a message when a stream dies.
     reply.hijack();
@@ -322,9 +334,15 @@ export function buildApp(){
     reply.raw.write(`data: ${JSON.stringify({conversationId})}\n\n`);
     let full="";
     try{
-      for await(const chunk of gateway.stream!({message:q.message.trim(),context:context as unknown as Record<string,unknown>,history:context.history.map((item)=>({role:(item.role==="user"||item.role==="assistant"||item.role==="system")?item.role:"user",content:item.content}))})){
-        full+=chunk;
-        reply.raw.write(`data: ${JSON.stringify({chunk,conversationId})}\n\n`);
+      if(toolId){
+        const result=await createCoreToolRegistry(db).execute(toolId,{...intent.parameters,userId:auth.user.id},{userId:auth.user.id,roles:auth.user.roles,confirmed:true});
+        full=JSON.stringify(result,null,2);
+        reply.raw.write(`data: ${JSON.stringify({chunk:full,conversationId})}\n\n`);
+      } else {
+        for await(const chunk of gateway.stream!({message:q.message.trim(),context:context as unknown as Record<string,unknown>,history:context.history.map((item)=>({role:(item.role==="user"||item.role==="assistant"||item.role==="system")?item.role:"user",content:item.content}))})){
+          full+=chunk;
+          reply.raw.write(`data: ${JSON.stringify({chunk,conversationId})}\n\n`);
+        }
       }
       if(!full.trim()) throw new Error("model_empty_response");
       await conversations.updateOne({id:conversationId,userId:auth.user.id},{$push:{
