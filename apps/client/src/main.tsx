@@ -75,6 +75,7 @@ function MorokVoiceCore() {
   const [debugLevel, setDebugLevel] = useState<0 | 1 | 2 | 3>(0);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [active, setActive] = useState(false);
+  const [transcript, setTranscript] = useState("");
   const seedRef = useRef(1);
 
   useEffect(() => {
@@ -100,6 +101,7 @@ function MorokVoiceCore() {
     const onStart: EventListener = (event) => {
       const detail = (event as unknown as CustomEvent<{ text?: string }>).detail;
       const text = detail?.text ?? "";
+      setTranscript(text);
       let seed = 0;
       for (let i = 0; i < text.length; i++) seed = (seed * 31 + text.charCodeAt(i)) >>> 0;
       seedRef.current = seed || 1;
@@ -223,8 +225,14 @@ function MorokVoiceCore() {
       aria-label="Visualizador da voz do Morok"
       onDoubleClick={() => setDebugLevel(level => (level === 0 ? 1 : level === 1 ? 2 : level === 2 ? 3 : 0))}
     >
-      <canvas ref={canvasRef} />
-      <span className="voiceCoreCenter" aria-hidden="true" />
+      <div className="voiceCoreVisual">
+        <canvas ref={canvasRef} />
+        <span className="voiceCoreCenter" aria-hidden="true" />
+      </div>
+      <div className="voiceCoreTranscript" aria-live="polite">
+        <span>{active ? "MOROK // FALANDO" : transcript ? "MOROK // ÚLTIMA FALA" : "MOROK // AGUARDANDO"}</span>
+        <p>{transcript || "A transcrição da fala do Morok aparecerá aqui."}</p>
+      </div>
       {debugLabel && <span className="voiceCoreDebugLevel">{debugLabel}</span>}
     </div>
   );
