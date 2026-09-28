@@ -1,5 +1,5 @@
 FROM ollama/ollama:latest
-ENV OLLAMA_HOST=127.0.0.1:11434
+ENV OLLAMA_HOST=0.0.0.0:11434
 ENV OLLAMA_MODELS=/data/models
 EXPOSE 10000
 COPY start.sh /start.sh
