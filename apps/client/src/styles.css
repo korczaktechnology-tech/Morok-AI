@@ -4422,3 +4422,92 @@ mix-blend-mode:screen;opacity:.65}
     pointer-events:none!important;
   }
 }
+
+
+/* MOROK // REFERENCE MATCH v15 — BRAND / TARGET MODULE DETAILS */
+@media (min-width:1360px){
+  /* Header logo treatment closer to the target mark. */
+  .morokDashboardStage .kosMark{
+    font-size:46px!important;
+    line-height:.88!important;
+    letter-spacing:-5px!important;
+    text-shadow:0 0 12px rgba(97,132,255,.55)!important;
+  }
+  .morokDashboardStage .kosMark span{
+    display:inline-grid!important;
+    place-items:center!important;
+    width:30px!important;
+    height:30px!important;
+    margin:0 2px!important;
+    vertical-align:6px!important;
+    font-size:23px!important;
+    line-height:1!important;
+    letter-spacing:-1px!important;
+    color:#eef2ff!important;
+    background:linear-gradient(145deg,#8f54ff,#3c3cff)!important;
+    clip-path:polygon(50% 0,88% 12%,100% 50%,88% 88%,50% 100%,12% 88%,0 50%,12% 12%)!important;
+    box-shadow:0 0 12px rgba(107,63,255,.65)!important;
+    text-shadow:0 0 5px rgba(255,255,255,.55)!important;
+  }
+
+  /* Target objective uses an inverted technical core, not a square. */
+  .morokDashboardStage .dashGoal:after{
+    width:58px!important;
+    height:58px!important;
+    transform:translate(-50%,-50%)!important;
+    clip-path:polygon(50% 100%,0 22%,100% 22%)!important;
+    background:linear-gradient(180deg,rgba(106,93,255,.14),rgba(66,164,255,.07))!important;
+    border:1px solid rgba(113,91,255,.70)!important;
+    box-shadow:0 0 14px rgba(113,91,255,.34),inset 0 0 12px rgba(50,130,255,.08)!important;
+  }
+
+  /* More of the target's fine concentric instrumentation, kept behind the M. */
+  .morokDashboardStage .dashCore:after{
+    background:
+      radial-gradient(circle,transparent 0 41%,rgba(75,124,255,.13) 41.3% 41.7%,transparent 42%),
+      radial-gradient(circle,transparent 0 48%,rgba(218,63,255,.09) 48.3% 48.8%,transparent 49%),
+      radial-gradient(circle,transparent 0 56%,rgba(28,194,255,.09) 56.3% 56.8%,transparent 57%),
+      repeating-radial-gradient(circle,transparent 0 17px,rgba(96,113,255,.040) 17.5px 18px)!important;
+  }
+
+  /* Target side panels carry a small luminous top segment. */
+  .morokDashboardStage .dashPanel:after{
+    width:65px!important;
+    height:1px!important;
+    right:17px!important;
+    top:10px!important;
+    background:linear-gradient(90deg,transparent,#6f83ff 55%,#bd4cff)!important;
+    box-shadow:0 0 8px rgba(91,110,255,.56)!important;
+  }
+
+  /* Bottom operation module: stronger hierarchy, smaller text, more target-like. */
+  .morokDashboardStage > .dashMiniStatus{
+    padding:12px 11px!important;
+  }
+  .morokDashboardStage > .dashMiniStatus .miniChart{
+    height:60px!important;
+    border-bottom-color:rgba(100,110,160,.28)!important;
+  }
+  .morokDashboardStage > .dashMiniStatus .miniChart i{
+    width:10px!important;
+  }
+  .morokDashboardStage > .dashMiniStatus>span{
+    font-size:8px!important;
+    letter-spacing:.15px!important;
+  }
+
+  /* Action band is visually separated from the core by a thin technical line. */
+  .morokDashboardStage .dashActions:before{
+    content:"";
+    position:absolute;
+    left:-32px;right:-32px;top:-14px;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(77,103,245,.34),rgba(135,65,255,.24),transparent);
+    box-shadow:0 0 7px rgba(70,91,255,.18);
+    pointer-events:none;
+  }
+
+  /* Keep the reference bottom edge clean on unusual desktop heights. */
+  @media (min-height:760px){
+    .morokDashboardStage .dashFooter{top:864px!important}
+  }
+}
