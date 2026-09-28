@@ -555,7 +555,7 @@ function Dashboard() {
       <div className="dashSystems">
         <div className="systemsEdge"/>
         <h2>SISTEMAS</h2>
-        <ul>{systems.map((x,i)=><li key={x}><span className={"sysGlyph g"+i}>{["◉","♧","◌","◎","♧","□","▣","♧"][i]}</span>{x}</li>)}</ul>
+        <ul>{systems.map((x,i)=><li key={x}><button type="button" className="systemLink" onClick={() => { const routes: Record<string,string> = { ERP:"./erp.html", FLOW:"./flow.html", OPS:"./ops.html", VISION:"./vision.html", CONNECT:"./connect.html", MOBILE:"./mobile.html", DOCUMENTS:"./documents.html", AI:"./morok.html" }; window.location.href = routes[x] ?? "./index.html"; }}><span className={"sysGlyph g"+i}>{["◉","♧","◌","◎","♧","□","▣","♧"][i]}</span>{x}</button></li>)}</ul>
       </div>
 
       <main className="dashCore">
