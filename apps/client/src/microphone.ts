@@ -291,7 +291,7 @@ class MorokMicrophoneController {
       if (!this.wanted || !this.track || this.track.readyState !== "live") return;
       // SpeechRecognition.end means the recognition service disconnected;
       // it does not mean that the microphone MediaStream ended.
-      // Retry with a small backoff instead of rapidly cycling the service.
+      // Retry only after the configured ten-minute recovery interval.
       this.scheduleRecognitionRetry();
     };
 
