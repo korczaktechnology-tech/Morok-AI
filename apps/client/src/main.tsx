@@ -307,8 +307,137 @@ function useMicrophoneDebug() {
   return {state,start,stop,toggle,close,setState};
 }
 
+type SystemMetrics = {
+  cpu: number | null;
+  ram: number | null;
+  storage: number | null;
+  network: number | null;
+  networkUnit: string;
+};
+
+function formatClock(date: Date) {
+  return new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).format(date);
+}
+
+function formatDate(date: Date) {
+  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short", year: "numeric" }).format(date).replace(".", "").toUpperCase();
+}
+
 function Dashboard() {
   const systems = ["ERP","FLOW","OPS","VISION","CONNECT","MOBILE","DOCUMENTS","AI"];
+  const [now, setNow] = useState(() => new Date());
+  const [metrics, setMetrics] = useState<SystemMetrics>({
+    cpu: null, ram: null, storage: null, network: null, networkUnit: "Mbps"
+  });
+  const [weather, setWeather] = useState<{ temperature: number | null; location: string }>({
+    temperature: null, location: "LOCALIZAÇÃO NÃO DISPONÍVEL"
+  });
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const readMetrics = async () => {
+      try {
+        const native = await window.morokDesktop?.execute?.("system.metrics");
+        if (native && typeof native === "object") {
+          const raw = native as Record<string, unknown>;
+          const cpu = typeof raw.cpu === "number" ? raw.cpu : null;
+          const ram = typeof raw.ram === "number" ? raw.ram : null;
+          const storage = typeof raw.storage === "number" ? raw.storage : null;
+          const network = typeof raw.network === "number" ? raw.network : null;
+          if (!cancelled && (cpu !== null || ram !== null || storage !== null || network !== null)) {
+            setMetrics({
+              cpu, ram, storage, network,
+              networkUnit: typeof raw.networkUnit === "string" ? raw.networkUnit : "Mbps"
+            });
+            return;
+          }
+        }
+      } catch {}
+
+      const next: SystemMetrics = {
+        cpu: null,
+        ram: null,
+        storage: null,
+        network: null,
+        networkUnit: "Mbps"
+      };
+
+      const connection = (navigator as Navigator & {
+        connection?: { downlink?: number };
+      }).connection;
+      if (typeof connection?.downlink === "number") next.network = connection.downlink;
+
+      try {
+        const memory = (performance as Performance & {
+          memory?: { usedJSHeapSize: number; jsHeapSizeLimit: number };
+        }).memory;
+        if (memory?.jsHeapSizeLimit) {
+          next.ram = Math.round((memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100);
+        }
+      } catch {}
+
+      try {
+        const estimate = await navigator.storage?.estimate?.();
+        if (estimate?.usage && estimate.quota) {
+          next.storage = Math.round((estimate.usage / estimate.quota) * 100);
+        }
+      } catch {}
+
+      if (!cancelled) setMetrics(next);
+    };
+
+    void readMetrics();
+    const timer = window.setInterval(() => void readMetrics(), 5000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadWeather = async (latitude: number, longitude: number) => {
+      try {
+        const [weatherResponse, addressResponse] = await Promise.all([
+          fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m&timezone=auto`, { cache: "no-store" }),
+          fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&zoom=10&accept-language=pt-BR`, {
+            headers: { "Accept": "application/json" },
+            cache: "no-store"
+          })
+        ]);
+        const weatherData = await weatherResponse.json() as { current?: { temperature_2m?: number } };
+        const addressData = await addressResponse.json() as { address?: { city?: string; town?: string; municipality?: string; state?: string; country?: string } };
+        const address = addressData.address ?? {};
+        const city = address.city ?? address.town ?? address.municipality ?? "LOCALIZAÇÃO";
+        const state = address.state ? `, ${address.state}` : "";
+        if (!cancelled) {
+          setWeather({
+            temperature: typeof weatherData.current?.temperature_2m === "number" ? Math.round(weatherData.current.temperature_2m) : null,
+            location: `${city.toUpperCase()}${state.toUpperCase()}`
+          });
+        }
+      } catch {}
+    };
+
+    if (!navigator.geolocation) {
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      position => void loadWeather(position.coords.latitude, position.coords.longitude),
+      () => {},
+      { enableHighAccuracy: false, maximumAge: 300000, timeout: 10000 }
+    );
+
+    return () => { cancelled = true; };
+  }, []);
   const processes = [
     ["KORCZAK FLOW","324 MB"],["KORCZAK ERP","512 MB"],["KORCZAK VISION","448 MB"],
     ["KORCZAK OPS","287 MB"],["KORCZAK CONNECT","196 MB"],["KORCZAK MOBILE","143 MB"]
@@ -334,6 +463,13 @@ function Dashboard() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
+  const resourceRows = [
+    ["CPU", metrics.cpu === null ? "N/D" : `${metrics.cpu}%`, metrics.cpu],
+    ["MEMÓRIA RAM", metrics.ram === null ? "N/D" : `${metrics.ram}%`, metrics.ram],
+    ["ARMAZENAMENTO", metrics.storage === null ? "N/D" : `${metrics.storage}%`, metrics.storage],
+    ["REDE", metrics.network === null ? "N/D" : `${metrics.network.toFixed(1)} ${metrics.networkUnit}`, metrics.network === null ? null : Math.min(100, metrics.network / 10 * 100)]
+  ] as const;
+
   return (
     <div className="morokFullDashboard">
       <div className="dashAmbient" aria-hidden="true" />
@@ -346,18 +482,16 @@ function Dashboard() {
             <small>MAIS CONTROLE. MAIS RESULTADOS.</small>
           </div>
         </div>
-        <div className="dashClock"><strong>14:37:26</strong><span>24 SET 2026</span></div>
-        <div className="dashWeather"><span className="sunGlyph">☼</span><strong>22°C</strong><small>BRASIL, SP</small></div>
+        <div className="dashClock"><strong>{formatClock(now)}</strong><span>{formatDate(now)}</span></div>
+        <div className="dashWeather"><span className="sunGlyph">☼</span><strong>{weather.temperature === null ? "--°C" : `${weather.temperature}°C`}</strong><small>{weather.location}</small></div>
       </header>
 
       <aside className="dashLeft">
         <div className="dashPanel resourcePanel">
-          {[
-            ["CPU","12%"],["MEMÓRIA RAM","48%"],["ARMAZENAMENTO","67%"],["REDE","1.2 Gbps"]
-          ].map(([label,value],i)=>
+          {resourceRows.map(([label,value,percent],i)=>
             <div className="resourceRow" key={label}>
               <span className={"resourceIcon ri"+i}>{i===0?"▣":i===1?"▤":i===2?"◉":"⌘"}</span>
-              <div className="resourceData"><b>{label}</b><strong>{value}</strong><span className="resourceBar"><i style={{width:i===0?"12%":i===1?"48%":i===2?"67%":"54%"}}/></span></div>
+              <div className="resourceData"><b>{label}</b><strong>{value}</strong><span className="resourceBar"><i style={{width: percent === null ? "0%" : `${percent}%`}}/></span></div>
             </div>
           )}
         </div>
