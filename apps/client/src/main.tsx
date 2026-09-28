@@ -333,14 +333,21 @@ function formatDate(date: Date) {
 
 function Dashboard() {
   const dashboardRef = useRef<HTMLDivElement | null>(null);
+  const dashboardStageRef = useRef<HTMLDivElement | null>(null);
 
   useLayoutEffect(() => {
-    const root = dashboardRef.current;
-    if (!root) return;
+    const stage = dashboardStageRef.current;
+    if (!stage) return;
+
     const syncScale = () => {
-      const scale = Math.min(window.innerWidth / 1664, window.innerHeight / 936);
-      root.style.setProperty("--dashboard-scale", String(Math.max(scale, 0.01)));
+      const scale = Math.min(
+        window.innerWidth / 1664,
+        window.innerHeight / 936,
+        1
+      );
+      stage.style.setProperty("--dashboard-scale", String(Math.max(scale, 0.01)));
     };
+
     syncScale();
     window.addEventListener("resize", syncScale);
     return () => window.removeEventListener("resize", syncScale);
@@ -499,7 +506,7 @@ function Dashboard() {
 
   return (
     <div className="morokFullDashboard" ref={dashboardRef}>
-      <div className="morokDashboardStage">
+      <div className="morokDashboardStage" ref={dashboardStageRef}>
       <div className="dashAmbient" aria-hidden="true" />
       <div className="dashTechLines" aria-hidden="true" />
       <header className="dashHeader">
