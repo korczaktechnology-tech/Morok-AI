@@ -1252,6 +1252,7 @@ function MorokMicrophoneSystem(p:{onWake:(command:string)=>void;onListening:(val
   const manualRef=useRef(false);
   const disposedRef=useRef(false);
   const listeningRef=useRef(false);
+  const audioTrackRef=useRef<MediaStreamTrack|null>(null);
   const wakeRef=useRef(p.onWake);
   const listeningCallbackRef=useRef(p.onListening);
   wakeRef.current=p.onWake;
@@ -1281,7 +1282,6 @@ function MorokMicrophoneSystem(p:{onWake:(command:string)=>void;onListening:(val
       const r=recognitionRef.current;
       recognitionRef.current=null;
       recognitionStarting=false;
-      listening(false);
       try{r?.stop?.()}catch{}
     };
 
@@ -1351,14 +1351,12 @@ function MorokMicrophoneSystem(p:{onWake:(command:string)=>void;onListening:(val
             setState("blocked");
             return;
           }
-          listening(false);
           if(recognitionRef.current===r)recognitionRef.current=null;
           schedule();
         };
         r.onend=()=>{
           recognitionStarting=false;
           if(recognitionRef.current===r)recognitionRef.current=null;
-          listening(false);
           if(!disposedRef.current&&streamRef.current) schedule();
         };
         recognitionRef.current=r;
@@ -1399,8 +1397,10 @@ function MorokMicrophoneSystem(p:{onWake:(command:string)=>void;onListening:(val
           return;
         }
         streamRef.current=stream;
-        setState("ready");
         const audioTracks=stream.getAudioTracks();
+        audioTrackRef.current=audioTracks[0]??null;
+        setState("ready");
+        listening(true);
         audioTracks.forEach(track=>{
           track.addEventListener("ended",()=>{
             if(disposedRef.current||streamRef.current!==stream)return;
@@ -1412,14 +1412,13 @@ function MorokMicrophoneSystem(p:{onWake:(command:string)=>void;onListening:(val
             if(disposedRef.current||streamRef.current!==stream)return;
             // A temporary hardware/browser mute is not permission loss.
             // Keep the stream and recognition alive and let the browser recover it.
-            listening(false);
           });
           track.addEventListener("unmute",()=>{
             if(disposedRef.current||streamRef.current!==stream)return;
             if(!recognitionRef.current&&!recognitionStarting)schedule();
           });
         });
-        start(audioTracks[0]);
+        start(audioTrackRef.current??undefined);
       }catch(error){
         if(disposedRef.current)return;
         const name=error instanceof DOMException?error.name:"";
@@ -1436,7 +1435,7 @@ function MorokMicrophoneSystem(p:{onWake:(command:string)=>void;onListening:(val
     const manual=()=>{
       manualRef.current=true;
       buffer="";
-      if(!recognitionRef.current&&!recognitionStarting)start();
+      if(!recognitionRef.current&&!recognitionStarting)start(audioTrackRef.current??undefined);
     };
 
     window.addEventListener("morok-mic-manual",manual);
@@ -1449,6 +1448,7 @@ function MorokMicrophoneSystem(p:{onWake:(command:string)=>void;onListening:(val
       try{streamRef.current?.getTracks().forEach(t=>t.stop())}catch{}
       streamRef.current=null;
       listening(false);
+      audioTrackRef.current=null;
     };
   },[]);
 
