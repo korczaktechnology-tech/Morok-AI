@@ -85,8 +85,11 @@ until curl -fsS http://127.0.0.1:11434/api/tags >/dev/null 2>&1; do
   sleep 1
 done
 
-echo "Garantindo modelo qwen2.5:0.5b..."
-ollama pull qwen2.5:0.5b
+echo "Verificando modelo qwen2.5:0.5b..."
+if ! ollama list | awk 'NR > 1 {print $1}' | grep -Fxq "qwen2.5:0.5b"; then
+  echo "Modelo não encontrado; baixando qwen2.5:0.5b..."
+  ollama pull qwen2.5:0.5b
+fi
 
 if ! ollama list | awk 'NR > 1 {print $1}' | grep -Fxq "qwen2.5:0.5b"; then
   echo "Modelo qwen2.5:0.5b não está disponível após o pull." >&2
