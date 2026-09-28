@@ -78,7 +78,7 @@ async function completeProvider(provider: Provider, request: ModelRequest): Prom
     method: "POST",
     headers: headers(provider),
     body: JSON.stringify(payload(request)),
-    signal: AbortSignal.timeout(30000)
+    signal: AbortSignal.timeout(90000)
   });
 
   if (!response.ok) await upstreamError(response, "model_gateway_http_");
@@ -125,7 +125,7 @@ export class OpenAICompatibleGateway implements ModelGateway {
           method: "POST",
           headers: headers(provider),
           body: JSON.stringify(payload(request, true)),
-          signal: AbortSignal.timeout(60000)
+          signal: AbortSignal.timeout(180000)
         });
 
         if (!response.ok) await upstreamError(response, "model_gateway_stream_http_");
