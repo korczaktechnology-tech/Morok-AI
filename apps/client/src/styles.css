@@ -4511,3 +4511,127 @@ mix-blend-mode:screen;opacity:.65}
     .morokDashboardStage .dashFooter{top:864px!important}
   }
 }
+
+
+/* MOROK // DESKTOP FIT v16 — SHORT-VIEWPORT ARTBOARD / ZERO CROP */
+@media (min-width:1360px) and (max-height:760px){
+  /*
+    The target is composed on a 1664px-wide artboard. Short desktop displays
+    need a vertically compressed master artboard so the full HUD remains visible
+    without shrinking to the point of large side gutters.
+  */
+  .morokFullDashboard{
+    overflow:hidden!important;
+  }
+  .morokFullDashboard > .morokDashboardStage{
+    width:1664px!important;
+    height:840px!important;
+    left:50%!important;
+    top:50%!important;
+    transform:
+      translate(-50%,-50%)
+      scale(min(calc(100vw / 1664px),calc(100dvh / 840px)))!important;
+    transform-origin:center center!important;
+    overflow:hidden!important;
+  }
+
+  /* Preserve the upper hierarchy; compress only the lower band. */
+  .morokDashboardStage .dashHeader{
+    top:17px!important;
+  }
+  .morokDashboardStage .dashLeft{
+    top:111px!important;
+    height:512px!important;
+  }
+  .morokDashboardStage .dashSystems{
+    top:148px!important;
+    height:370px!important;
+  }
+  .morokDashboardStage .dashCore{
+    top:366px!important;
+  }
+  .morokDashboardStage .dashRight{
+    top:124px!important;
+  }
+  .morokDashboardStage .dashNav{
+    top:124px!important;
+    height:480px!important;
+  }
+
+  /* Lower assistant band moves into the shortened artboard. */
+  .morokDashboardStage > .assistantPanel{
+    left:22px!important;
+    top:580px!important;
+    bottom:auto!important;
+    width:470px!important;
+    height:214px!important;
+    overflow:visible!important;
+  }
+  .morokDashboardStage > .assistantPanel .morokVoiceCore{
+    left:7px!important;
+    top:2px!important;
+    width:184px!important;
+    height:184px!important;
+  }
+  .morokDashboardStage > .assistantPanel > div:last-child{
+    left:220px!important;
+    top:31px!important;
+    right:12px!important;
+  }
+
+  /* Operations module sits above the action row, never outside the viewport. */
+  .morokDashboardStage > .dashMiniStatus{
+    left:430px!important;
+    top:500px!important;
+    bottom:auto!important;
+    width:170px!important;
+    height:142px!important;
+  }
+
+  /* Objective module stays in the lower-right information band. */
+  .morokDashboardStage .dashGoal{
+    left:1230px!important;
+    top:578px!important;
+    right:auto!important;
+    bottom:auto!important;
+    width:414px!important;
+    height:202px!important;
+    overflow:hidden!important;
+  }
+
+  /* Five action controls stay centered and clear of the footer. */
+  .morokDashboardStage .dashActions{
+    left:830px!important;
+    top:682px!important;
+    bottom:auto!important;
+    transform:translateX(-50%)!important;
+    gap:7px!important;
+  }
+  .morokDashboardStage .dashActions button{
+    width:112px!important;
+    height:88px!important;
+  }
+
+  .morokDashboardStage .dashFooter{
+    left:536px!important;
+    top:804px!important;
+    right:auto!important;
+    bottom:auto!important;
+    width:650px!important;
+    height:32px!important;
+  }
+
+  /* Clean edges at the compact height. */
+  .morokDashboardStage .dashHeader:after{
+    top:61px!important;
+  }
+  .morokDashboardStage .dashLeft:before{
+    top:274px!important;
+  }
+  .morokDashboardStage .dashRight:before{
+    top:-35px!important;
+  }
+  .morokDashboardStage .dashNav:before{
+    top:68px!important;
+  }
+}
