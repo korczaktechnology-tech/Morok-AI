@@ -21,11 +21,14 @@ export interface MorokConfig {
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): MorokConfig {
-  const nodeEnv = (env.NODE_ENV ?? "development") as Environment;
+  const rawNodeEnv = env.NODE_ENV ?? "development";
+  if (!["development","test","production"].includes(rawNodeEnv)) throw new Error("NODE_ENV must be development, test or production");
+  const nodeEnv = rawNodeEnv as Environment;
   const port = Number(env.PORT ?? 10000);
   if (!Number.isInteger(port) || port <= 0) throw new Error("PORT must be a positive integer");
 
   if (!env.MONGODB_URI) throw new Error("MONGODB_URI is required");
+  if (env.MODEL_API_KEY && !env.MODEL_API_USERNAME) throw new Error("MODEL_API_USERNAME is required when MODEL_API_KEY is configured");
 
   const modelTemperature = Number(env.MODEL_TEMPERATURE ?? 0.4);
   const webTimeoutMs = Number(env.WEB_TIMEOUT_MS ?? 10000);
@@ -55,7 +58,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): MorokConfig {
     modelApiUrl: env.MODEL_API_URL?.trim() || ollamaUrl,
     modelApiKey: env.MODEL_API_KEY || undefined,
     modelApiUsername: env.MODEL_API_USERNAME?.trim() || "morok",
-    modelFallbackApiUrl: env.MODEL_FALLBACK_API_URL || undefined,
+    modelFallbackApiUrl: env.MODEL_FALLBACK_API_URL?.trim() || undefined,
     modelFallbackApiKey: env.MODEL_FALLBACK_API_KEY || undefined,
     modelName: env.MODEL_NAME ?? "qwen2.5:0.5b",
     modelTemperature,
