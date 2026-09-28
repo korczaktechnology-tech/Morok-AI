@@ -1457,65 +1457,11 @@ function MorokAlwaysListening(p:{onWake:(command:string)=>void}) {
     let transcriptBuffer="";
     let lastWakeAt=0;
 
-    const normalize=(value:string)=>value
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g,"")
-      .replace(/[^a-z0-9\s]/g," ")
-      .replace(/\s+/g," ")
-      .trim();
-
-    const findWake=(value:string)=>{
-      const normalized=normalize(value);
-      const patterns=[
-        /\bmorok\b/,
-        /\bmoroc\b/,
-        /\bmoroque\b/,
-        /\bmoraque\b/,
-        /\bmoroki\b/,
-        /\bmoro\b/,
-        /\bmor\s+oque\b/,
-        /\bmoro\s+oque\b/,
-        /\bmor\s+aqui\b/,
-        /\bmoro\s+aqui\b/
-      ];
-      for(const pattern of patterns){
-        const match=pattern.exec(normalized);
-        if(match)return {index:match.index,end:match.index+match[0].length};
-      }
-
-      const words=normalized.split(" ").filter(Boolean);
-      for(const word of words){
-        if(word.length>=3 && word.length<=8){
-          const a=word;
-          const b="morok";
-          const previous=Array.from({length:b.length+1},(_,i)=>i);
-          for(let i=1;i<=a.length;i++){
-            let diagonal=previous[0]!;
-            previous[0]=i;
-            for(let j=1;j<=b.length;j++){
-              const above=previous[j]!;
-              previous[j]=Math.min(
-                previous[j]!+1,
-                previous[j-1]!+1,
-                diagonal+(a[i-1]===b[j-1]?0:1)
-              );
-              diagonal=above;
-            }
-          }
-          if(previous[b.length]!<=2){
-            const index=normalized.indexOf(word);
-            return {index,end:index+word.length};
-          }
-        }
-      }
-      return null;
-    };
-
     const start=()=>{
       if(disposed||recognitionRef.current||window.speechSynthesis?.speaking)return;
       const Recognition=window.SpeechRecognition ?? window.webkitSpeechRecognition;
       if(!Recognition)return;
+
       try{
         const recognition=new Recognition();
         recognition.lang="pt-BR";
@@ -1525,13 +1471,32 @@ function MorokAlwaysListening(p:{onWake:(command:string)=>void}) {
 
         recognition.onresult=(event:any)=>{
           let fresh="";
+          let detectedWakeEnd=-1;
+
           for(let i=event.resultIndex;i<event.results.length;i++){
-            fresh+=(event.results[i][0]?.transcript??"")+" ";
+            const result=event.results[i];
+            if(!result)continue;
+
+            let selected=result[0]?.transcript ?? "";
+            for(let alternativeIndex=0;alternativeIndex<Math.min(result.length,5);alternativeIndex++){
+              const candidate=result[alternativeIndex]?.transcript ?? "";
+              const candidateBuffer=(transcriptBuffer+" "+candidate).slice(-240);
+              const candidateWake=findMorokWake(candidateBuffer);
+              if(candidateWake){
+                selected=candidate;
+                detectedWakeEnd=candidateWake.end;
+                break;
+              }
+            }
+            fresh+=(selected+" ");
           }
+
           if(!fresh.trim())return;
 
-          transcriptBuffer=(transcriptBuffer+" "+fresh).slice(-180);
-          const wake=findWake(transcriptBuffer);
+          transcriptBuffer=(transcriptBuffer+" "+fresh).slice(-240);
+          const wake=detectedWakeEnd>=0
+            ? {end:detectedWakeEnd}
+            : findMorokWake(transcriptBuffer);
           if(!wake)return;
 
           const now=Date.now();
@@ -1574,10 +1539,12 @@ function MorokAlwaysListening(p:{onWake:(command:string)=>void}) {
 
     const ready=()=>start();
     window.addEventListener("morok-mic-ready",ready);
+
     return()=>{
       disposed=true;
       window.removeEventListener("morok-mic-ready",ready);
       try{recognitionRef.current?.stop?.()}catch{}
+      recognitionRef.current=null;
     };
   },[]);
 
