@@ -809,7 +809,7 @@ function App() {
   const [brasiliaDate, setBrasiliaDate] = useState("00/00/0000");
   const [temperature, setTemperature] = useState<string | null>(null);
   const [weatherPlace, setWeatherPlace] = useState("LOCALIZAÇÃO NÃO DISPONÍVEL");
-  const [mobileChatOpen, setMobileChatOpen] = useState(false);
+  const [mobileChatOpen, setMobileChatOpen] = useState(false);\n  const [morokConversationOpen, setMorokConversationOpen] = useState(false);\n  const [morokConversationMinimized, setMorokConversationMinimized] = useState(false);
   const [workflowMonitorOpen, setWorkflowMonitorOpen] = useState(false);
   const [githubWorkflows, setGithubWorkflows] = useState<GithubWorkflow[]>([]);
   const [workflowLoading, setWorkflowLoading] = useState(false);
@@ -1308,6 +1308,114 @@ function Systems({setTab}:{setTab:(x:ModuleKey)=>void}){const systems=[["KORCZAK
 function Processes({tasks,automations,integrations}:{tasks:Task[];automations:any[];integrations:any[]}){return <section className="reportGrid"><Panel title="PROCESSOS EM EXECUÇÃO"><div className="bigNumber">{tasks.filter(t=>t.status!=="completed").length}</div><span className="muted">tarefas pendentes</span></Panel><Panel title="AUTOMAÇÕES ATIVAS"><div className="bigNumber">{automations.filter(a=>a.enabled).length}</div><span className="muted">rotinas habilitadas</span></Panel><Panel title="INTEGRAÇÕES"><div className="bigNumber">{integrations.length}</div><span className="muted">conexões configuradas</span></Panel><Panel title="ESTADO OPERACIONAL"><div className="statusMatrix"><span>API <b>ONLINE</b></span><span>IA <b>READY</b></span><span>DB <b>CONNECTED</b></span><span>AGENTE <b>PREPARED</b></span></div></Panel></section>}
 function Teams({contacts}:{contacts:any[]}){return <Module title="Equipes e contatos"><div className="teamHero"><div className="teamCore">♙</div><div><b>REDE OPERACIONAL</b><p>{contacts.length} contatos registrados no núcleo atual.</p></div></div>{contacts.slice(0,8).map(c=><Item key={c.id} title={c.name} meta={c.email??c.phone??"SEM CONTATO"} />)}</Module>}
 function Reports({tasks,events,docs}:{tasks:Task[];events:Event[];docs:Doc[]}){return <section className="reportGrid"><Panel title="TAREFAS"><div className="bigNumber">{tasks.length}</div><span className="muted">registros</span></Panel><Panel title="AGENDA"><div className="bigNumber">{events.length}</div><span className="muted">eventos</span></Panel><Panel title="DOCUMENTOS"><div className="bigNumber">{docs.length}</div><span className="muted">arquivos documentais</span></Panel><Panel title="PERFORMANCE"><div className="chart"><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/></div><small>atividade do núcleo</small></Panel></section>}
+function MorokConversationWindow(p:{messages:Msg[];input:string;setInput:(v:string)=>void;send:(v?:string)=>void;loading:boolean;onMinimize:()=>void;listening:boolean;startVoice:()=>void}) {
+  return <div className="morokConversationWindow" role="dialog" aria-label="Conversa com Morok">
+    <header className="morokConversationHeader">
+      <div className="morokConversationBrand"><span className="morokConversationIcon"><img src={MOROK_SUB_ICON} alt="Morok" /></span><div><b>MOROK</b><small>CONVERSAÇÃO ATIVA</small></div></div>
+      <button type="button" onClick={p.onMinimize} aria-label="Minimizar conversa">−</button>
+    </header>
+    <div className="morokConversationMessages">
+      {p.messages.length===0 ? <div className="morokConversationEmpty"><img src={MOROK_SUB_ICON} alt="" /><span>Olá. Estou ouvindo.</span></div> :
+        p.messages.map((m,i)=><article key={i} className={m.role==="assistant"?"morokBubble":"userBubble"}><small>{m.role==="assistant"?"MOROK":"VOCÊ"}</small><p>{m.content || "PROCESSANDO..."}</p></article>)}
+    </div>
+    <form className="morokConversationComposer" onSubmit={e=>{e.preventDefault();p.send()}}>
+      <button type="button" className={p.listening?"morokConversationMic active":"morokConversationMic"} onClick={p.startVoice} aria-label="Falar com Morok">◉</button>
+      <input value={p.input} onChange={e=>p.setInput(e.target.value)} placeholder="Fale ou digite para o Morok..." />
+      <button type="submit" disabled={p.loading||!p.input.trim()} aria-label="Enviar">➤</button>
+    </form>
+  </div>;
+}
+
+function MorokMicrophoneGate(p:{onGranted:()=>void}) {
+  const [state,setState]=useState<"checking"|"ready"|"blocked"|"unsupported">("checking");
+  const recognitionRef=useRef<any>(null);
+  const grantedRef=useRef(false);
+
+  const start=()=>{
+    const Recognition=window.SpeechRecognition ?? window.webkitSpeechRecognition;
+    if(!Recognition){setState("unsupported");return;}
+    try{
+      const recognition=new Recognition();
+      recognition.lang="pt-BR";
+      recognition.continuous=true;
+      recognition.interimResults=true;
+      recognition.onstart=()=>{grantedRef.current=true;setState("ready");p.onGranted();};
+      recognition.onerror=(event:any)=>{
+        const error=event?.error;
+        if(error==="not-allowed"||error==="service-not-allowed"||error==="audio-capture") setState("blocked");
+      };
+      recognition.onend=()=>{
+        recognitionRef.current=null;
+        if(grantedRef.current) window.setTimeout(start,250);
+      };
+      recognitionRef.current=recognition;
+      recognition.start();
+    }catch{setState("blocked");}
+  };
+
+  useEffect(()=>{start();return()=>{try{recognitionRef.current?.stop?.()}catch{}}},[]);
+
+  if(state==="ready") return null;
+  return <div className="morokMicGate" role="dialog" aria-modal="true" aria-label="Permissão de microfone">
+    <div className="morokMicGatePanel">
+      <div className="morokMicGateIcon"><img src={MOROK_SUB_ICON} alt="Morok" /></div>
+      <small>ACESSO DE VOZ // MOROK</small>
+      <h1>{state==="unsupported"?"MICROFONE NÃO SUPORTADO":"MICROFONE DESATIVADO"}</h1>
+      <p>{state==="unsupported"?"Este navegador não disponibilizou reconhecimento de voz. Use um navegador compatível para manter o microfone aberto.":"O Morok precisa do microfone habilitado para permanecer em escuta. Habilite o microfone no navegador e tente novamente."}</p>
+      {state!=="unsupported"&&<button type="button" onClick={start}>HABILITAR MICROFONE</button>}
+      <span>ESCUTA CONTÍNUA · COMANDO: “MOROK, ACORDE”</span>
+    </div>
+  </div>;
+}
+
+function MorokAlwaysListening(p:{onWake:(command:string)=>void}) {
+  const recognitionRef=useRef<any>(null);
+  const restartingRef=useRef(false);
+
+  useEffect(()=>{
+    let disposed=false;
+    const normalize=(value:string)=>value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9, ]/g," ").replace(/\s+/g," ").trim();
+    const start=()=>{
+      if(disposed||recognitionRef.current||window.speechSynthesis?.speaking)return;
+      const Recognition=window.SpeechRecognition ?? window.webkitSpeechRecognition;
+      if(!Recognition)return;
+      try{
+        const recognition=new Recognition();
+        recognition.lang="pt-BR";
+        recognition.continuous=true;
+        recognition.interimResults=true;
+        recognition.onresult=(event:any)=>{
+          let transcript="";
+          for(let i=event.resultIndex;i<event.results.length;i++) transcript+=event.results[i][0]?.transcript??"";
+          const normalized=normalize(transcript);
+          const wakeIndex=normalized.indexOf("morok acorde");
+          if(wakeIndex>=0){
+            const command=transcript.slice(wakeIndex+"morok acorde".length).replace(/^[,.:;\s-]+/,"").trim();
+            p.onWake(command);
+          }
+        };
+        recognition.onend=()=>{
+          recognitionRef.current=null;
+          if(!disposed&&!restartingRef.current){
+            restartingRef.current=true;
+            window.setTimeout(()=>{restartingRef.current=false;start()},300);
+          }
+        };
+        recognition.onerror=(event:any)=>{
+          if(event?.error==="not-allowed"||event?.error==="service-not-allowed"){recognitionRef.current=null;return;}
+        };
+        recognitionRef.current=recognition;
+        recognition.start();
+      }catch{recognitionRef.current=null;}
+    };
+    const timer=window.setTimeout(start,500);
+    const resume=()=>{if(!window.speechSynthesis?.speaking)start();};
+    window.addEventListener("focus",resume);
+    return()=>{disposed=true;window.clearTimeout(timer);window.removeEventListener("focus",resume);try{recognitionRef.current?.stop?.()}catch{}};
+  },[p.onWake]);
+  return null;
+}
+
 function Chat(p:{messages:Msg[];input:string;setInput:(v:string)=>void;send:(v?:string)=>void;loading:boolean;startVoice:()=>void;listening:boolean;speaking:boolean;setSpeaking:(v:boolean)=>void}){return <section className="chatPanel"><div className="chatHeader"><div className="miniOrb"><span/></div><div><b>MOROK</b><small>ASSISTENTE VIRTUAL · {p.loading?"PROCESSANDO":"PRONTO"}</small></div><button onClick={()=>p.setSpeaking(!p.speaking)}>VOZ {p.speaking?"ON":"OFF"}</button></div><div className="chatMessages">{p.messages.length===0?<div className="emptyChat"><div className="miniOrb large"><span/></div><b>Olá, Korczak.</b><span>Estou pronto para analisar, planejar, executar e monitorar.</span></div>:p.messages.map((m,i)=><article className={m.role} key={i}><small>{m.role==="user"?"VOCÊ":"MOROK"}</small><p>{m.content||"PROCESSANDO..."}</p></article>)}</div><form onSubmit={e=>{e.preventDefault();p.send()}}><button type="button" className={p.listening?"voice active":"voice"} onClick={p.startVoice}>◉</button><input value={p.input} onChange={e=>p.setInput(e.target.value)} placeholder="Digite uma instrução para o Morok..." /><button disabled={p.loading||!p.input.trim()}>ENVIAR</button></form></section>}
 function Settings(p:{speaking:boolean;setSpeaking:(v:boolean)=>void;secretCount:number;newConversation:()=>void;localAgent:boolean;notice:string}){return <Module title="Configurações"><Item title="Voz do Morok" meta={p.speaking?"SÍNTESE DE VOZ ATIVA":"SÍNTESE DE VOZ DESATIVADA"}><button onClick={()=>p.setSpeaking(!p.speaking)}>{p.speaking?"DESATIVAR":"ATIVAR"}</button></Item><Item title="Cofre seguro" meta={p.secretCount+" credenciais armazenadas"} /><Item title="Agente local" meta={p.localAgent?"DESKTOP DISPONÍVEL":"INTERFACE PREPARADA PARA AGENTE DESKTOP"} /><Item title="Conversa" meta="Limpar contexto local"><button onClick={p.newConversation}>NOVA CONVERSA</button></Item><div className="settingsNotice">{p.notice}</div></Module>}
 }
