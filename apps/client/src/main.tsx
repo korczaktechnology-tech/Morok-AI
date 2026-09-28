@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Capacitor } from "@capacitor/core";
 import "./styles.css";
 
@@ -332,6 +332,20 @@ function formatDate(date: Date) {
 }
 
 function Dashboard() {
+  const dashboardRef = useRef<HTMLDivElement | null>(null);
+
+  useLayoutEffect(() => {
+    const root = dashboardRef.current;
+    if (!root) return;
+    const syncScale = () => {
+      const scale = Math.min(window.innerWidth / 1664, window.innerHeight / 936);
+      root.style.setProperty("--dashboard-scale", String(Math.max(scale, 0.01)));
+    };
+    syncScale();
+    window.addEventListener("resize", syncScale);
+    return () => window.removeEventListener("resize", syncScale);
+  }, []);
+
   const systems = ["ERP","FLOW","OPS","VISION","CONNECT","MOBILE","DOCUMENTS","AI"];
   const [now, setNow] = useState(() => new Date());
   const [metrics, setMetrics] = useState<SystemMetrics>({
@@ -484,7 +498,8 @@ function Dashboard() {
   ] as const;
 
   return (
-    <div className="morokFullDashboard">
+    <div className="morokFullDashboard" ref={dashboardRef}>
+      <div className="morokDashboardStage">
       <div className="dashAmbient" aria-hidden="true" />
       <div className="dashTechLines" aria-hidden="true" />
       <header className="dashHeader">
@@ -568,6 +583,7 @@ function Dashboard() {
 
       <div className="dashActions">{actions.map(([icon,label],i)=><button className={i===2?"execute":""} key={label}><span>{icon}</span>{label}</button>)}</div>
       <footer className="dashFooter">KOS&nbsp; // &nbsp;KORCZAK OPERATIONS SYSTEM</footer>
+      </div>
       <MicrophoneDebugWindow
         state={microphoneDebug.state}
         onClose={microphoneDebug.close}
