@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, session } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import si from "systeminformation";
@@ -7,8 +7,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 let mainWindow: BrowserWindow | null = null;
-let lastCpuSample: { total: number; idle: number } | null = null;
-let lastNetworkSample = 0;
+let cachedStorage = 0;
+let cachedStorageAt = 0;
 
 type Metrics = {
   cpu: number;
@@ -67,14 +67,19 @@ async function readNetwork(): Promise<number> {
   return clamp((bytesPerSecond * 8) / 1_000_000, 0, 1024);
 }
 
-async function readMetrics(includeStorage: boolean): Promise<Metrics> {
+async function readMetrics(): Promise<Metrics> {
   const [cpu, ram, network] = await Promise.all([
     readCpu(),
     readRam(),
     readNetwork()
   ]);
 
-  const storage = includeStorage ? await readStorage() : await readStorage();
+  const now = Date.now();
+  if (now - cachedStorageAt >= 600_000) {
+    cachedStorage = await readStorage();
+    cachedStorageAt = now;
+  }
+  const storage = cachedStorage;
 
   return {
     cpu: Number(cpu.toFixed(1)),
@@ -94,7 +99,7 @@ ipcMain.handle("morok:execute", async (_event, request: { action?: string }) => 
       return { granted: true, native: true };
 
     case "system.metrics":
-      return readMetrics(true);
+      return readMetrics();
 
     default:
       throw new Error(`Unknown Morok desktop action: ${request?.action ?? "undefined"}`);
@@ -125,11 +130,7 @@ function createWindow() {
   });
 }
 
-app.whenReady().then(async () => {
-  session.defaultSession.setPermissionRequestHandler((_webContents, _permission, callback) => {
-    callback(false);
-  });
-
+app.whenReady().then(() => {
   createWindow();
 
   app.on("activate", () => {
