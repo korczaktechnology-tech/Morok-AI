@@ -32,22 +32,85 @@ export function buildApp(){
   app.get("/health",async()=>({status:"ok",service:"morok-api",environment:config.nodeEnv}));
   app.get("/api/v1/status",async()=>({status:"ok",identity:MOROK_IDENTITY,phase:1,capabilities:{commands:coreCommands.length,permissions:corePermissions.length,tools:createCoreToolRegistry(await connectDatabase()).list().length,modelGateway:Boolean(config.modelApiUrl),voice:true,web:true,files:true,automation:true,organizer:true}}));
   app.get("/api/v1/model/status",async(_req,reply)=>{
-    if(!config.modelApiUrl)return reply.code(503).send({status:"unconfigured",model:config.modelName});
+    const configured={
+      url:Boolean(config.modelApiUrl),
+      username:Boolean(config.modelApiUsername),
+      key:Boolean(config.modelApiKey),
+      model:config.modelName
+    };
+    if(!config.modelApiUrl){
+      return reply.code(503).send({
+        status:"unconfigured",
+        provider:"ollama",
+        checks:{configuration:configured,reachable:false,authenticated:false,ollama:false,model:false}
+      });
+    }
+
     const base=config.modelApiUrl.replace(/\/v1\/?$/,"");
-    try{
-      const authorization = config.modelApiKey
+    const authorization=config.modelApiKey
       ? "Basic " + Buffer.from(config.modelApiUsername + ":" + config.modelApiKey).toString("base64")
       : undefined;
-    const response=await fetch(base+"/api/tags",{
-      headers: authorization ? {authorization} : undefined,
-      signal:AbortSignal.timeout(5000)
-    });
-      if(!response.ok)return reply.code(503).send({status:"unavailable",model:config.modelName});
+    const startedAt=Date.now();
+
+    try{
+      const response=await fetch(base+"/api/tags",{
+        headers:authorization ? {authorization} : undefined,
+        signal:AbortSignal.timeout(7000)
+      });
+      const latencyMs=Date.now()-startedAt;
+
+      if(response.status===401 || response.status===403){
+        return reply.code(503).send({
+          status:"auth_failed",
+          provider:"ollama",
+          model:config.modelName,
+          latencyMs,
+          checks:{configuration:configured,reachable:true,authenticated:false,ollama:false,model:false},
+          upstream:{status:response.status}
+        });
+      }
+
+      if(!response.ok){
+        return reply.code(503).send({
+          status:"upstream_error",
+          provider:"ollama",
+          model:config.modelName,
+          latencyMs,
+          checks:{configuration:configured,reachable:true,authenticated:Boolean(authorization),ollama:false,model:false},
+          upstream:{status:response.status}
+        });
+      }
+
       const data=await response.json() as {models?:Array<{name?:string}>};
-      const loaded=(data.models??[]).some(model=>model.name===config.modelName);
-      return {status:"ok",provider:"ollama",model:config.modelName,installed:loaded};
-    }catch{
-      return reply.code(503).send({status:"unavailable",provider:"ollama",model:config.modelName});
+      const models=(data.models??[]).map(model=>model.name).filter((name):name is string=>Boolean(name));
+      const installed=models.some(name=>name===config.modelName);
+      return {
+        status:installed ? "ok" : "model_missing",
+        provider:"ollama",
+        model:config.modelName,
+        installed,
+        latencyMs,
+        checks:{
+          configuration:configured,
+          reachable:true,
+          authenticated:Boolean(authorization),
+          ollama:true,
+          model:installed
+        },
+        upstream:{status:response.status,modelCount:models.length}
+      };
+    }catch(error){
+      const code=error instanceof Error ? error.name : "unknown";
+      const message=error instanceof Error ? error.message : "unknown_error";
+      app.log.warn({error:message,code},"Falha no diagnóstico do Ollama");
+      return reply.code(503).send({
+        status:code==="TimeoutError"||code==="AbortError" ? "timeout" : "unreachable",
+        provider:"ollama",
+        model:config.modelName,
+        latencyMs:Date.now()-startedAt,
+        checks:{configuration:configured,reachable:false,authenticated:false,ollama:false,model:false},
+        upstream:{error:code}
+      });
     }
   });
   let githubWorkflowCache:{expiresAt:number;workflows:Array<{
