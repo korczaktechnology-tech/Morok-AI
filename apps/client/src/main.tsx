@@ -513,11 +513,6 @@ function Dashboard() {
       <div className="dashActions">{actions.map(([icon,label],i)=><button className={i===2?"execute":""} key={label}><span>{icon}</span>{label}</button>)}</div>
       <footer className="dashFooter">KOS&nbsp; // &nbsp;KORCZAK OPERATIONS SYSTEM</footer>
       </div>
-      <MicrophoneDebugWindow
-        state={microphoneDebug.state}
-        onClose={microphoneDebug.close}
-        onToggle={microphoneDebug.toggle}
-      />
     </div>
   );
 }
@@ -895,10 +890,6 @@ function App() {
     window.morokDesktop?.isAvailable?.().then(Boolean).then(setLocalAgent).catch(() => setLocalAgent(false));
   }, []);
 
-  useEffect(() => () => {
-    speech?.stop();
-    window.speechSynthesis?.cancel();
-  }, [speech]);
 
   async function request(path: string, init: RequestInit = {}) {
     const r = await fetch(API + path, {
