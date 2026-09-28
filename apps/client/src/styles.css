@@ -2607,3 +2607,20 @@ mix-blend-mode:screen;opacity:.65}
     opacity:1!important;
   }
 }
+
+
+/* MOROK // OBJECTIVE PANEL — preserve its left edge and extend to the page end */
+@media(min-width:1360px){
+  .dashGoal{
+    left:calc(100% - 634px)!important;
+    right:0!important;
+    width:auto!important;
+  }
+
+  /* Voice Core position is intentionally untouched. */
+  .dashLeft .assistantPanel{
+    left:0!important;
+    bottom:0!important;
+    top:auto!important;
+  }
+}
