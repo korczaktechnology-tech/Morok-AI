@@ -341,7 +341,7 @@ function Dashboard() {
   useEffect(() => {
     let cancelled = false;
 
-    const readNative = async () => {
+    const readNative = async (includeStorage = false) => {
       try {
         const native = await window.morokDesktop?.execute?.("system.metrics");
         if (native && typeof native === "object" && !cancelled) {
@@ -350,7 +350,7 @@ function Dashboard() {
             ...current,
             cpu: typeof raw.cpu === "number" ? Math.max(0, Math.min(100, raw.cpu)) : current.cpu,
             ram: typeof raw.ram === "number" ? Math.max(0, Math.min(100, raw.ram)) : current.ram,
-            storage: typeof raw.storage === "number" ? Math.max(0, Math.min(100, raw.storage)) : current.storage,
+            storage: includeStorage && typeof raw.storage === "number" ? Math.max(0, Math.min(100, raw.storage)) : current.storage,
             network: typeof raw.network === "number" ? Math.max(0, Math.min(1024, raw.network)) : current.network,
             networkUnit: "Mbps"
           }));
@@ -402,7 +402,7 @@ function Dashboard() {
     };
 
     const tickFast = async () => {
-      const nativeWorked = await readNative();
+      const nativeWorked = await readNative(false);
       if (!nativeWorked) {
         await readBrowserFallback("network");
         await readBrowserFallback("ram");
@@ -410,7 +410,7 @@ function Dashboard() {
     };
 
     const tickStorage = async () => {
-      const nativeWorked = await readNative();
+      const nativeWorked = await readNative(true);
       if (!nativeWorked) await readBrowserFallback("storage");
     };
 
