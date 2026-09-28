@@ -933,6 +933,7 @@ function App() {
     } catch (e) {
       setNotice(e instanceof Error ? e.message : "Falha");
     } finally {
+      window.clearTimeout(streamTimeout);
       setLoading(false);
     }
   }
@@ -1002,8 +1003,6 @@ function App() {
         signal: streamController.signal,
         headers: { Accept: "text/event-stream", Authorization: `Bearer ${token}` }
       });
-      window.clearTimeout(streamTimeout);
-
       if (!r.ok) {
         const errorData = await r.json().catch(() => ({}));
         throw new Error(errorData.error ?? `api_http_${r.status}`);
