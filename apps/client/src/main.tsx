@@ -1011,7 +1011,7 @@ function App() {
       let buffer = "", full = "", streamError = "", nextConversationId = conversationId;
 
       const processLine = (rawLine: string) => {
-        const line = rawLine.endsWith("\\r") ? rawLine.slice(0, -1) : rawLine;
+        const line = rawLine.endsWith("\r") ? rawLine.slice(0, -1) : rawLine;
         if (line.startsWith("event: ")) {
           if (line.slice(7).trim() === "error") streamError = "stream_failed";
           return;
@@ -1048,7 +1048,7 @@ function App() {
         const { done, value: chunk } = await reader.read();
         if (done) break;
         buffer += decoder.decode(chunk, { stream: true });
-        const lines = buffer.split("\\n");
+        const lines = buffer.split("\n");
         buffer = lines.pop() ?? "";
         for (const line of lines) processLine(line);
       }
