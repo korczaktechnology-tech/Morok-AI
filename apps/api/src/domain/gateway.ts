@@ -41,14 +41,40 @@ function headers(provider: Provider) {
     : undefined;
 
   return {
+    accept: "application/json",
     "content-type": "application/json",
     ...(authorization ? { authorization } : {})
   };
 }
 
+function endpoint(provider: Provider) {
+  const url = provider.url.trim().replace(/\/$/, "");
+  return url.endsWith("/v1") ? url + "/chat/completions" : url + "/v1/chat/completions";
+}
+
+async function upstreamError(response: Response, prefix: string) {
+  let detail = "";
+  try {
+    const text = await response.text();
+    if (text) {
+      try {
+        const parsed = JSON.parse(text) as { error?: { message?: string } | string; message?: string };
+        const value = typeof parsed.error === "string"
+          ? parsed.error
+          : parsed.error?.message ?? parsed.message;
+        if (value) detail = String(value).slice(0, 300);
+      } catch {
+        detail = text.slice(0, 300);
+      }
+    }
+  } catch {}
+
+  throw new Error(prefix + response.status + (detail ? "_" + detail.replace(/[^a-zA-Z0-9_.:-]+/g, "_") : ""));
+}
+
 async function completeProvider(provider: Provider, request: ModelRequest): Promise<ModelResponse> {
   const response = await fetch(
-    provider.url.replace(/\/$/, "") + "/chat/completions",
+    endpoint(provider),
     {
       method: "POST",
       headers: headers(provider),
@@ -57,7 +83,7 @@ async function completeProvider(provider: Provider, request: ModelRequest): Prom
     }
   );
 
-  if (!response.ok) throw new Error("model_gateway_http_" + response.status);
+  if (!response.ok) await upstreamError(response, "model_gateway_http_");
 
   const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
   const content = data.choices?.[0]?.message?.content?.trim();
@@ -107,8 +133,8 @@ export class OpenAICompatibleGateway implements ModelGateway {
           }
         );
 
-        if (!response.ok || !response.body)
-          throw new Error("model_gateway_stream_http_" + response.status);
+        if (!response.ok) await upstreamError(response, "model_gateway_stream_http_");
+        if (!response.body) throw new Error("model_gateway_stream_empty_body");
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
