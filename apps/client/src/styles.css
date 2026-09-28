@@ -2624,3 +2624,75 @@ mix-blend-mode:screen;opacity:.65}
     top:auto!important;
   }
 }
+
+
+/* MOROK // TELEMETRY + EDGE CONTAINMENT */
+@media(min-width:1360px){
+  /* SYSTEMS: all eight system entries fit without clipping. */
+  .dashSystems{
+    height:400px!important;
+    min-height:400px!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+  .dashSystems h2{
+    margin-bottom:10px!important;
+  }
+  .dashSystems ul{
+    margin:0!important;
+    padding:0!important;
+  }
+  .dashSystems li{
+    height:40px!important;
+    min-height:40px!important;
+  }
+
+  /* Voice Core / assistant box is hard-anchored to the physical HUD edges. */
+  .dashLeft{
+    left:0!important;
+    bottom:0!important;
+    max-width:100vw!important;
+    overflow:visible!important;
+  }
+  .dashLeft .assistantPanel{
+    left:0!important;
+    bottom:0!important;
+    right:auto!important;
+    top:auto!important;
+    width:min(400px,100vw)!important;
+    max-width:100vw!important;
+    box-sizing:border-box!important;
+    margin:0!important;
+  }
+
+  /* Never allow the bottom information boxes to cross the right HUD edge. */
+  .dashMiniStatus{
+    right:0!important;
+    left:auto!important;
+    width:min(188px,100vw)!important;
+    max-width:100vw!important;
+    box-sizing:border-box!important;
+  }
+  .dashGoal{
+    right:0!important;
+    left:max(0px,calc(100% - 634px))!important;
+    width:auto!important;
+    max-width:100vw!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+}
+
+@media(max-width:1359px){
+  .dashLeft .assistantPanel,
+  .dashGoal,
+  .dashMiniStatus{
+    max-width:100vw!important;
+    box-sizing:border-box!important;
+  }
+}
+
+/* Telemetry labels: network gauge is normalized to 0–1024 Mbps. */
+.resourcePanel .resourceBar span{
+  max-width:100%!important;
+}
