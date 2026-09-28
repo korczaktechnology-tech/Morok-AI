@@ -1351,32 +1351,53 @@ function MorokConversationWindow(p:{messages:Msg[];input:string;setInput:(v:stri
 
 function MorokMicrophoneGate(p:{onGranted:()=>void}) {
   const [state,setState]=useState<"checking"|"ready"|"blocked"|"unsupported">("checking");
-  const recognitionRef=useRef<any>(null);
+  const streamRef=useRef<MediaStream|null>(null);
   const grantedRef=useRef(false);
 
-  const start=()=>{
+  const start=async()=>{
+    if(grantedRef.current&&streamRef.current) return;
+
     const Recognition=window.SpeechRecognition ?? window.webkitSpeechRecognition;
-    if(!Recognition){setState("unsupported");return;}
+    if(!Recognition || !navigator.mediaDevices?.getUserMedia){
+      setState("unsupported");
+      return;
+    }
+
     try{
-      const recognition=new Recognition();
-      recognition.lang="pt-BR";
-      recognition.continuous=true;
-      recognition.interimResults=true;
-      recognition.onstart=()=>{grantedRef.current=true;setState("ready");p.onGranted();try{recognition.stop()}catch{};recognitionRef.current=null;};
-      recognition.onerror=(event:any)=>{
-        const error=event?.error;
-        if(error==="not-allowed"||error==="service-not-allowed"||error==="audio-capture") setState("blocked");
-      };
-      recognition.onend=()=>{
-        recognitionRef.current=null;
-        if(!grantedRef.current) window.setTimeout(start,250);
-      };
-      recognitionRef.current=recognition;
-      recognition.start();
-    }catch{setState("blocked");}
+      // A permissão é solicitada pelo getUserMedia e o stream permanece aberto.
+      // Não iniciamos/paralisamos um SpeechRecognition temporário só para testar a permissão.
+      const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+      streamRef.current=stream;
+      grantedRef.current=true;
+      setState("ready");
+      p.onGranted();
+
+      stream.getAudioTracks().forEach(track=>{
+        track.onended=()=>{
+          grantedRef.current=false;
+          streamRef.current=null;
+          setState("blocked");
+        };
+      });
+    }catch{
+      grantedRef.current=false;
+      streamRef.current=null;
+      setState("blocked");
+    }
   };
 
-  useEffect(()=>{const blocked=()=>setState("blocked");window.addEventListener("morok-mic-blocked",blocked);start();return()=>{window.removeEventListener("morok-mic-blocked",blocked);try{recognitionRef.current?.stop?.()}catch{}}},[]);
+  useEffect(()=>{
+    const blocked=()=>setState("blocked");
+    window.addEventListener("morok-mic-blocked",blocked);
+    void start();
+
+    return()=>{
+      window.removeEventListener("morok-mic-blocked",blocked);
+      try{streamRef.current?.getTracks().forEach(track=>track.stop())}catch{}
+      streamRef.current=null;
+      grantedRef.current=false;
+    };
+  },[]);
 
   if(state==="ready") return null;
   return <div className="morokMicGate" role="dialog" aria-modal="true" aria-label="Permissão de microfone">
@@ -1384,8 +1405,8 @@ function MorokMicrophoneGate(p:{onGranted:()=>void}) {
       <div className="morokMicGateIcon"><img src={MOROK_SUB_ICON} alt="Morok" /></div>
       <small>ACESSO DE VOZ // MOROK</small>
       <h1>{state==="unsupported"?"MICROFONE NÃO SUPORTADO":"MICROFONE DESATIVADO"}</h1>
-      <p>{state==="unsupported"?"Este navegador não disponibilizou reconhecimento de voz. Use um navegador compatível para manter o microfone aberto.":"O Morok precisa do microfone habilitado para permanecer em escuta. Habilite o microfone no navegador e tente novamente."}</p>
-      {state!=="unsupported"&&<button type="button" onClick={start}>HABILITAR MICROFONE</button>}
+      <p>{state==="unsupported"?"Este navegador não disponibilizou captura de microfone ou reconhecimento de voz. Use um navegador compatível para manter a escuta contínua.":"O Morok precisa do microfone habilitado para permanecer em escuta. Habilite o microfone no navegador e tente novamente."}</p>
+      {state!=="unsupported"&&<button type="button" onClick={()=>void start()}>HABILITAR MICROFONE</button>}
       <span>ESCUTA CONTÍNUA · COMANDO: “MOROK, ACORDE”</span>
     </div>
   </div>;
