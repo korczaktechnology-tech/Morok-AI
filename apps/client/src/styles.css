@@ -2942,3 +2942,289 @@ mix-blend-mode:screen;opacity:.65}
   .morokFullDashboard > .assistantPanel .morokVoiceCore{left:74px!important;z-index:60!important;}
   .morokFullDashboard > .dashMiniStatus{left:212px!important;z-index:10!important;}
 }
+
+/* MOROK // REFERENCE DESIGN LOCK — FINAL DESKTOP COMPOSITION */
+@media (min-width:1360px){
+  .morokFullDashboard{
+    zoom:1!important;
+    width:100vw!important;
+    min-width:0!important;
+    height:100dvh!important;
+    min-height:720px!important;
+    max-width:100vw!important;
+    overflow:hidden!important;
+    background:
+      radial-gradient(circle at 50% 46%,rgba(74,36,255,.18),transparent 31%),
+      radial-gradient(circle at 16% 50%,rgba(26,91,255,.08),transparent 22%),
+      radial-gradient(circle at 78% 48%,rgba(188,0,255,.08),transparent 23%),
+      linear-gradient(180deg,#010207 0%,#02030a 52%,#010207 100%)!important;
+  }
+
+  /* Fundo: circuitos sutis, sem grade. */
+  .morokFullDashboard:before{
+    opacity:.38!important;
+    background:
+      linear-gradient(118deg,transparent 0 7%,rgba(61,81,180,.24) 7.08%,transparent 7.22%),
+      linear-gradient(62deg,transparent 0 14%,rgba(130,42,255,.20) 14.08%,transparent 14.22%),
+      linear-gradient(118deg,transparent 0 74%,rgba(0,145,255,.18) 74.08%,transparent 74.22%),
+      linear-gradient(62deg,transparent 0 82%,rgba(255,39,92,.16) 82.08%,transparent 82.22%)!important;
+    mask-image:radial-gradient(ellipse at center,#000 15%,transparent 94%)!important;
+  }
+  .dashTechLines{
+    opacity:.58!important;
+    background-image:
+      linear-gradient(118deg,transparent 0 6%,rgba(65,91,214,.28) 6.08%,transparent 6.2%),
+      linear-gradient(62deg,transparent 0 17%,rgba(139,35,255,.26) 17.08%,transparent 17.2%),
+      linear-gradient(118deg,transparent 0 29%,rgba(19,164,255,.16) 29.08%,transparent 29.2%),
+      linear-gradient(62deg,transparent 0 71%,rgba(255,30,92,.16) 71.08%,transparent 71.2%),
+      linear-gradient(118deg,transparent 0 88%,rgba(61,104,255,.20) 88.08%,transparent 88.2%)!important;
+    background-size:360px 240px,430px 300px,520px 340px,480px 320px,610px 390px!important;
+    mask-image:radial-gradient(ellipse at center,#000 8%,transparent 97%)!important;
+  }
+
+  /* Cabeçalho. */
+  .morokFullDashboard .dashHeader{
+    left:24px!important;right:24px!important;top:16px!important;
+    width:auto!important;height:70px!important;min-height:0!important;
+    transform:none!important;z-index:100!important;
+  }
+  .morokFullDashboard .kosMark{font-size:45px!important;letter-spacing:-5px!important}
+  .morokFullDashboard .kosBrand{gap:18px!important}
+  .morokFullDashboard .kosBrand strong{font-size:11px!important;letter-spacing:.9px!important}
+  .morokFullDashboard .kosBrand small{font-size:10px!important;margin-top:14px!important}
+  .morokFullDashboard .dashClock{margin-right:24px!important}
+  .morokFullDashboard .dashClock strong{font-size:18px!important}
+  .morokFullDashboard .dashClock span,
+  .morokFullDashboard .dashWeather small{font-size:9px!important}
+  .morokFullDashboard .dashWeather .sunGlyph{font-size:28px!important}
+
+  /* Coluna esquerda: +50px de largura, sem deslocar o Voice Core. */
+  .morokFullDashboard .dashLeft{
+    left:22px!important;top:112px!important;bottom:auto!important;
+    width:352px!important;height:auto!important;transform:none!important;
+    z-index:8!important;
+    overflow:visible!important;
+  }
+  .morokFullDashboard .resourcePanel{
+    position:absolute!important;left:0!important;top:0!important;
+    width:352px!important;height:270px!important;margin:0!important;
+    padding:15px 21px!important;
+  }
+  .morokFullDashboard .resourceRow{height:60px!important}
+  .morokFullDashboard .resourceIcon{width:40px!important;height:40px!important;font-size:19px!important}
+  .morokFullDashboard .resourceData b{font-size:11px!important}
+  .morokFullDashboard .resourceData strong{font-size:17px!important}
+  .morokFullDashboard .resourceBar{height:8px!important}
+  .morokFullDashboard .processPanel{
+    position:absolute!important;left:0!important;top:282px!important;
+    width:352px!important;height:230px!important;margin:0!important;
+    padding:15px 21px!important;
+  }
+  .morokFullDashboard .processPanel h3{font-size:11px!important;margin-bottom:8px!important}
+  .morokFullDashboard .processRow{height:31px!important;font-size:10px!important}
+  .morokFullDashboard .processRow strong{font-size:10px!important}
+
+  /* Systems. */
+  .morokFullDashboard .dashSystems{
+    left:calc(50% - 470px)!important;
+    top:148px!important;bottom:auto!important;
+    width:190px!important;height:370px!important;
+    padding:34px 17px 16px 55px!important;
+    transform:none!important;
+    background:linear-gradient(150deg,rgba(7,6,24,.94),rgba(2,4,15,.88))!important;
+    clip-path:polygon(12% 0,72% 0,100% 13%,100% 87%,72% 100%,12% 100%,0 92%,0 10%)!important;
+    z-index:12!important;
+  }
+  .morokFullDashboard .dashSystems h2{font-size:18px!important;margin-bottom:13px!important}
+  .morokFullDashboard .dashSystems li{height:40px!important;font-size:11px!important;gap:9px!important}
+  .morokFullDashboard .dashSystems .sysGlyph{font-size:16px!important;width:19px!important}
+
+  /* Núcleo central. */
+  .morokFullDashboard .dashCore{
+    left:50%!important;top:44%!important;
+    width:min(650px,39vw,69vh)!important;
+    max-width:650px!important;aspect-ratio:1!important;
+    transform:translate(-50%,-50%)!important;
+    z-index:7!important;filter:none!important;
+  }
+  .morokFullDashboard .dashCore .ringA{box-shadow:0 0 26px rgba(63,65,255,.18)!important}
+  .morokFullDashboard .dashCore .ringB{box-shadow:0 0 16px rgba(177,51,255,.32)!important}
+  .morokFullDashboard .dashCore .coreRing{border-width:1px!important}
+  .morokFullDashboard .dashCore .ringA{border-width:2px!important}
+  .morokFullDashboard .dashCore .ringB{border-width:2px!important}
+  .morokFullDashboard .dashCore .ringD{
+    width:64%!important;height:64%!important;
+    transform:translate(-50%,-50%) rotate(20deg) scaleY(.52)!important;
+  }
+  .morokFullDashboard .dashCore .ringE{
+    width:56%!important;height:56%!important;
+    transform:translate(-50%,-50%) rotate(-22deg) scaleY(.50)!important;
+  }
+  .morokFullDashboard .dashCore .coreLogo{width:44%!important;height:44%!important;transform:translateY(-2%)!important}
+  .morokFullDashboard .dashCore .coreLogo img{
+    filter:drop-shadow(0 0 18px rgba(129,61,255,.8))
+            drop-shadow(0 0 30px rgba(0,170,255,.55))
+            drop-shadow(0 0 4px rgba(255,255,255,.85))!important;
+  }
+  .morokFullDashboard .dashCore .coreName{
+    top:74%!important;font-size:clamp(34px,2.8vw,44px)!important;
+    letter-spacing:7px!important;
+  }
+  .morokFullDashboard .dashCore .coreSubtitle{
+    top:84%!important;font-size:clamp(9px,.68vw,11px)!important;
+    letter-spacing:1.4px!important;
+  }
+  .morokFullDashboard .dashCore .coreTopLabel{top:1%!important}
+  .morokFullDashboard .dashCore .coreTopLabel b{font-size:22px!important}
+
+  /* Informações à direita e navegação. */
+  .morokFullDashboard .dashRight{
+    left:auto!important;right:235px!important;top:122px!important;
+    width:285px!important;transform:none!important;z-index:10!important;
+  }
+  .morokFullDashboard .notificationPanel{
+    width:285px!important;height:180px!important;padding:17px 20px!important
+  }
+  .morokFullDashboard .activityPanel{
+    width:285px!important;height:220px!important;margin-top:18px!important;padding:17px 20px!important
+  }
+  .morokFullDashboard .noticeRow{height:31px!important;font-size:10px!important}
+  .morokFullDashboard .activityRow{height:37px!important;font-size:10px!important}
+  .morokFullDashboard .dashNav{
+    right:20px!important;top:122px!important;
+    width:200px!important;height:472px!important;bottom:auto!important;
+    transform:none!important;z-index:14!important;
+    clip-path:polygon(12% 0,100% 0,100% 91%,92% 100%,12% 100%,0 92%,0 8%)!important;
+  }
+  .morokFullDashboard .dashNav button{
+    height:59px!important;min-height:59px!important;
+    padding:0 18px!important;font-size:11px!important;gap:15px!important;
+  }
+  .morokFullDashboard .dashNav button span{font-size:22px!important;width:23px!important}
+
+  /* Assistant: círculo + transcrição, no rodapé esquerdo. */
+  .morokFullDashboard > .assistantPanel{
+    position:absolute!important;left:0!important;right:auto!important;
+    top:auto!important;bottom:0!important;
+    width:430px!important;height:194px!important;min-height:0!important;
+    margin:0!important;padding:0!important;display:block!important;
+    transform:none!important;overflow:visible!important;
+    background:linear-gradient(90deg,rgba(2,4,16,.74),rgba(3,5,20,.34),transparent)!important;
+    border:1px solid rgba(72,91,194,.34)!important;
+    border-radius:0!important;
+    clip-path:polygon(0 10%,7% 0,88% 0,100% 17%,100% 75%,88% 100%,0 100%)!important;
+    box-shadow:inset 0 1px 0 rgba(114,138,255,.20),inset 0 0 34px rgba(39,49,128,.09)!important;
+    z-index:30!important;
+  }
+  .morokFullDashboard > .assistantPanel .morokVoiceCore{
+    position:absolute!important;left:20px!important;top:5px!important;
+    right:auto!important;bottom:auto!important;
+    width:185px!important;height:185px!important;
+    margin:0!important;flex:none!important;transform:none!important;
+    border-radius:50%!important;background:transparent!important;
+    border:0!important;overflow:visible!important;z-index:2!important;
+  }
+  .morokFullDashboard > .assistantPanel .morokVoiceCore .voiceCoreVisual{
+    position:absolute!important;left:0!important;top:0!important;
+    width:185px!important;height:185px!important;
+    border:1px solid rgba(92,113,255,.42)!important;
+    border-radius:50%!important;
+    background:
+      repeating-radial-gradient(circle at center,transparent 0 21px,rgba(61,91,220,.13) 22px 23px),
+      radial-gradient(circle at center,rgba(80,73,255,.10) 0 20%,transparent 54%)!important;
+    box-shadow:0 0 18px rgba(70,87,255,.10),inset 0 0 20px rgba(72,61,180,.08)!important;
+    overflow:hidden!important;
+  }
+  .morokFullDashboard > .assistantPanel .morokVoiceCore .voiceCoreCenter{
+    width:7px!important;height:7px!important;
+    background:#eef2ff!important;
+    border:1px solid rgba(137,157,255,.85)!important;
+    box-shadow:0 0 7px rgba(110,132,255,.95),0 0 15px rgba(100,73,255,.55)!important;
+  }
+  .morokFullDashboard > .assistantPanel .morokVoiceCore canvas{
+    position:absolute!important;inset:0!important;
+    width:100%!important;height:100%!important;opacity:1!important;
+  }
+  .morokFullDashboard > .assistantPanel > div:last-child{
+    position:absolute!important;left:220px!important;right:12px!important;
+    top:39px!important;transform:none!important;margin:0!important;
+    z-index:3!important;
+  }
+  .morokFullDashboard > .assistantPanel > div:last-child:before{
+    content:"VOICE / REALTIME"!important;
+    display:block!important;margin:0 0 4px!important;
+    font:600 7px/1 monospace!important;letter-spacing:1.5px!important;
+    color:rgba(111,145,255,.52)!important;
+  }
+  .morokFullDashboard > .assistantPanel > div:last-child h3{
+    font-size:17px!important;letter-spacing:.6px!important;margin:0!important
+  }
+  .morokFullDashboard > .assistantPanel > div:last-child small{font-size:8px!important}
+  .morokFullDashboard > .assistantPanel > div:last-child p{
+    font-size:10px!important;line-height:1.45!important;margin:11px 0!important
+  }
+  .morokFullDashboard > .assistantPanel .wave{display:block!important;font-size:15px!important}
+
+  /* MiniStatus: imediatamente à direita do bloco do Voice Core. */
+  .morokFullDashboard > .dashMiniStatus{
+    position:absolute!important;left:430px!important;right:auto!important;
+    top:auto!important;bottom:0!important;
+    width:182px!important;height:170px!important;
+    margin:0!important;box-sizing:border-box!important;
+    transform:none!important;z-index:31!important;
+    padding:14px 13px!important;
+    background:rgba(2,4,16,.78)!important;
+    clip-path:polygon(7% 0,89% 0,100% 14%,92% 100%,7% 100%,0 88%)!important;
+    border:1px solid rgba(69,91,220,.38)!important;
+  }
+  .morokFullDashboard > .dashMiniStatus .miniChart{height:62px!important}
+  .morokFullDashboard > .dashMiniStatus .miniChart i{width:12px!important}
+  .morokFullDashboard > .dashMiniStatus>span{font-size:9px!important}
+  .morokFullDashboard > .dashMiniStatus .stable{margin-left:7px!important;color:#54caff!important}
+
+  /* Objetivo. */
+  .morokFullDashboard .dashGoal{
+    right:20px!important;left:auto!important;bottom:78px!important;
+    width:260px!important;height:190px!important;padding:18px 21px!important;
+    transform:none!important;z-index:11!important;
+    background:rgba(2,4,15,.74)!important;
+  }
+  .morokFullDashboard .dashGoal h3{font-size:11px!important}
+  .morokFullDashboard .dashGoal>b{font-size:10px!important}
+  .morokFullDashboard .dashGoal p{font-size:10px!important;line-height:1.45!important}
+  .morokFullDashboard .dashGoal strong{font-size:8px!important}
+  .morokFullDashboard .goalBar{height:9px!important;margin:17px 0 15px!important}
+
+  /* Ações e rodapé. */
+  .morokFullDashboard .dashActions{
+    left:50%!important;bottom:68px!important;
+    transform:translateX(-50%)!important;gap:8px!important;z-index:16!important;
+  }
+  .morokFullDashboard .dashActions button{
+    width:112px!important;height:88px!important;
+    font-size:10px!important;
+  }
+  .morokFullDashboard .dashActions button span{font-size:25px!important}
+  .morokFullDashboard .dashFooter{
+    left:30%!important;right:30%!important;bottom:13px!important;height:28px!important;
+    font-size:8px!important;z-index:12!important;
+  }
+}
+
+/* Desktop estreito: mesma hierarquia, apenas compressão controlada. */
+@media (min-width:1360px) and (max-width:1500px){
+  .morokFullDashboard .dashLeft,
+  .morokFullDashboard .resourcePanel,
+  .morokFullDashboard .processPanel{width:320px!important}
+  .morokFullDashboard .dashSystems{left:332px!important;width:178px!important}
+  .morokFullDashboard .dashRight{right:206px!important;width:250px!important}
+  .morokFullDashboard .notificationPanel,
+  .morokFullDashboard .activityPanel{width:250px!important}
+  .morokFullDashboard .dashNav{width:186px!important;right:12px!important}
+  .morokFullDashboard .dashNav button{padding:0 14px!important;gap:12px!important;font-size:10px!important}
+  .morokFullDashboard > .assistantPanel{width:410px!important}
+  .morokFullDashboard > .assistantPanel > div:last-child{left:210px!important}
+  .morokFullDashboard > .dashMiniStatus{left:410px!important;width:176px!important}
+  .morokFullDashboard .dashGoal{width:235px!important}
+  .morokFullDashboard .dashActions button{width:96px!important}
+}
