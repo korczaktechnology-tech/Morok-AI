@@ -504,11 +504,12 @@ function Dashboard() {
           <h3>PROCESSOS ATIVOS</h3>
           {processes.map(([name,val],i)=><div className="processRow" key={name}><i className={"processDot p"+i}/><span>{name}</span><strong>{val}</strong></div>)}
         </div>
-        <div className="assistantPanel">
-          <MorokVoiceCore />
-          <div><h3>MOROK</h3><small>ASSISTENTE VIRTUAL</small><p>Olá, Korczak.<br/>Todos os sistemas estão operando normalmente.</p></div>
-        </div>
       </aside>
+
+      <div className="assistantPanel">
+        <MorokVoiceCore />
+        <div><h3>MOROK</h3><small>ASSISTENTE VIRTUAL</small><p>Olá, Korczak.<br/>Todos os sistemas estão operando normalmente.</p></div>
+      </div>
 
       <div className="dashSystems">
         <div className="systemsEdge"/>
