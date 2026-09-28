@@ -3,7 +3,7 @@ services:
     name: morok-api
     runtime: node
     plan: free
-    buildCommand: npm install --workspaces --include=dev --no-audit --no-fund && npm run build --workspace=@morok/api
+    buildCommand: npm install --workspaces --include=dev --no-audit --no-fund --prefer-offline && npm run build --workspace=@morok/api
     startCommand: npm run start --workspace=@morok/api
     healthCheckPath: /health
     buildFilter:
@@ -11,9 +11,9 @@ services:
         - apps/api/**
         - packages/**
         - package.json
+        - package-lock.json
         - tsconfig.base.json
         - .nvmrc
-        - render.yaml
     envVars:
       - key: NODE_ENV
         value: production
@@ -46,7 +46,6 @@ services:
     buildFilter:
       paths:
         - apps/ollama/**
-        - render.yaml
     envVars:
       - key: MODEL_PROXY_KEY
         sync: false
