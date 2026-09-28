@@ -4961,3 +4961,69 @@ mix-blend-mode:screen;opacity:.65}
     bottom:auto!important;
   }
 }
+
+/* ===== INDEX DASHBOARD ALIGNMENT // USER GEOMETRY ===== */
+
+@media (min-width:1360px) and (min-height:761px){
+  /* Header bottom = 81px */
+  .morokDashboardStage .dashSystems{
+    top:81px!important;
+  }
+
+  /* Process right = 21px + 304px = 325px */
+  .morokDashboardStage > .dashMiniStatus{
+    left:325px!important;
+    top:621px!important;
+    bottom:auto!important;
+    transform:translateY(-100%)!important;
+  }
+
+  /* Navigation top = header bottom */
+  .morokDashboardStage .dashNav{
+    top:81px!important;
+  }
+
+  /* Notifications: top = header bottom, right = navigation left */
+  .morokDashboardStage .dashRight{
+    left:1182px!important;
+    top:81px!important;
+  }
+  .morokDashboardStage .notificationPanel{
+    margin-top:0!important;
+  }
+  .morokDashboardStage .activityPanel{
+    margin-top:0!important;
+  }
+}
+
+@media (min-width:1360px) and (max-height:760px){
+  /* Header bottom = 81px */
+  .morokDashboardStage .dashSystems{
+    top:81px!important;
+  }
+
+  /* Process right = 21px + 304px = 325px */
+  .morokDashboardStage > .dashMiniStatus{
+    left:325px!important;
+    top:593px!important;
+    bottom:auto!important;
+    transform:translateY(-100%)!important;
+  }
+
+  /* Navigation top = header bottom */
+  .morokDashboardStage .dashNav{
+    top:81px!important;
+  }
+
+  /* Notifications: top = header bottom, right = navigation left */
+  .morokDashboardStage .dashRight{
+    left:1182px!important;
+    top:81px!important;
+  }
+  .morokDashboardStage .notificationPanel{
+    margin-top:0!important;
+  }
+  .morokDashboardStage .activityPanel{
+    margin-top:0!important;
+  }
+}
