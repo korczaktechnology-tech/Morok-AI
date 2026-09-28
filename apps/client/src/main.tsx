@@ -893,17 +893,34 @@ function App() {
 
 
   async function request(path: string, init: RequestInit = {}) {
-    const r = await fetch(API + path, {
-      ...init,
-      headers: {
-        ...(init.body ? { "Content-Type": "application/json" } : {}),
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...(init.headers ?? {})
+    let last: unknown;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const controller = new AbortController();
+      const timer = window.setTimeout(() => controller.abort(), 30000);
+      try {
+        const r = await fetch(API + path, {
+          ...init,
+          signal: init.signal ?? controller.signal,
+          headers: {
+            ...(init.body ? { "Content-Type": "application/json" } : {}),
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            ...(init.headers ?? {})
+          }
+        });
+        const d = await r.json().catch(() => ({}));
+        if (r.ok) return d;
+        if (![408, 425, 429, 502, 503, 504].includes(r.status) || attempt === 2) {
+          throw new Error(d.error ?? `api_http_${r.status}`);
+        }
+      } catch (error) {
+        last = error;
+        if (attempt === 2) throw error;
+      } finally {
+        window.clearTimeout(timer);
       }
-    });
-    const d = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(d.error ?? "request_failed");
-    return d;
+      await new Promise(resolve => window.setTimeout(resolve, 700 * (attempt + 1)));
+    }
+    throw last instanceof Error ? last : new Error("request_failed");
   }
 
   async function auth(path: string) {
