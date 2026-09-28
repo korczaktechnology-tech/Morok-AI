@@ -339,6 +339,21 @@ function Dashboard() {
   }, []);
 
   useEffect(() => {
+    const requestMetricsAccess = async () => {
+      try {
+        await window.morokDesktop?.execute?.("system.requestMetricsPermission");
+      } catch {}
+
+      // Storage persistence is the only related browser permission available.
+      try {
+        await navigator.storage?.persist?.();
+      } catch {}
+    };
+
+    void requestMetricsAccess();
+  }, []);
+
+  useEffect(() => {
     let cancelled = false;
 
     const readNative = async (includeStorage = false) => {
