@@ -31,6 +31,19 @@ export function buildApp(){
 
   app.get("/health",async()=>({status:"ok",service:"morok-api",environment:config.nodeEnv}));
   app.get("/api/v1/status",async()=>({status:"ok",identity:MOROK_IDENTITY,phase:1,capabilities:{commands:coreCommands.length,permissions:corePermissions.length,tools:createCoreToolRegistry(await connectDatabase()).list().length,modelGateway:Boolean(config.modelApiUrl),voice:true,web:true,files:true,automation:true,organizer:true}}));
+  app.get("/api/v1/model/status",async(_req,reply)=>{
+    if(!config.modelApiUrl)return reply.code(503).send({status:"unconfigured",model:config.modelName});
+    const base=config.modelApiUrl.replace(/\\/v1\\/?$/,"");
+    try{
+      const response=await fetch(base+"/api/tags",{signal:AbortSignal.timeout(5000)});
+      if(!response.ok)return reply.code(503).send({status:"unavailable",model:config.modelName});
+      const data=await response.json() as {models?:Array<{name?:string}>};
+      const loaded=(data.models??[]).some(model=>model.name===config.modelName);
+      return {status:"ok",provider:"ollama",model:config.modelName,installed:loaded};
+    }catch{
+      return reply.code(503).send({status:"unavailable",provider:"ollama",model:config.modelName});
+    }
+  });
   let githubWorkflowCache:{expiresAt:number;workflows:Array<{
     id:number;workflowId:number;name:string;runNumber:number;commit:string;sha:string;
     status:string;conclusion:string|null;updatedAt:string;workflowState:string;
