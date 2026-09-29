@@ -53,7 +53,8 @@ from pathlib import Path
 p=Path("apps/client/android/app/src/main/AndroidManifest.xml");s=p.read_text()
 for x in ['<uses-permission android:name="android.permission.RECORD_AUDIO" />','<uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />','<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />','<uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />']:
  if x not in s:
-  s=s.replace('<manifest ', '<manifest '+x+' ')
+  i=s.find('>')
+  s=s[:i+1]+'\n    '+x+s[i+1:]
 if "MorokWakeService" not in s:s=s.replace("</application>",'<service android:name="com.korczak.morok.MorokWakeService" android:exported="false" android:foregroundServiceType="microphone" />\n</application>')
 if "FileProvider" not in s:s=s.replace("</application>",'<provider android:name="androidx.core.content.FileProvider" android:authorities="com.korczak.morok.fileprovider" android:exported="false" android:grantUriPermissions="true"><meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" /></provider>\n</application>')
 p.write_text(s)
