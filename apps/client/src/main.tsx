@@ -8,6 +8,7 @@ const API = import.meta.env.VITE_API_URL ?? "https://morok-ai.onrender.com";
 const MOROK_SUB_ICON = `${import.meta.env.BASE_URL}MorokSubIcon.svg`;
 const MOROK_CENTER_ICON = `${import.meta.env.BASE_URL}MorokCenterIcon.svg`;
 const MorokUpdater = Capacitor.registerPlugin<{ installApk(options: { url: string }): Promise<void> }>("MorokUpdater");
+const MorokNativeVoice = Capacitor.registerPlugin<{ startVoiceService(): Promise<void>; requestOverlay(): Promise<void> }>("MorokUpdater");
 
 type Msg = { role: "user" | "assistant"; content: string };
 type Task = { id: string; title: string; status: string; dueAt?: string };
@@ -736,6 +737,27 @@ function App() {
   const workflowRequestRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
+    if (Capacitor.getPlatform() !== "android") return;
+    const onNativeCommand = (event: Event) => {
+      try {
+        const detail = JSON.parse((event as CustomEvent).detail || "{}");
+        const command = String(detail.command || "");
+        if (!command) return;
+        if (command === "update") window.dispatchEvent(new Event("morok-check-update"));
+        else if (command === "open") setTab("home");
+        else if (command === "projects") setTab("systems");
+        else if (command === "security") setTab("settings");
+        else if (command === "network") setTab("home");
+        setVoiceCommand(command);
+        window.setTimeout(() => setVoiceCommand(null), 2600);
+      } catch {}
+    };
+    window.addEventListener("morokNativeCommand", onNativeCommand);
+    void MorokNativeVoice.startVoiceService().catch(() => {});
+    return () => window.removeEventListener("morokNativeCommand", onNativeCommand);
+  }, []);
+
+  useEffect(() => {
     const tick = () => {
       const now = new Date();
       setBrasiliaTime(new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).format(now));
@@ -1346,6 +1368,7 @@ function MorokConversationWindow(p:{messages:Msg[];input:string;setInput:(v:stri
 }
 
 function MorokMicrophoneSystem(p:{onWake:(command:string)=>void;onListening:(value:boolean)=>void}) {
+  if (Capacitor.getPlatform() === "android") return null;
   const wakeRef=useRef(p.onWake);
   const listeningRef=useRef(p.onListening);
   const bufferRef=useRef("");
