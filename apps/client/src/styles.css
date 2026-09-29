@@ -5059,3 +5059,54 @@ mix-blend-mode:screen;opacity:.65}
 .mobileUpdateOverlay{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:24px;background:rgba(2,3,8,.86);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
 .mobileUpdatePanel{position:relative;width:min(420px,92vw);padding:32px 26px 26px;text-align:center;border:1px solid rgba(126,93,255,.55);background:linear-gradient(145deg,rgba(12,14,27,.98),rgba(4,6,14,.98));box-shadow:0 0 50px rgba(103,58,255,.22),inset 0 0 30px rgba(255,255,255,.025);clip-path:polygon(0 18px,18px 0,calc(100% - 18px) 0,100% 18px,100% calc(100% - 18px),calc(100% - 18px) 100%,18px 100%,0 calc(100% - 18px))}
 .mobileUpdateClose{position:absolute;right:12px;top:10px;width:32px;height:32px;border:0;background:transparent;color:#b9b9c9;font-size:24px;cursor:pointer}.mobileUpdateIcon{width:72px;height:72px;margin:0 auto 18px;display:grid;place-items:center;border:1px solid rgba(166,113,255,.6);border-radius:50%;box-shadow:0 0 24px rgba(119,72,255,.3)}.mobileUpdateIcon img{width:48px;height:48px}.mobileUpdatePanel small{display:block;letter-spacing:.18em;color:#a9a1ff;font-size:10px}.mobileUpdatePanel h2{margin:8px 0;color:#fff;letter-spacing:.08em;font-size:25px}.mobileUpdatePanel p{margin:0 0 16px;color:#a9adbd;line-height:1.5;font-size:13px}.mobileUpdateNotes{max-height:110px;overflow:auto;margin:0 0 18px;padding:12px;text-align:left;font-size:11px;line-height:1.45;color:#bfc3d1;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07)}.mobileUpdateInstall{width:100%;padding:13px 16px;border:1px solid rgba(150,110,255,.8);background:linear-gradient(90deg,rgba(90,48,180,.8),rgba(151,57,140,.8));color:#fff;font-weight:700;letter-spacing:.08em;cursor:pointer}.mobileCoreHint{font-size:9px!important;letter-spacing:.12em}
+
+
+/* MOROK MOBILE // REFERENCE HUD CORE */
+@media (max-width:700px){
+  .mobileCoreRings{
+    -webkit-tap-highlight-color:transparent!important;
+    touch-action:manipulation!important;
+  }
+  .mobileCoreRings:focus-visible{
+    outline:1px solid rgba(80,183,255,.9)!important;
+    outline-offset:5px!important;
+  }
+  .mobileCoreHud{
+    position:absolute!important;
+    inset:0!important;
+    width:100%!important;
+    height:100%!important;
+    overflow:visible!important;
+    pointer-events:none!important;
+    opacity:.92!important;
+    z-index:1!important;
+    filter:drop-shadow(0 0 8px rgba(31,135,255,.35))!important;
+  }
+  .mobileCoreHud circle,
+  .mobileCoreHud ellipse,
+  .mobileCoreHud path{
+    fill:none!important;
+    stroke:rgba(64,166,255,.62)!important;
+    stroke-width:1!important;
+    vector-effect:non-scaling-stroke!important;
+  }
+  .mobileCoreHud circle:nth-child(2){stroke:rgba(123,62,255,.68)!important;stroke-dasharray:2 8!important}
+  .mobileCoreHud circle:nth-child(3){stroke:rgba(33,191,255,.42)!important;stroke-dasharray:1 5!important}
+  .mobileCoreHud ellipse:nth-last-child(1){stroke:rgba(255,42,112,.68)!important;stroke-width:1.4!important}
+  .mobileCoreHud ellipse:nth-last-child(2){stroke:rgba(90,72,255,.72)!important;stroke-width:1.2!important}
+  .mobileCoreHud path:nth-of-type(n+5){stroke:rgba(181,221,255,.52)!important}
+  .mobileCoreRings:before,.mobileCoreRings:after{z-index:2!important}
+  .mobileCoreOrbit{z-index:3!important}
+  .mobileCoreCrosshair{z-index:2!important}
+  .mobileCoreNode{z-index:4!important}
+  .mobileCoreGlyph{z-index:7!important}
+  .mobileCoreRings>b,.mobileCoreHint,.mobileCoreRings>i{z-index:8!important}
+  .mobileCoreGlyph img{
+    width:76px!important;height:76px!important;
+    filter:drop-shadow(0 0 7px rgba(181,70,255,.8)) drop-shadow(0 0 13px rgba(26,151,255,.58))!important;
+  }
+  .mobileCoreRings:active .mobileCoreGlyph img{
+    transform:scale(.93)!important;
+  }
+  .mobileCoreRings:active .mobileCoreOrbit{animation-duration:.45s!important}
+}
