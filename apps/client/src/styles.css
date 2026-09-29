@@ -5110,3 +5110,7 @@ mix-blend-mode:screen;opacity:.65}
   }
   .mobileCoreRings:active .mobileCoreOrbit{animation-duration:.45s!important}
 }
+
+.morokVoiceCommandOverlay{position:fixed;inset:0;z-index:12000;display:grid;place-items:start center;padding:14vh 20px 20px;pointer-events:none;background:radial-gradient(circle at 50% 24%,rgba(105,65,255,.12),transparent 32%)}
+.morokVoiceCommandPanel{min-width:min(360px,88vw);max-width:460px;padding:22px 26px;text-align:center;border:1px solid rgba(143,102,255,.68);background:rgba(5,7,16,.88);backdrop-filter:blur(18px);box-shadow:0 0 45px rgba(101,61,255,.22),inset 0 0 24px rgba(255,255,255,.025);clip-path:polygon(0 14px,14px 0,calc(100% - 14px) 0,100% 14px,100% calc(100% - 14px),calc(100% - 14px) 100%,14px 100%,0 calc(100% - 14px));animation:morokVoiceCommandIn .18s ease-out both}
+.morokVoiceCommandCore{width:54px;height:54px;margin:0 auto 10px;display:grid;place-items:center;border:1px solid rgba(161,117,255,.72);border-radius:50%;box-shadow:0 0 25px rgba(124,73,255,.34)}.morokVoiceCommandCore img{width:34px;height:34px}.morokVoiceCommandPanel small{display:block;color:#a99dff;font-size:9px;letter-spacing:.18em}.morokVoiceCommandPanel strong{display:block;margin:7px 0;color:#fff;font-size:17px}.morokVoiceCommandPanel span{color:#85899b;font-size:8px;letter-spacing:.12em}@keyframes morokVoiceCommandIn{from{opacity:0;transform:translateY(-10px) scale(.98)}to{opacity:1;transform:none}}
