@@ -8,7 +8,6 @@ const API = import.meta.env.VITE_API_URL ?? "https://morok-ai.onrender.com";
 const MOROK_SUB_ICON = `${import.meta.env.BASE_URL}MorokSubIcon.svg`;
 const MOROK_CENTER_ICON = `${import.meta.env.BASE_URL}MorokCenterIcon.svg`;
 const MorokUpdater = Capacitor.registerPlugin<{ installApk(options: { url: string }): Promise<void> }>("MorokUpdater");
-const MorokWake = Capacitor.registerPlugin<{ startWakeMode(): Promise<void>; stopWakeMode(): Promise<void> }>("MorokWake");
 
 type Msg = { role: "user" | "assistant"; content: string };
 type Task = { id: string; title: string; status: string; dueAt?: string };
@@ -690,19 +689,7 @@ function UpdateChecker(){
     </div>
   </div>;
 }
-function useMorokWakeWord(){
-  useEffect(()=>{
-    if(!Capacitor.isNativePlatform() || Capacitor.getPlatform()!=="android") return;
-    const start=()=>{ void MorokWake.startWakeMode().catch(()=>{}); };
-    start();
-    document.addEventListener("visibilitychange",start);
-    window.addEventListener("focus",start);
-    return()=>{ document.removeEventListener("visibilitychange",start); window.removeEventListener("focus",start); };
-  },[]);
-}
-
 function App() {
-  useMorokWakeWord();
   const [token, setToken] = useState(localStorage.getItem("morok_token") ?? "");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
