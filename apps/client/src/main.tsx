@@ -698,6 +698,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("OFFLINE");
   const [listening, setListening] = useState(false);
+  const [voiceCommand, setVoiceCommand] = useState<string | null>(null);
   const [speaking, setSpeaking] = useState(true);
   const [tab, setTab] = useState<ModuleKey>("home");
   const [notice, setNotice] = useState("");
@@ -1284,7 +1285,10 @@ function App() {
 
       <MorokMicrophoneSystem
         onWake={(command)=>{
-          if(command) void runPredefinedCommand(command);
+          if(!command)return;
+          setVoiceCommand(command);
+          void runPredefinedCommand(command);
+          window.setTimeout(()=>setVoiceCommand(null),2600);
         }}
         onListening={setListening}
       />
@@ -1299,6 +1303,7 @@ function App() {
           listening={listening}
           startVoice={startVoice}
         />}
+      {voiceCommand && <div className="morokVoiceCommandOverlay" role="status" aria-live="assertive"><div className="morokVoiceCommandPanel"><div className="morokVoiceCommandCore"><img src={MOROK_SUB_ICON} alt="Morok"/></div><small>COMANDO DE VOZ DETECTADO</small><strong>“{voiceCommand}”</strong><span>COMANDO PREDEFINIDO EM EXECUÇÃO</span></div></div>}
       {false && morokConversationOpen && morokConversationMinimized &&
         <button type="button" className="morokConversationBubble" onClick={()=>setMorokConversationMinimized(false)} aria-label="Abrir conversa com Morok">
           <img src={MOROK_SUB_ICON} alt="Morok" />
