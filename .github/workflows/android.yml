@@ -245,6 +245,19 @@ jobs:
           p.write_text(s)
           PY
 
+      - name: Configure Android version and signing
+        working-directory: apps/client/android
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("app/build.gradle")
+          s=p.read_text()
+          if "signingConfigs" not in s:
+              s=s.replace("android {","android {\n    signingConfigs {\n        morokRelease {\n            def props = new Properties()\n            def f = rootProject.file('keystore.properties')\n            if (f.exists()) { f.withInputStream { props.load(it) } }\n            if (props['storeFile']) { storeFile rootProject.file(props['storeFile']) }\n            storePassword props['storePassword']\n            keyAlias props['keyAlias']\n            keyPassword props['keyPassword']\n        }\n    }",1)
+          s=s.replace("buildTypes {","buildTypes {\n        debug { signingConfig signingConfigs.morokRelease }",1)
+          p.write_text(s)
+          PY
+
       - name: Build debug APK
         working-directory: apps/client/android
         run: ./gradlew assembleDebug --no-daemon
