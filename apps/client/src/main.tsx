@@ -632,78 +632,60 @@ function compareVersions(a:string,b:string){
 }
 
 function UpdateChecker(){
-  const [update,setUpdate]=useState<{version:string;url:string;notes:string}|null>(null);
-
-  // O verificador roda automaticamente ao abrir o aplicativo mobile. Desktop/web não consulta o GitHub.
+  const [state,setState]=useState<"idle"|"checking"|"downloading"|"failed">("idle");
   const isMobileApp = Capacitor.isNativePlatform() && Capacitor.getPlatform() === "android";
-  const [checking,setChecking]=useState(false);
-  const [installing,setInstalling]=useState(false);
 
   useEffect(()=>{
     if(!isMobileApp)return;
     let active=true;
+    const install=async(url:string)=>{
+      if(!active)return;
+      setState("downloading");
+      try {
+        await MorokUpdater.installApk({url});
+      } catch {
+        if(active)setState("failed");
+      }
+    };
     const check=async()=>{
-      if(checking)return;
-      setChecking(true);
+      setState("checking");
       try{
-        const response=await fetch(GITHUB_RELEASES,{
-          headers:{Accept:"application/vnd.github+json"},
-          cache:"no-store"
-        });
-        if(!response.ok)return;
+        const response=await fetch(GITHUB_RELEASES,{headers:{Accept:"application/vnd.github+json"},cache:"no-store"});
+        if(!response.ok)throw new Error("github");
         const releases=await response.json();
         if(!active || !Array.isArray(releases))return;
-
         const release=releases
           .filter((item:any)=>item && !item.draft && !item.prerelease && item.tag_name)
           .sort((a:any,b:any)=>compareVersions(String(b.tag_name),String(a.tag_name)))[0];
-
-        if(!release || compareVersions(String(release.tag_name),APP_VERSION)<=0)return;
-
+        if(!release || compareVersions(String(release.tag_name),APP_VERSION)<=0){
+          setState("idle");
+          return;
+        }
         const apk=Array.isArray(release.assets)
           ? release.assets.find((asset:any)=>String(asset?.name||"").toLowerCase().endsWith(".apk"))
           : null;
-        const url=apk?.browser_download_url || release.html_url;
-        if(url && active){
-          setUpdate({
-            version:String(release.tag_name).replace(/^v/i,""),
-            url,
-            notes:String(release.body||"")
-          });
-        }
-      }catch{}
-      finally{
-        if(active)setChecking(false);
+        if(!apk?.browser_download_url)throw new Error("apk");
+        await install(String(apk.browser_download_url));
+      }catch{
+        if(active)setState("failed");
       }
     };
-
     check();
-    const onVisibility=()=>{if(document.visibilityState==="visible")check();};
-    document.addEventListener("visibilitychange",onVisibility);
-    return()=>{
-      active=false;
-      document.removeEventListener("visibilitychange",onVisibility);
-    };
-  },[]);
+    return()=>{active=false;};
+  },[isMobileApp]);
 
-  if(!isMobileApp || !update)return null;
-  const install=async()=>{ try{ setInstalling(true); await MorokUpdater.installApk({url:update.url}); }catch{} finally{ setInstalling(false); } };
-  return <div className="morokUpdateOverlay" role="dialog" aria-modal="true" aria-label="Atualização disponível">
+  if(!isMobileApp || state==="idle")return null;
+  const message=state==="checking" ? "VERIFICANDO NOVA VERSÃO..." : state==="downloading" ? "BAIXANDO E INSTALANDO..." : "NÃO FOI POSSÍVEL ATUALIZAR AUTOMATICAMENTE";
+  return <div className="morokUpdateOverlay" role="dialog" aria-modal="true" aria-label="Atualização do Morok">
     <div className="morokUpdatePanel">
       <div className="morokUpdateCore"><span>M</span></div>
-      <small>NOVA VERSÃO DISPONÍVEL</small>
-      <h2>MOROK {update.version}</h2>
-      <p>Uma versão mais recente do Morok foi encontrada no GitHub.</p>
-      {update.notes && <div className="morokUpdateNotes">{update.notes.slice(0,700)}</div>}
-      <div className="morokUpdateCurrent">VERSÃO ATUAL <b>{APP_VERSION}</b></div>
-      <div className="morokUpdateActions">
-        <button className="morokUpdateButton" onClick={()=>void install()} disabled={installing}>{installing?"BAIXANDO E INSTALANDO...":"ATUALIZAR AGORA"}</button>
-        <button className="morokUpdateLater" onClick={()=>setUpdate(null)}>AGORA NÃO</button>
-      </div>
+      <small>ATUALIZAÇÃO AUTOMÁTICA</small>
+      <h2>MOROK</h2>
+      <p>{message}</p>
+      {state==="failed" && <button className="morokUpdateButton" onClick={()=>window.location.reload()}>TENTAR NOVAMENTE</button>}
     </div>
   </div>;
 }
-
 function App() {
   const [token, setToken] = useState(localStorage.getItem("morok_token") ?? "");
   const [email, setEmail] = useState("");
