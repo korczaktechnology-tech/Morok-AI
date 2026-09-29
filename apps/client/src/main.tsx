@@ -521,34 +521,6 @@ function Dashboard() {
 
 function MobileDashboard({onOpenChat}:{onOpenChat:()=>void}){
   const [now, setNow] = useState(() => new Date());
-  const [updateOpen, setUpdateOpen] = useState(false);
-  const [updateChecking, setUpdateChecking] = useState(false);
-  const [update, setUpdate] = useState<{version:string;apk:string;notes:string}|null>(null);
-  useEffect(() => { const id=window.setInterval(()=>setNow(new Date()),1000); return ()=>window.clearInterval(id); }, []);
-  const clock = new Intl.DateTimeFormat("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false}).format(now);
-  const date = new Intl.DateTimeFormat("pt-BR",{day:"2-digit",month:"short",year:"numeric"}).format(now).replace(".","").toUpperCase();
-  const checkForUpdate = async () => {
-    if(updateChecking) return;
-    setUpdateChecking(true);
-    try {
-      const response=await fetch(GITHUB_RELEASES,{headers:{Accept:"application/vnd.github+json"},cache:"no-store"});
-      if(!response.ok) throw new Error(`HTTP_${response.status}`);
-      const releases=await response.json();
-      const release=Array.isArray(releases) ? releases.filter((r:any)=>r&&!r.draft&&!r.prerelease&&r.tag_name).sort((a:any,b:any)=>compareVersions(String(b.tag_name),String(a.tag_name)))[0] : null;
-      if(!release || compareVersions(String(release.tag_name),APP_VERSION)<=0){
-        setUpdate(null);
-        setUpdateOpen(true);
-        return;
-      }
-      const apk=Array.isArray(release.assets) ? release.assets.find((a:any)=>String(a?.name??"").toLowerCase().endsWith(".apk")) : null;
-      setUpdate({version:String(release.tag_name).replace(/^v/i,""),apk:String(apk?.browser_download_url||release.html_url),notes:String(release.body||"")});
-      setUpdateOpen(true);
-    } catch { setUpdate(null); setUpdateOpen(true); }
-    finally { setUpdateChecking(false); }
-  };
-  const installUpdate = async () => { if(!update?.apk) return; if(Capacitor.getPlatform()==="android"){ await MorokUpdater.installApk({url:update.apk}); return; } window.location.href=update.apk; };
-  useEffect(() => { const onCheck=()=>void checkForUpdate(); window.addEventListener("morok-check-update",onCheck); return ()=>window.removeEventListener("morok-check-update",onCheck); }, []);
-
   const activities=[
     ["11:41","Projeto KOS atualizado","blue"],
     ["11:32","Backup concluído","green"],
@@ -578,7 +550,21 @@ function MobileDashboard({onOpenChat}:{onOpenChat:()=>void}){
       </aside>
 
       <section className="mobileCore">
-        <button className="mobileCoreRings" type="button" onClick={()=>void checkForUpdate()} aria-label="Verificar atualização do Morok" title="Verificar atualização">
+        <button className="mobileCoreRings" type="button" onClick={onOpenChat} aria-label="Abrir conversa com o Morok" title="Conversar com o Morok">
+          <svg className="mobileCoreHud" viewBox="0 0 320 320" aria-hidden="true">
+            <circle cx="160" cy="160" r="143"/>
+            <circle cx="160" cy="160" r="128"/>
+            <circle cx="160" cy="160" r="106"/>
+            <circle cx="160" cy="160" r="83"/>
+            <path d="M160 17v24M160 279v24M17 160h24M279 160h24"/>
+            <path d="M66 66l17 17M237 237l17 17M254 66l-17 17M83 237l-17 17"/>
+            <path d="M160 48l16 16-16 16-16-16z"/>
+            <path d="M160 240l16 16-16 16-16-16z"/>
+            <path d="M48 160l16-16 16 16-16 16z"/>
+            <path d="M240 160l16-16 16 16-16 16z"/>
+            <ellipse cx="160" cy="160" rx="125" ry="55" transform="rotate(-24 160 160)"/>
+            <ellipse cx="160" cy="160" rx="112" ry="42" transform="rotate(35 160 160)"/>
+          </svg>
           <span className="mobileCoreOrbit orbitA" />
           <span className="mobileCoreOrbit orbitB" />
           <span className="mobileCoreOrbit orbitC" />
@@ -590,14 +576,12 @@ function MobileDashboard({onOpenChat}:{onOpenChat:()=>void}){
           <span className="mobileCoreNode nodeRight" />
           <span className="mobileCoreNode nodeBottom" />
           <span className="mobileCoreNode nodeLeft" />
-          <span className="mobileCoreGlyph"><img src={MOROK_SUB_ICON} alt="Abrir conversa com o Morok" /></span>
+          <span className="mobileCoreGlyph"><img src={MOROK_SUB_ICON} alt="" /></span>
           <b>MOROK</b>
-          <span className="mobileCoreHint">{updateChecking ? "VERIFICANDO VERSÃO..." : "TOQUE PARA VERIFICAR ATUALIZAÇÃO"}</span>
+          <span className="mobileCoreHint">TOQUE PARA CONVERSAR</span>
           <i>⌁⌁⌁</i>
         </button>
       </section>
-      {updateOpen && <div className="mobileUpdateOverlay" role="dialog" aria-modal="true" aria-label="Atualização do Morok"><div className="mobileUpdatePanel"><button type="button" className="mobileUpdateClose" onClick={()=>setUpdateOpen(false)} aria-label="Fechar">×</button><div className="mobileUpdateIcon"><img src={MOROK_SUB_ICON} alt="Morok"/></div>{update ? <><small>NOVA VERSÃO DISPONÍVEL</small><h2>MOROK {update.version}</h2><p>Uma versão mais recente foi encontrada no GitHub.</p>{update.notes&&<div className="mobileUpdateNotes">{update.notes.slice(0,500)}</div>}<button type="button" className="mobileUpdateInstall" onClick={()=>void installUpdate()}>ATUALIZAR AGORA</button></> : <><small>MOROK 0.1.2</small><h2>VERSÃO ATUAL</h2><p>{updateChecking ? "Verificando o GitHub..." : "Nenhuma versão mais nova foi encontrada."}</p><button type="button" className="mobileUpdateInstall" onClick={()=>setUpdateOpen(false)}>CONTINUAR</button></>}</div></div>}
-
       <aside className="mobileTelemetry">
         {[
           ["CPU","34%","cpu"],["RAM","61%","ram"],["DISCO","42%","disk"],["GPU","28%","gpu"]
