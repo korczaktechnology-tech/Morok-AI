@@ -1,13 +1,13 @@
 import { createRoot } from "react-dom/client";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Capacitor } from "@capacitor/core";
-import { Browser } from "@capacitor/browser";
 import "./styles.css";
 import { morokMicrophone, type MorokMicrophoneState } from "./microphone.js";
 
 const API = import.meta.env.VITE_API_URL ?? "https://morok-ai.onrender.com";
 const MOROK_SUB_ICON = `${import.meta.env.BASE_URL}MorokSubIcon.svg`;
 const MOROK_CENTER_ICON = `${import.meta.env.BASE_URL}MorokCenterIcon.svg`;
+const MorokUpdater = Capacitor.registerPlugin<{ installApk(options: { url: string }): Promise<void> }>("MorokUpdater");
 
 type Msg = { role: "user" | "assistant"; content: string };
 type Task = { id: string; title: string; status: string; dueAt?: string };
@@ -546,7 +546,7 @@ function MobileDashboard({onOpenChat}:{onOpenChat:()=>void}){
     } catch { setUpdate(null); setUpdateOpen(true); }
     finally { setUpdateChecking(false); }
   };
-  const installUpdate = async () => { if(!update?.apk) return; await Browser.open({url:update.apk}); };
+  const installUpdate = async () => { if(!update?.apk) return; if(Capacitor.getPlatform()==="android"){ await MorokUpdater.installApk({url:update.apk}); return; } window.location.href=update.apk; };
   useEffect(() => { const onCheck=()=>void checkForUpdate(); window.addEventListener("morok-check-update",onCheck); return ()=>window.removeEventListener("morok-check-update",onCheck); }, []);
 
   const activities=[
@@ -650,10 +650,10 @@ function compareVersions(a:string,b:string){
 function UpdateChecker(){
   const [update,setUpdate]=useState<{version:string;url:string;notes:string}|null>(null);
 
-  // O verificador automático foi desativado. Atualizações são iniciadas pelo núcleo central mobile.
-  // Desktop/web não deve consultar nem exibir a tela de atualização.
-  const isMobileApp = Capacitor.isNativePlatform() && (Capacitor.getPlatform() === "android" || Capacitor.getPlatform() === "ios");
+  // O verificador roda automaticamente ao abrir o aplicativo mobile. Desktop/web não consulta o GitHub.
+  const isMobileApp = Capacitor.isNativePlatform() && Capacitor.getPlatform() === "android";
   const [checking,setChecking]=useState(false);
+  const [installing,setInstalling]=useState(false);
 
   useEffect(()=>{
     if(!isMobileApp)return;
@@ -703,6 +703,7 @@ function UpdateChecker(){
   },[]);
 
   if(!isMobileApp || !update)return null;
+  const install=async()=>{ try{ setInstalling(true); await MorokUpdater.installApk({url:update.url}); }catch{} finally{ setInstalling(false); } };
   return <div className="morokUpdateOverlay" role="dialog" aria-modal="true" aria-label="Atualização disponível">
     <div className="morokUpdatePanel">
       <div className="morokUpdateCore"><span>M</span></div>
@@ -712,7 +713,7 @@ function UpdateChecker(){
       {update.notes && <div className="morokUpdateNotes">{update.notes.slice(0,700)}</div>}
       <div className="morokUpdateCurrent">VERSÃO ATUAL <b>{APP_VERSION}</b></div>
       <div className="morokUpdateActions">
-        <button className="morokUpdateButton" onClick={()=>window.location.href=update.url}>ATUALIZAR AGORA</button>
+        <button className="morokUpdateButton" onClick={()=>void install()} disabled={installing}>{installing?"BAIXANDO E INSTALANDO...":"ATUALIZAR AGORA"}</button>
         <button className="morokUpdateLater" onClick={()=>setUpdate(null)}>AGORA NÃO</button>
       </div>
     </div>
