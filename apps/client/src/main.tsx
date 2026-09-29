@@ -1354,18 +1354,15 @@ function MorokConversationWindow(p:{messages:Msg[];input:string;setInput:(v:stri
 }
 
 function MorokMicrophoneSystem(p:{onWake:(command:string)=>void;onListening:(value:boolean)=>void}) {
-  const [state,setState]=useState<MorokMicrophoneState>("starting");
   const wakeRef=useRef(p.onWake);
   const listeningRef=useRef(p.onListening);
   const bufferRef=useRef("");
-  const lastWakeRef=useRef(0);
 
   wakeRef.current=p.onWake;
   listeningRef.current=p.onListening;
 
   useEffect(()=>{
     const onState=(next:MorokMicrophoneState)=>{
-      setState(next);
       listeningRef.current(next==="live");
     };
     const onTranscript=(text:string)=>{
@@ -1375,33 +1372,18 @@ function MorokMicrophoneSystem(p:{onWake:(command:string)=>void;onListening:(val
       bufferRef.current=buffer;
       const wake=findMorokWake(buffer);
       if(!wake)return;
-      const now=Date.now();
-      if(now-lastWakeRef.current<1800)return;
-      lastWakeRef.current=now;
-      const command=buffer.slice(wake.end).replace(/^[,.:;!?\s-]+/,"").trim();
+      const command=buffer.slice(wake.end).replace(/^[,.:;!?\\s-]+/,"").trim();
       bufferRef.current="";
       wakeRef.current(command);
     };
-
     return morokMicrophone.subscribe(onState,onTranscript);
   },[]);
 
-  if(state==="live")return null;
-  const title=state==="blocked"?"MICROFONE BLOQUEADO":state==="unsupported"?"VOZ NÃO SUPORTADA":"HABILITANDO MICROFONE";
-  const text=state==="blocked"
-    ?"O acesso contínuo ao microfone foi interrompido. Permita o microfone e recarregue a página."
-    :state==="unsupported"
-      ?"Este navegador não oferece reconhecimento de voz compatível."
-      :"O Morok está abrindo o canal de áudio contínuo.";
-  return <div className="morokMicGate" role="dialog" aria-modal="true" aria-label="Acesso ao microfone">
-    <div className="morokMicGatePanel">
-      <div className="morokMicGateIcon"><img src={MOROK_SUB_ICON} alt="Morok"/></div>
-      <small>CANAL DE ÁUDIO // MOROK</small><h1>{title}</h1><p>{text}</p>
-      {state==="blocked"&&<button type="button" onClick={()=>window.location.reload()}>HABILITAR MICROFONE</button>}
-      <span>ESCUTA CONTÍNUA · COMANDO: “MOROK, ACORDE”</span>
-    </div>
-  </div>;
+  // No estado de microfone bloqueado/indisponível, não mostramos modal.
+  // O Android pode pedir a permissão nativamente quando necessário.
+  return null;
 }
+
 function findMorokWake(text:string){
   const normalize=(v:string)=>v.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9\s]/g," ").replace(/\s+/g," ").trim();
   const distance=(a:string,b:string)=>{
