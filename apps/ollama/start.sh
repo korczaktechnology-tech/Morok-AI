@@ -10,7 +10,7 @@ if [ "${#MODEL_PROXY_KEY}" -lt 24 ]; then
   exit 1
 fi
 
-printf 'morok:%s\n' "$(htpasswd -nbB morok "$MODEL_PROXY_KEY" | cut -d: -f2-)" > /etc/nginx/.htpasswd
+printf 'morok:%s\n' "$(htpasswd -nbm morok "$MODEL_PROXY_KEY" | cut -d: -f2-)" > /etc/nginx/.htpasswd
 # Nginx workers run as www-data and must be able to read the credentials file.
 chown root:www-data /etc/nginx/.htpasswd
 chmod 640 /etc/nginx/.htpasswd
