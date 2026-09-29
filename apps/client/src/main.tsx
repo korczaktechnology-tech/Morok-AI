@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Capacitor } from "@capacitor/core";
+import { Browser } from "@capacitor/browser";
 import "./styles.css";
 import { morokMicrophone, type MorokMicrophoneState } from "./microphone.js";
 
@@ -519,6 +520,34 @@ function Dashboard() {
 }
 
 function MobileDashboard({onOpenChat}:{onOpenChat:()=>void}){
+  const [now, setNow] = useState(() => new Date());
+  const [updateOpen, setUpdateOpen] = useState(false);
+  const [updateChecking, setUpdateChecking] = useState(false);
+  const [update, setUpdate] = useState<{version:string;apk:string;notes:string}|null>(null);
+  useEffect(() => { const id=window.setInterval(()=>setNow(new Date()),1000); return ()=>window.clearInterval(id); }, []);
+  const clock = new Intl.DateTimeFormat("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false}).format(now);
+  const date = new Intl.DateTimeFormat("pt-BR",{day:"2-digit",month:"short",year:"numeric"}).format(now).replace(".","").toUpperCase();
+  const checkForUpdate = async () => {
+    if(updateChecking) return;
+    setUpdateChecking(true);
+    try {
+      const response=await fetch(GITHUB_RELEASES,{headers:{Accept:"application/vnd.github+json"},cache:"no-store"});
+      if(!response.ok) throw new Error(`HTTP_${response.status}`);
+      const releases=await response.json();
+      const release=Array.isArray(releases) ? releases.filter((r:any)=>r&&!r.draft&&!r.prerelease&&r.tag_name).sort((a:any,b:any)=>compareVersions(String(b.tag_name),String(a.tag_name)))[0] : null;
+      if(!release || compareVersions(String(release.tag_name),APP_VERSION)<=0){
+        setUpdate(null);
+        setUpdateOpen(true);
+        return;
+      }
+      const apk=Array.isArray(release.assets) ? release.assets.find((a:any)=>String(a?.name??"").toLowerCase().endsWith(".apk")) : null;
+      setUpdate({version:String(release.tag_name).replace(/^v/i,""),apk:String(apk?.browser_download_url||release.html_url),notes:String(release.body||"")});
+      setUpdateOpen(true);
+    } catch { setUpdate(null); setUpdateOpen(true); }
+    finally { setUpdateChecking(false); }
+  };
+  const installUpdate = async () => { if(!update?.apk) return; await Browser.open({url:update.apk}); };
+
   const activities=[
     ["11:41","Projeto KOS atualizado","blue"],
     ["11:32","Backup concluído","green"],
@@ -533,11 +562,11 @@ function MobileDashboard({onOpenChat}:{onOpenChat:()=>void}){
   ];
   return <div className="mobileMorok">
     <header className="mobileTop">
-      <div className="mobileStatus"><span>11:42</span><i>➤</i></div>
+      <div className="mobileStatus"><span>{clock.slice(0,5)}</span><i>➤</i></div>
       <div className="mobileHeaderPanel">
-        <div className="mobileBrand"><div className="mobileLogo"><img src={MOROK_SUB_ICON} alt="Morok" /></div><div><b>MOROK</b><small>IA ASSISTENTE DO KOS</small><em><span/> ONLINE <strong>|</strong> v2.8.4</em></div></div>
+        <div className="mobileBrand"><div className="mobileLogo"><img src={MOROK_SUB_ICON} alt="Morok" /></div><div><b>MOROK</b><small>IA ASSISTENTE DO KOS</small><em><span/> ONLINE <strong>|</strong> v0.1.2</em></div></div>
         <div className="mobileKos"><b>✦ KOS</b><small>KORCZAK<br/>OPERATIONAL<br/>SYSTEM</small></div>
-        <div className="mobileDate"><span>14 SET 2025</span><b>11:42:17</b></div>
+        <div className="mobileDate"><span>{date}</span><b>{clock}</b></div>
       </div>
     </header>
 
@@ -548,7 +577,7 @@ function MobileDashboard({onOpenChat}:{onOpenChat:()=>void}){
       </aside>
 
       <section className="mobileCore">
-        <button className="mobileCoreRings" type="button" onClick={onOpenChat} aria-label="Abrir conversa com o Morok">
+        <button className="mobileCoreRings" type="button" onClick={()=>void checkForUpdate()} aria-label="Verificar atualização do Morok" title="Verificar atualização">
           <span className="mobileCoreOrbit orbitA" />
           <span className="mobileCoreOrbit orbitB" />
           <span className="mobileCoreOrbit orbitC" />
@@ -562,10 +591,11 @@ function MobileDashboard({onOpenChat}:{onOpenChat:()=>void}){
           <span className="mobileCoreNode nodeLeft" />
           <span className="mobileCoreGlyph"><img src={MOROK_SUB_ICON} alt="Abrir conversa com o Morok" /></span>
           <b>MOROK</b>
-          <span className="mobileCoreHint">TOQUE PARA CONVERSAR</span>
+          <span className="mobileCoreHint">{updateChecking ? "VERIFICANDO VERSÃO..." : "TOQUE PARA VERIFICAR ATUALIZAÇÃO"}</span>
           <i>⌁⌁⌁</i>
         </button>
       </section>
+      {updateOpen && <div className="mobileUpdateOverlay" role="dialog" aria-modal="true" aria-label="Atualização do Morok"><div className="mobileUpdatePanel"><button type="button" className="mobileUpdateClose" onClick={()=>setUpdateOpen(false)} aria-label="Fechar">×</button><div className="mobileUpdateIcon"><img src={MOROK_SUB_ICON} alt="Morok"/></div>{update ? <><small>NOVA VERSÃO DISPONÍVEL</small><h2>MOROK {update.version}</h2><p>Uma versão mais recente foi encontrada no GitHub.</p>{update.notes&&<div className="mobileUpdateNotes">{update.notes.slice(0,500)}</div>}<button type="button" className="mobileUpdateInstall" onClick={()=>void installUpdate()}>ATUALIZAR AGORA</button></> : <><small>MOROK 0.1.2</small><h2>VERSÃO ATUAL</h2><p>{updateChecking ? "Verificando o GitHub..." : "Nenhuma versão mais nova foi encontrada."}</p><button type="button" className="mobileUpdateInstall" onClick={()=>setUpdateOpen(false)}>CONTINUAR</button></>}</div></div>}
 
       <aside className="mobileTelemetry">
         {[
@@ -603,7 +633,7 @@ function MobileDashboard({onOpenChat}:{onOpenChat:()=>void}){
   </div>;
 }
 
-const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? "0.1.0";
+const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? "0.1.2";
 const GITHUB_RELEASES = "https://api.github.com/repos/korczaktechnology-tech/Morok-AI/releases?per_page=20";
 
 function normalizeVersion(value:string){
@@ -619,7 +649,7 @@ function compareVersions(a:string,b:string){
 function UpdateChecker(){
   const [update,setUpdate]=useState<{version:string;url:string;notes:string}|null>(null);
 
-  // O verificador de atualização pertence somente ao aplicativo nativo mobile.
+  // O verificador automático foi desativado. Atualizações são iniciadas pelo núcleo central mobile.
   // Desktop/web não deve consultar nem exibir a tela de atualização.
   const isMobileApp = Capacitor.isNativePlatform() && (Capacitor.getPlatform() === "android" || Capacitor.getPlatform() === "ios");
   const [checking,setChecking]=useState(false);
@@ -1086,6 +1116,19 @@ function App() {
     morokMicrophone.manual();
   }
 
+  function runPredefinedCommand(raw:string) {
+    const value=raw.normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toLowerCase().trim();
+    const say=(text:string)=>{ setNotice(text); if("speechSynthesis" in window){ const u=new SpeechSynthesisUtterance(text); u.lang="pt-BR"; window.speechSynthesis.speak(u); } };
+    if(/(hora|horas|que horas)/.test(value)){ say("Agora são "+new Intl.DateTimeFormat("pt-BR",{hour:"2-digit",minute:"2-digit"}).format(new Date())+"."); return; }
+    if(/(data|dia de hoje|hoje)/.test(value)){ say("Hoje é "+new Intl.DateTimeFormat("pt-BR",{dateStyle:"full"}).format(new Date())+"."); return; }
+    if(/(atualiza|versao|versão|github)/.test(value)){ window.dispatchEvent(new Event("morok-check-update")); say("Verificando a versão disponível."); return; }
+    if(/(projeto|projetos)/.test(value)){ say("Projetos selecionado."); return; }
+    if(/(seguranca|segurança)/.test(value)){ say("Segurança selecionada."); return; }
+    if(/(rede|conexao|conexão)/.test(value)){ say("Rede selecionada."); return; }
+    if(/(sair|fechar|encerrar)/.test(value)){ say("Comando recebido."); return; }
+    say("Comando não reconhecido. Use hora, data, atualização, projetos, segurança ou rede.");
+  }
+
   async function addTask() {
     const title = window.prompt("Título da tarefa"); if (!title) return;
     try { const d = await request("/api/v1/tasks", { method: "POST", body: JSON.stringify({ title }) }); setTasks(x => [d.task, ...x]); }
@@ -1267,14 +1310,11 @@ function App() {
 
       <MorokMicrophoneSystem
         onWake={(command)=>{
-          setMorokConversationOpen(true);
-          setMorokConversationMinimized(false);
-          if(command) void send(command);
+          if(command) void runPredefinedCommand(command);
         }}
         onListening={setListening}
       />
-      <UpdateChecker />
-      {morokConversationOpen && !morokConversationMinimized &&
+      {false && morokConversationOpen && !morokConversationMinimized &&
         <MorokConversationWindow
           messages={messages}
           input={input}
@@ -1285,14 +1325,14 @@ function App() {
           listening={listening}
           startVoice={startVoice}
         />}
-      {morokConversationOpen && morokConversationMinimized &&
+      {false && morokConversationOpen && morokConversationMinimized &&
         <button type="button" className="morokConversationBubble" onClick={()=>setMorokConversationMinimized(false)} aria-label="Abrir conversa com Morok">
           <img src={MOROK_SUB_ICON} alt="Morok" />
         </button>}
       <main className="appShell">
         <section className="mainStage">
           <div className="desktopDashboard"><Dashboard /></div><div className="mobileDashboard"><MobileDashboard onOpenChat={()=>setMobileChatOpen(true)} /></div>
-          {mobileChatOpen && <div className="mobileChatOverlay"><div className="mobileChatShell"><button className="mobileChatClose" type="button" onClick={()=>setMobileChatOpen(false)} aria-label="Fechar conversa">×</button><Chat messages={messages} input={input} setInput={setInput} send={(v)=>void send(v)} loading={loading} startVoice={startVoice} listening={listening} speaking={speaking} setSpeaking={setSpeaking} /></div></div>}
+          
         </section>
       </main>
     </>
