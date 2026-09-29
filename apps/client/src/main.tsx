@@ -621,7 +621,7 @@ function MobileDashboard({onOpenChat}:{onOpenChat:()=>void}){
   </div>;
 }
 
-const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? "0.1.2";
+const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? "0.1.5";
 const GITHUB_RELEASES = "https://api.github.com/repos/korczaktechnology-tech/Morok-AI/releases?per_page=20";
 
 function normalizeVersion(value:string){
