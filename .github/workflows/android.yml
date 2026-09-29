@@ -216,48 +216,6 @@ jobs:
         working-directory: apps/client
         run: npx cap sync android
 
-      - name: Configure persistent APK signing
-        working-directory: apps/client/android
-        env:
-          MOROK_KEYSTORE_B64: ${{ secrets.MOROK_KEYSTORE_BASE64 }}
-          MOROK_STORE_PASSWORD: ${{ secrets.MOROK_KEYSTORE_PASSWORD }}
-          MOROK_KEY_PASSWORD: ${{ secrets.MOROK_KEY_PASSWORD }}
-          MOROK_KEY_ALIAS: ${{ secrets.MOROK_KEY_ALIAS }}
-        run: |
-          if [ -z "$MOROK_KEYSTORE_B64" ] || [ -z "$MOROK_STORE_PASSWORD" ] || [ -z "$MOROK_KEY_PASSWORD" ] || [ -z "$MOROK_KEY_ALIAS" ]; then
-            echo "Persistent signing secrets are not configured; refusing to publish an APK that cannot self-update."
-            exit 1
-          fi
-          echo "$MOROK_KEYSTORE_B64" | base64 --decode > morok-release.jks
-          cat > keystore.properties <<EOF
-          storeFile=morok-release.jks
-          storePassword=$MOROK_STORE_PASSWORD
-          keyAlias=$MOROK_KEY_ALIAS
-          keyPassword=$MOROK_KEY_PASSWORD
-          EOF
-          python3 - <<'PY'
-          from pathlib import Path
-          p=Path("build.gradle")
-          s=p.read_text()
-          signing = """\n    signingConfigs {\n        morokRelease {\n            def props = new Properties()\n            file('keystore.properties').withInputStream { props.load(it) }\n            storeFile file(props['storeFile'])\n            storePassword props['storePassword']\n            keyAlias props['keyAlias']\n            keyPassword props['keyPassword']\n        }\n    }\n"""
-          s=s.replace("android {", "android {" + signing, 1)
-          s=s.replace("buildTypes {", "buildTypes {\n        debug {\n            signingConfig signingConfigs.morokRelease\n        }", 1)
-          p.write_text(s)
-          PY
-
-      - name: Configure Android version and signing
-        working-directory: apps/client/android
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p=Path("app/build.gradle")
-          s=p.read_text()
-          if "signingConfigs" not in s:
-              s=s.replace("android {","android {\n    signingConfigs {\n        morokRelease {\n            def props = new Properties()\n            def f = rootProject.file('keystore.properties')\n            if (f.exists()) { f.withInputStream { props.load(it) } }\n            if (props['storeFile']) { storeFile rootProject.file(props['storeFile']) }\n            storePassword props['storePassword']\n            keyAlias props['keyAlias']\n            keyPassword props['keyPassword']\n        }\n    }",1)
-          s=s.replace("buildTypes {","buildTypes {\n        debug { signingConfig signingConfigs.morokRelease }",1)
-          p.write_text(s)
-          PY
-
       - name: Build debug APK
         working-directory: apps/client/android
         run: ./gradlew assembleDebug --no-daemon
