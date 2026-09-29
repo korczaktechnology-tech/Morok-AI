@@ -4,6 +4,9 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+    paths:
+      - "apps/android-native/**"
+      - ".github/workflows/android.yml"
     tags:
       - "v*.*.*"
 
@@ -11,7 +14,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: android-${{ github.ref }}
+  group: android-native-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -19,76 +22,45 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: 22
+        uses: actions/checkout@v4
 
       - name: Setup Java
-        uses: actions/setup-java@v6
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "21"
+          java-version: "17"
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v4
+        uses: android-actions/setup-android@v3
         with:
-          cmdline-tools-version: 12266719
-          accept-android-sdk-licenses: true
-          packages: platform-tools
+          packages: platform-tools platforms;android-35 build-tools;35.0.0
 
-      - name: Install Android build components
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.10.2"
+
+      - name: Use project logo when available
         run: |
-          yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build web client
-        run: VITE_APP_VERSION=$(node -p "require('./apps/client/package.json').version") npm run build --workspace=@morok/client
-
-      - name: Create Android project
-        working-directory: apps/client
-        run: npx cap add android
-
-      - name: Configure Morok wake word and overlay
-        run: |
-          chmod +x apps/client/scripts/configure-android.sh
-          apps/client/scripts/configure-android.sh
-
-      - name: Configure Morok app icon
-        working-directory: apps/client
-        run: |
-          if [ -f public/MorokLogo.png ]; then
-            mkdir -p android/app/src/main/res/drawable-nodpi
-            cp public/MorokLogo.png android/app/src/main/res/drawable-nodpi/morok_logo.png
-            sed -i 's|android:icon="@mipmap/ic_launcher"|android:icon="@drawable/morok_logo"|' android/app/src/main/AndroidManifest.xml
-            sed -i 's|android:roundIcon="@mipmap/ic_launcher_round"|android:roundIcon="@drawable/morok_logo"|' android/app/src/main/AndroidManifest.xml
-          else
-            echo "MorokLogo.png not found; keeping Capacitor default icon."
+          if [ -f apps/client/public/MorokLogo.png ]; then
+            rm -f apps/android-native/app/src/main/res/drawable/morok_logo.xml
+            mkdir -p apps/android-native/app/src/main/res/drawable-nodpi
+            cp apps/client/public/MorokLogo.png apps/android-native/app/src/main/res/drawable-nodpi/morok_logo.png
           fi
 
-      - name: Sync Capacitor
-        working-directory: apps/client
-        run: npx cap sync android
-
-      - name: Build debug APK
-        working-directory: apps/client/android
-        run: ./gradlew assembleDebug --no-daemon
-
-      - name: Publish GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v0.1.5
-          name: Morok v0.1.5
-          generate_release_notes: true
-          files: apps/client/android/app/build/outputs/apk/debug/app-debug.apk
+      - name: Build standalone native Android APK
+        working-directory: apps/android-native
+        run: gradle --no-daemon :app:assembleDebug
 
       - name: Upload APK
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
-          name: Morok-Android-debug
-          path: apps/client/android/app/build/outputs/apk/debug/app-debug.apk
+          name: Morok-Android-Native
+          path: apps/android-native/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: apps/android-native/app/build/outputs/apk/debug/app-debug.apk
