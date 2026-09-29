@@ -7,10 +7,41 @@ mkdir -p "$JAVA" "$RES/xml"
 
 cat > "$JAVA/MainActivity.java" <<'EOF'
 package com.korczak.morok;
-import android.os.Bundle;
+
+import android.Manifest;
+import android.content.*;
+import android.content.pm.PackageManager;
+import android.os.*;
+import android.provider.Settings;
 import com.getcapacitor.BridgeActivity;
+
 public class MainActivity extends BridgeActivity {
- @Override public void onCreate(Bundle b){ registerPlugin(MorokUpdaterPlugin.class); super.onCreate(b); android.content.Intent i=new android.content.Intent(this,MorokVoiceService.class); if(android.os.Build.VERSION.SDK_INT>=26) startForegroundService(i); else startService(i); }
+ private static final int MIC_REQUEST=731;
+ private final BroadcastReceiver voiceReceiver=new BroadcastReceiver(){
+  @Override public void onReceive(Context context,Intent intent){
+   String command=intent.getStringExtra("command");
+   if(command!=null && getBridge()!=null) getBridge().triggerWindowJSEvent("morokNativeCommand","{\"command\":\""+command+"\"}");
+  }
+ };
+ @Override public void onCreate(Bundle b){
+  registerPlugin(MorokUpdaterPlugin.class);
+  super.onCreate(b);
+  registerReceiver(voiceReceiver,new IntentFilter("com.korczak.morok.VOICE_COMMAND"),Context.RECEIVER_NOT_EXPORTED);
+  if(Build.VERSION.SDK_INT>=23 && checkSelfPermission(Manifest.permission.RECORD_AUDIO)!=PackageManager.PERMISSION_GRANTED) requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO},MIC_REQUEST);
+  else startVoice();
+ }
+ private void startVoice(){
+  Intent i=new Intent(this,MorokVoiceService.class);
+  if(Build.VERSION.SDK_INT>=26) startForegroundService(i); else startService(i);
+  if(Build.VERSION.SDK_INT>=23 && !Settings.canDrawOverlays(this)){
+   // Overlay is optional until the user authorizes it; the voice service still runs.
+  }
+ }
+ @Override public void onRequestPermissionsResult(int request,String[] permissions,int[] results){
+  super.onRequestPermissionsResult(request,permissions,results);
+  if(request==MIC_REQUEST && results.length>0 && results[0]==PackageManager.PERMISSION_GRANTED) startVoice();
+ }
+ @Override protected void onDestroy(){ try{unregisterReceiver(voiceReceiver);}catch(Exception ignored){} super.onDestroy(); }
 }
 EOF
 
