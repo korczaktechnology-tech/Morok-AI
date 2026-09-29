@@ -7,7 +7,17 @@ export type MorokMicrophoneState =
 type Listener = (state: MorokMicrophoneState) => void;
 type TranscriptListener = (text: string) => void;
 
+type NativeMicrophonePlugin = {
+  start(): Promise<void>;
+  stop(): Promise<void>;
+  addListener(eventName: "state" | "transcript", listener: (event: { state?: string; text?: string }) => void): Promise<{ remove: () => Promise<void> }>;
+};
+
 type SpeechRecognitionConstructor = new () => any;
+
+const NativeMicrophone = (globalThis as any).Capacitor?.registerPlugin?.("MorokMicrophone") as NativeMicrophonePlugin | undefined;
+
+// Native Android microphone keeps the activation service independent from WebView recognition.
 
 declare global {
   interface Window {
@@ -30,6 +40,8 @@ class MorokMicrophoneController {
   private appVisible = true;
   private listeners = new Set<Listener>();
   private transcriptListeners = new Set<TranscriptListener>();
+  private nativeHandles: Array<{remove:()=>Promise<void>}> = [];
+  private nativeActive = false;
 
   subscribe(onState: Listener, onTranscript: TranscriptListener) {
     this.listeners.add(onState);
@@ -39,14 +51,15 @@ class MorokMicrophoneController {
       this.stopTimer = null;
     }
     this.wanted = true;
-    onState(this.currentState());
-    void this.ensureStarted();
+    if (this.useNative()) void this.startNative();
+    else { onState(this.currentState()); void this.ensureStarted(); }
 
     return () => {
       this.listeners.delete(onState);
       this.transcriptListeners.delete(onTranscript);
       if (this.listeners.size === 0) {
         this.wanted = false;
+        if (this.nativeActive) void this.stopNative();
         this.scheduleStop();
       }
     };
@@ -55,11 +68,13 @@ class MorokMicrophoneController {
   manual() {
     this.wanted = true;
     this.appVisible = true;
-    void this.ensureStarted();
+    if (this.useNative()) void this.startNative();
+    else void this.ensureStarted();
   }
 
   setAppVisible(visible: boolean) {
     this.appVisible = visible;
+    if (this.useNative()) return;
     if (!visible) {
       this.stopRecognitionOnly();
       return;
@@ -68,6 +83,39 @@ class MorokMicrophoneController {
     if (this.stream && !this.recognition && !this.recognitionStarting) {
       this.startRecognition();
     }
+  }
+
+
+  private useNative() {
+    return Boolean(NativeMicrophone && (globalThis as any).Capacitor?.getPlatform?.() === "android");
+  }
+
+  private async startNative() {
+    if (!NativeMicrophone || this.nativeActive) return;
+    try {
+      const onState = await NativeMicrophone.addListener("state", event => {
+        const state = event.state === "live" ? "live" : event.state === "blocked" ? "blocked" : "starting";
+        this.listeners.forEach(listener => listener(state as MorokMicrophoneState));
+      });
+      const onTranscript = await NativeMicrophone.addListener("transcript", event => {
+        const text = String(event.text ?? "").trim();
+        if (text) this.transcriptListeners.forEach(listener => listener(text));
+      });
+      this.nativeHandles = [onState, onTranscript];
+      await NativeMicrophone.start();
+      this.nativeActive = true;
+    } catch {
+      this.nativeHandles = [];
+      this.nativeActive = false;
+      this.listeners.forEach(listener => listener("blocked"));
+    }
+  }
+
+  private async stopNative() {
+    try { await NativeMicrophone?.stop(); } catch {}
+    for (const handle of this.nativeHandles) { try { await handle.remove(); } catch {} }
+    this.nativeHandles = [];
+    this.nativeActive = false;
   }
 
   private currentState(): MorokMicrophoneState {
