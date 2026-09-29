@@ -10,7 +10,7 @@ package com.korczak.morok;
 import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;
 public class MainActivity extends BridgeActivity {
- @Override public void onCreate(Bundle b){ registerPlugin(MorokUpdaterPlugin.class); super.onCreate(b); }
+ @Override public void onCreate(Bundle b){ registerPlugin(MorokUpdaterPlugin.class); super.onCreate(b); android.content.Intent i=new android.content.Intent(this,MorokVoiceService.class); if(android.os.Build.VERSION.SDK_INT>=26) startForegroundService(i); else startService(i); }
 }
 EOF
 
@@ -170,9 +170,14 @@ from pathlib import Path
 p=Path("apps/client/android/app/src/main/AndroidManifest.xml")
 s=p.read_text()
 permission='<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />'
-if permission not in s:
- i=s.find(">",s.find("<manifest"))
- s=s[:i+1]+"\n    "+permission+s[i+1:]
+audio='<uses-permission android:name="android.permission.RECORD_AUDIO" />'
+overlay='<uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />'
+fg='<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />'
+fgmic='<uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />'
+for permission_line in (permission,audio,overlay,fg,fgmic):
+ if permission_line not in s:
+  i=s.find(">",s.find("<manifest"))
+  s=s[:i+1]+"\\n    "+permission_line+s[i+1:]
 provider='''        <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="com.korczak.morok.fileprovider"
@@ -183,6 +188,13 @@ provider='''        <provider
                 android:resource="@xml/file_paths" />
         </provider>'''
 if "androidx.core.content.FileProvider" not in s:
- s=s.replace("</application>",provider+"\n    </application>",1)
+ s=s.replace("</application>",provider+"\\n    </application>",1)
+service='''        <service
+            android:name=".MorokVoiceService"
+            android:exported="false"
+            android:foregroundServiceType="microphone"
+            android:stopWithTask="false" />'''
+if ".MorokVoiceService" not in s:
+ s=s.replace("</application>",service+"\\n    </application>",1)
 p.write_text(s)
 PY
