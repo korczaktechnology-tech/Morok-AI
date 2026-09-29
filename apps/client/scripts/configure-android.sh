@@ -12,7 +12,8 @@ import android.Manifest;
 import android.content.*;
 import android.content.pm.PackageManager;
 import android.os.*;
-import android.provider.Settings;\nimport android.net.Uri;
+import android.provider.Settings;
+import android.net.Uri;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
