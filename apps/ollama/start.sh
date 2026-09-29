@@ -12,10 +12,11 @@ fi
 
 printf 'morok:%s\n' "$(htpasswd -nbB morok "$MODEL_PROXY_KEY" | cut -d: -f2-)" > /etc/nginx/.htpasswd
 # Nginx workers run as www-data and must be able to read the credentials file.
-chown www-data:www-data /etc/nginx/.htpasswd
-chmod 600 /etc/nginx/.htpasswd
+chown root:www-data /etc/nginx/.htpasswd
+chmod 640 /etc/nginx/.htpasswd
 
 cat > /etc/nginx/nginx.conf <<EOF
+user www-data;
 worker_processes 1;
 pid /tmp/nginx.pid;
 error_log /dev/stderr warn;
