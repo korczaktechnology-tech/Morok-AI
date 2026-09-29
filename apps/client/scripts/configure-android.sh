@@ -12,7 +12,7 @@ import android.Manifest;
 import android.content.*;
 import android.content.pm.PackageManager;
 import android.os.*;
-import android.provider.Settings;
+import android.provider.Settings;\nimport android.net.Uri;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
@@ -34,7 +34,10 @@ public class MainActivity extends BridgeActivity {
   Intent i=new Intent(this,MorokVoiceService.class);
   if(Build.VERSION.SDK_INT>=26) startForegroundService(i); else startService(i);
   if(Build.VERSION.SDK_INT>=23 && !Settings.canDrawOverlays(this)){
-   // Overlay is optional until the user authorizes it; the voice service still runs.
+   try{
+    Intent overlay=new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,Uri.parse("package:"+getPackageName()));
+    startActivity(overlay);
+   }catch(Exception ignored){}
   }
  }
  @Override public void onRequestPermissionsResult(int request,String[] permissions,int[] results){
