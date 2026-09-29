@@ -223,8 +223,8 @@ jobs:
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ github.event_name == 'workflow_dispatch' && '0.1.4' || github.ref_name }}
-          name: Morok v${{ github.event_name == 'workflow_dispatch' && '0.1.4' || github.ref_name }}
+          tag_name: v0.1.4
+          name: Morok v0.1.4
           generate_release_notes: true
           files: apps/client/android/app/build/outputs/apk/debug/app-debug.apk
 
