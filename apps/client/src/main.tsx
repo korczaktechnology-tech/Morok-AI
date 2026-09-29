@@ -547,6 +547,7 @@ function MobileDashboard({onOpenChat}:{onOpenChat:()=>void}){
     finally { setUpdateChecking(false); }
   };
   const installUpdate = async () => { if(!update?.apk) return; await Browser.open({url:update.apk}); };
+  useEffect(() => { const onCheck=()=>void checkForUpdate(); window.addEventListener("morok-check-update",onCheck); return ()=>window.removeEventListener("morok-check-update",onCheck); }, []);
 
   const activities=[
     ["11:41","Projeto KOS atualizado","blue"],
