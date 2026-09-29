@@ -45,7 +45,6 @@ public class MainActivity extends BridgeActivity {
   super.onRequestPermissionsResult(request,permissions,results);
   if(request==MIC_REQUEST && results.length>0 && results[0]==PackageManager.PERMISSION_GRANTED) startVoice();
  }
- @Override protected void onDestroy(){ try{unregisterReceiver(voiceReceiver);}catch(Exception ignored){} super.onDestroy(); }
 }
 EOF
 
