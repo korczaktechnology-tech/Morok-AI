@@ -738,9 +738,9 @@ function App() {
 
   useEffect(() => {
     if (Capacitor.getPlatform() !== "android") return;
-    const onNativeCommand = (event: Event) => {
+    const onNativeCommand = (event: globalThis.Event) => {
       try {
-        const detail = JSON.parse((event as CustomEvent).detail || "{}");
+        const detail = JSON.parse((event as unknown as globalThis.CustomEvent).detail || "{}");
         const command = String(detail.command || "");
         if (!command) return;
         if (command === "update") window.dispatchEvent(new Event("morok-check-update"));
