@@ -61,5 +61,9 @@ services:
         value: "1"
       - key: OLLAMA_KEEP_ALIVE
         value: 5m
+      - key: OLLAMA_FLASH_ATTENTION
+        value: "1"
+      - key: OLLAMA_KV_CACHE_TYPE
+        value: q4_0
       - key: OLLAMA_CONTEXT_LENGTH
         value: "512"
