@@ -1363,7 +1363,18 @@ function MorokMicrophoneSystem(p:{onWake:(command:string)=>void;onListening:(val
       bufferRef.current="";
       wakeRef.current(command);
     };
-    return morokMicrophone.subscribe(onState,onTranscript);
+    const syncVisibility = () => morokMicrophone.setAppVisible(document.visibilityState === "visible");
+    document.addEventListener("visibilitychange", syncVisibility);
+    window.addEventListener("pagehide", () => morokMicrophone.setAppVisible(false));
+    window.addEventListener("pageshow", syncVisibility);
+    syncVisibility();
+    const unsubscribe = morokMicrophone.subscribe(onState,onTranscript);
+    return () => {
+      document.removeEventListener("visibilitychange", syncVisibility);
+      window.removeEventListener("pageshow", syncVisibility);
+      unsubscribe();
+      morokMicrophone.setAppVisible(false);
+    };
   },[]);
 
   // No estado de microfone bloqueado/indisponível, não mostramos modal.
