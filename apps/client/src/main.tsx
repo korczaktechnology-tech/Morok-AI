@@ -933,7 +933,6 @@ function App() {
     } catch (e) {
       setNotice(e instanceof Error ? e.message : "Falha");
     } finally {
-      window.clearTimeout(streamTimeout);
       setLoading(false);
     }
   }
