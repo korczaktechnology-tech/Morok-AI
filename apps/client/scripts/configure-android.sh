@@ -208,7 +208,7 @@ fgmic='<uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICR
 for permission_line in (permission,audio,overlay,fg,fgmic):
  if permission_line not in s:
   i=s.find(">",s.find("<manifest"))
-  s=s[:i+1]+"\\n    "+permission_line+s[i+1:]
+  s=s[:i+1]+"\n    "+permission_line+s[i+1:]
 provider='''        <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="com.korczak.morok.fileprovider"
@@ -219,13 +219,13 @@ provider='''        <provider
                 android:resource="@xml/file_paths" />
         </provider>'''
 if "androidx.core.content.FileProvider" not in s:
- s=s.replace("</application>",provider+"\\n    </application>",1)
+ s=s.replace("</application>",provider+"\n    </application>",1)
 service='''        <service
             android:name=".MorokVoiceService"
             android:exported="false"
             android:foregroundServiceType="microphone"
             android:stopWithTask="false" />'''
 if ".MorokVoiceService" not in s:
- s=s.replace("</application>",service+"\\n    </application>",1)
+ s=s.replace("</application>",service+"\n    </application>",1)
 p.write_text(s)
 PY
