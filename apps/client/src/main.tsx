@@ -565,7 +565,7 @@ function MobileDashboard({onOpenChat}:{onOpenChat:()=>void}){
     <header className="mobileTop">
       <div className="mobileStatus"><span>{clock.slice(0,5)}</span><i>➤</i></div>
       <div className="mobileHeaderPanel">
-        <div className="mobileBrand"><div className="mobileLogo"><img src={MOROK_SUB_ICON} alt="Morok" /></div><div><b>MOROK</b><small>IA ASSISTENTE DO KOS</small><em><span/> ONLINE <strong>|</strong> v0.1.2</em></div></div>
+        <div className="mobileBrand"><div className="mobileLogo"><img src={MOROK_SUB_ICON} alt="Morok" /></div><div><b>MOROK</b><small>IA ASSISTENTE DO KOS</small><em><span/> ONLINE <strong>|</strong> v{APP_VERSION}</em></div></div>
         <div className="mobileKos"><b>✦ KOS</b><small>KORCZAK<br/>OPERATIONAL<br/>SYSTEM</small></div>
         <div className="mobileDate"><span>{date}</span><b>{clock}</b></div>
       </div>
@@ -1227,7 +1227,8 @@ function App() {
   function logout() { localStorage.removeItem("morok_token"); setToken(""); setMessages([]); }
 
   if (!token) return (
-    <main className="loginShell">
+    <>
+      <main className="loginShell">
       <div className="loginGlow glowOne" /><div className="loginGlow glowTwo" />
       <section className="loginPanel">
         <div className="brandMark"><span className="brandHex"><img src={MOROK_SUB_ICON} alt="Morok" /></span><div><strong>MOROK</strong><small>PERSONAL INTELLIGENCE SYSTEM</small></div></div>
@@ -1241,6 +1242,8 @@ function App() {
         <p className="loginHint">{notice || "Conexão criptografada com o núcleo Morok."}</p>
       </section>
     </main>
+      <UpdateChecker />
+    </>
   );
 
   const unread = notifications.length;
