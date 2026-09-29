@@ -34,15 +34,13 @@ http {
     listen ${PORT};
     server_name _;
 
+    # Liveness: Render must be able to see that the container is alive while
+    # the model is still being downloaded/loaded. Model readiness is exposed
+    # separately through /ready.
     location = /health {
-      if (!-f /tmp/morok-ready) { return 503; }
-      proxy_http_version 1.1;
-      proxy_set_header Host \$host;
-      proxy_set_header X-Real-IP \$remote_addr;
-      proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-      proxy_set_header X-Forwarded-Proto \$scheme;
-      proxy_pass http://127.0.0.1:11434/api/tags;
-      proxy_intercept_errors off;
+      default_type application/json;
+      add_header Cache-Control "no-store";
+      return 200 '{"status":"ok","service":"morok-ollama"}';
     }
 
     location = /ready {
@@ -54,6 +52,11 @@ http {
     }
 
     location / {
+      # Do not send model requests to Ollama until the configured model is
+      # actually installed. This makes the API receive a retryable 503
+      # instead of a misleading model-not-found/502 during cold start.
+      if (!-f /tmp/morok-ready) { return 503; }
+
       auth_basic "Morok Ollama";
       auth_basic_user_file /etc/nginx/.htpasswd;
 
