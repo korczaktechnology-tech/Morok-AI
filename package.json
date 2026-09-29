@@ -1,9 +1,12 @@
 {
   "name": "morok-ai",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "private": true,
   "description": "Morok — assistente pessoal inteligente multiplataforma.",
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "dev": "npm run dev --workspace=@morok/api & npm run dev --workspace=@morok/client",
     "build": "npm run build --workspaces --if-present",
@@ -12,7 +15,9 @@
     "test": "npm run test --workspaces --if-present",
     "format": "prettier --write ."
   },
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "devDependencies": {
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
