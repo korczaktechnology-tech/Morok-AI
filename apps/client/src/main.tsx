@@ -521,6 +521,9 @@ function Dashboard() {
 
 function MobileDashboard({onOpenChat}:{onOpenChat:()=>void}){
   const [now, setNow] = useState(() => new Date());
+  useEffect(() => { const id=window.setInterval(()=>setNow(new Date()),1000); return ()=>window.clearInterval(id); }, []);
+  const clock = new Intl.DateTimeFormat("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false}).format(now);
+  const date = new Intl.DateTimeFormat("pt-BR",{day:"2-digit",month:"short",year:"numeric"}).format(now).replace(".","").toUpperCase();
   const activities=[
     ["11:41","Projeto KOS atualizado","blue"],
     ["11:32","Backup concluído","green"],
