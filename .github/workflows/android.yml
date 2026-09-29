@@ -54,6 +54,153 @@ jobs:
         working-directory: apps/client
         run: npx cap add android
 
+      - name: Configure native automatic updater
+        working-directory: apps/client
+        run: |
+          mkdir -p android/app/src/main/java/com/korczak/morok android/app/src/main/res/xml
+          cat > android/app/src/main/java/com/korczak/morok/MainActivity.java <<'EOF'
+          package com.korczak.morok;
+          import android.os.Bundle;
+          import com.getcapacitor.BridgeActivity;
+          public class MainActivity extends BridgeActivity {
+            @Override public void onCreate(Bundle savedInstanceState) {
+              registerPlugin(MorokUpdaterPlugin.class);
+              super.onCreate(savedInstanceState);
+            }
+          }
+          EOF
+          cat > android/app/src/main/java/com/korczak/morok/MorokUpdaterPlugin.java <<'EOF'
+          package com.korczak.morok;
+          import android.content.Context;
+          import android.content.Intent;
+          import android.net.Uri;
+          import android.os.Build;
+          import android.os.Environment;
+          import android.provider.Settings;
+          import androidx.core.content.FileProvider;
+          import com.getcapacitor.Plugin;
+          import com.getcapacitor.PluginCall;
+          import com.getcapacitor.PluginMethod;
+          import com.getcapacitor.annotation.CapacitorPlugin;
+          import java.io.File;
+          import java.io.FileOutputStream;
+          import java.io.InputStream;
+          import java.net.HttpURLConnection;
+          import java.net.URL;
+
+          @CapacitorPlugin(name = "MorokUpdater")
+          public class MorokUpdaterPlugin extends Plugin {
+            @PluginMethod public void installApk(PluginCall call) {
+              String url = call.getString("url", "");
+              if (url.isEmpty() || !(url.startsWith("https://github.com/") || url.startsWith("https://objects.githubusercontent.com/"))) {
+                call.reject("Fonte de atualização não permitida."); return;
+              }
+              final Context context = getContext();
+              final File dir = new File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "updates");
+              if (!dir.exists() && !dir.mkdirs()) { call.reject("Não foi possível criar a pasta de atualização."); return; }
+              final File apk = new File(dir, "morok-update.apk");
+              new Thread(() -> {
+                try {
+                  download(url, apk);
+                  getActivity().runOnUiThread(() -> openInstaller(context, apk));
+                  call.resolve();
+                } catch (Exception e) { call.reject("Falha ao baixar a atualização: " + e.getMessage()); }
+              }, "morok-updater").start();
+            }
+            private void download(String source, File destination) throws Exception {
+              HttpURLConnection connection = (HttpURLConnection) new URL(source).openConnection();
+              connection.setInstanceFollowRedirects(true);
+              connection.setConnectTimeout(20000); connection.setReadTimeout(120000);
+              connection.setRequestProperty("User-Agent", "Morok-Updater/1.0"); connection.connect();
+              if (connection.getResponseCode() < 200 || connection.getResponseCode() >= 300) throw new Exception("HTTP " + connection.getResponseCode());
+              File partial = new File(destination.getAbsolutePath() + ".part");
+              try (InputStream input = connection.getInputStream(); FileOutputStream output = new FileOutputStream(partial)) {
+                byte[] buffer = new byte[65536]; int read;
+                while ((read = input.read(buffer)) != -1) output.write(buffer, 0, read);
+              } finally { connection.disconnect(); }
+              if (!partial.renameTo(destination)) throw new Exception("Não foi possível finalizar o APK.");
+            }
+            private void openInstaller(Context context, File apk) {
+              try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !context.getPackageManager().canRequestPackageInstalls()) {
+                  Intent settings = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:" + context.getPackageName()));
+                  settings.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); context.startActivity(settings); return;
+                }
+                Uri uri = FileProvider.getUriForFile(context, context.getPackageName() + ".fileprovider", apk);
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setDataAndType(uri, "application/vnd.android.package-archive");
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(intent);
+              } catch (Exception ignored) {}
+            }
+          }
+          EOF
+          cat > android/app/src/main/res/xml/file_paths.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <paths xmlns:android="http://schemas.android.com/apk/res/android">
+            <external-files-path name="updates" path="Download/updates/" />
+          </paths>
+          EOF
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("android/app/src/main/AndroidManifest.xml")
+          s=p.read_text()
+          if "android.permission.REQUEST_INSTALL_PACKAGES" not in s:
+              s=s.replace("<application", '<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />\n\n    <application', 1)
+          provider = (
+              '\n        <provider\n'
+              '            android:name="androidx.core.content.FileProvider"\n'
+              '            android:authorities="        working-directory: apps/client
+        run: |
+          if [ -f public/MorokLogo.png ]; then
+            mkdir -p android/app/src/main/res/drawable-nodpi
+            cp public/MorokLogo.png android/app/src/main/res/drawable-nodpi/morok_logo.png
+            sed -i 's|android:icon="@mipmap/ic_launcher"|android:icon="@drawable/morok_logo"|' android/app/src/main/AndroidManifest.xml
+            sed -i 's|android:roundIcon="@mipmap/ic_launcher_round"|android:roundIcon="@drawable/morok_logo"|' android/app/src/main/AndroidManifest.xml
+          else
+            echo "MorokLogo.png not found; keeping Capacitor default icon."
+          fi
+
+      - name: Sync Capacitor
+        working-directory: apps/client
+        run: npx cap sync android
+
+      - name: Build debug APK
+        working-directory: apps/client/android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: Morok-Android-debug
+          path: apps/client/android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(node -p "require('./apps/client/package.json').version")
+          TAG="v$VERSION"
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" "apps/client/android/app/build/outputs/apk/debug/app-debug.apk#Morok-$TAG.apk" \
+              --title "Morok $TAG" \
+              --generate-notes
+          else
+            echo "Release $TAG already exists."
+          fi
+ + '{applicationId}.fileprovider"\n'
+              '            android:exported="false"\n'
+              '            android:grantUriPermissions="true">\n'
+              '            <meta-data\n'
+              '                android:name="android.support.FILE_PROVIDER_PATHS"\n'
+              '                android:resource="@xml/file_paths" />\n'
+              '        </provider>'
+          )
+          if "androidx.core.content.FileProvider" not in s:
+              s=s.replace("</application>", provider+"\n    </application>", 1)
+          p.write_text(s)
+          PY
+
       - name: Configure Morok app icon
         working-directory: apps/client
         run: |
