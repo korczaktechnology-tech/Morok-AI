@@ -27,6 +27,7 @@ class MorokMicrophoneController {
   private retryAttempt = 0;
   private blocked = false;
   private wanted = false;
+  private appVisible = true;
   private listeners = new Set<Listener>();
   private transcriptListeners = new Set<TranscriptListener>();
 
@@ -53,7 +54,17 @@ class MorokMicrophoneController {
 
   manual() {
     this.wanted = true;
+    this.appVisible = true;
     void this.ensureStarted();
+  }
+
+  setAppVisible(visible: boolean) {
+    this.appVisible = visible;
+    if (!visible) {
+      this.stopRecognitionOnly();
+      return;
+    }
+    if (this.wanted) void this.ensureStarted();
     if (this.stream && !this.recognition && !this.recognitionStarting) {
       this.startRecognition();
     }
@@ -83,6 +94,18 @@ class MorokMicrophoneController {
     }, 2000);
   }
 
+  private stopRecognitionOnly() {
+    if (this.recognitionRetryTimer !== null) {
+      window.clearTimeout(this.recognitionRetryTimer);
+      this.recognitionRetryTimer = null;
+    }
+    const recognition = this.recognition;
+    this.recognition = null;
+    this.recognitionStarting = false;
+    try { recognition?.abort?.(); } catch {}
+    this.emit();
+  }
+
   private stopEverything() {
     if (this.streamRetryTimer !== null) {
       window.clearTimeout(this.streamRetryTimer);
@@ -103,7 +126,7 @@ class MorokMicrophoneController {
   }
 
   private async ensureStarted() {
-    if (!this.wanted || this.listeners.size === 0) return;
+    if (!this.wanted || this.listeners.size === 0 || !this.appVisible) return;
     if (!this.isSpeechRecognitionSupported()) {
       this.emit();
       return;
@@ -208,9 +231,9 @@ class MorokMicrophoneController {
   }
 
   private scheduleRecognitionRetry() {
-    if (!this.wanted || !this.track || this.track.readyState !== "live") return;
+    if (!this.wanted || !this.appVisible || !this.track || this.track.readyState !== "live") return;
     if (this.recognitionRetryTimer !== null || this.recognitionStarting || this.recognition) return;
-    const delay = 10 * 60 * 1000;
+    const delay = 1200;
     this.retryAttempt = Math.min(this.retryAttempt + 1, 10);
     this.recognitionRetryTimer = window.setTimeout(() => {
       this.recognitionRetryTimer = null;
@@ -288,10 +311,9 @@ class MorokMicrophoneController {
     recognition.onend = () => {
       if (this.recognition === recognition) this.recognition = null;
       this.recognitionStarting = false;
-      if (!this.wanted || !this.track || this.track.readyState !== "live") return;
-      // SpeechRecognition.end means the recognition service disconnected;
-      // it does not mean that the microphone MediaStream ended.
-      // Retry only after the configured ten-minute recovery interval.
+      if (!this.wanted || !this.appVisible || !this.track || this.track.readyState !== "live") return;
+      // Android/Chrome encerra sessões contínuas com frequência. Reabrimos a sessão
+      // rapidamente, mas mantemos o mesmo MediaStream para evitar liga/desliga físico.
       this.scheduleRecognitionRetry();
     };
 
@@ -299,7 +321,7 @@ class MorokMicrophoneController {
       // Chrome 135+ supports passing the existing MediaStreamTrack.
       // We intentionally do not fall back to recognition.start() because
       // that would create a second independent microphone capture path.
-      recognition.start(this.track);
+      recognition.start();
     } catch {
       this.recognitionStarting = false;
       try { recognition.abort(); } catch {}
