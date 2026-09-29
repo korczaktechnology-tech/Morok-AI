@@ -195,6 +195,11 @@ jobs:
           p.write_text(s)
           PY
 
+      - name: Configure Morok wake word and overlay
+        run: |
+          chmod +x apps/client/scripts/configure-android.sh
+          apps/client/scripts/configure-android.sh
+
       - name: Configure Morok app icon
         working-directory: apps/client
         run: |
@@ -220,17 +225,3 @@ jobs:
         with:
           name: Morok-Android-debug
           path: apps/client/android/app/build/outputs/apk/debug/app-debug.apk
-
-      - name: Publish GitHub Release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          VERSION=$(node -p "require('./apps/client/package.json').version")
-          TAG="v$VERSION"
-          if ! gh release view "$TAG" >/dev/null 2>&1; then
-            gh release create "$TAG" "apps/client/android/app/build/outputs/apk/debug/app-debug.apk#Morok-$TAG.apk" \
-              --title "Morok $TAG" \
-              --generate-notes
-          else
-            echo "Release $TAG already exists."
-          fi
